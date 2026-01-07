@@ -1,0 +1,22 @@
+{
+  "name": "@gitspread/domain-primitives",
+  "version": "1.0.0",
+  "description": "Base classes para Domain-Driven Design (Entities, Value Objects, Domain Events)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "keywords": [
+    "ddd",
+    "domain",
+    "entity",
+    "value-object",
+    "domain-event"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
