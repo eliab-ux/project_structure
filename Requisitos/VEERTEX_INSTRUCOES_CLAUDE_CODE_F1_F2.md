@@ -126,9 +126,16 @@ de isolamento** da F1: filtro global do MikroORM **e** RLS no PostgreSQL. Tabela
 sem RLS quebra o invariante que o `verify:isolation` protege.
 
 **Dependências a semear (§3.7, literal):** `COB→FIN` · `ROT→EST` · `PDV→EST` ·
-`CAN→VND+EST` · `FUNIL→CRM`. As duas últimas referenciam módulos futuros — semeie a
-aresta mesmo que o módulo alvo ainda não exista no catálogo da V1, ou reporte se isso
-violar integridade referencial e proponha a alternativa.
+`CAN→VND+EST` · `FUNIL→CRM`.
+
+**RESOLVIDA** (Eliab, 10/08/2026): **PDV, FUNIL e CRM ficam fora do catálogo**, e portanto
+as arestas `PDV→EST` e `FUNIL→CRM` não são semeadas. Elas ficam **registradas como
+comentário** em `modules.catalog.ts`, citando o §3.7, para entrarem junto com o módulo.
+
+O motivo de não semear: a FK é `account_modules.module_code → modules.code`, então a
+aresta exige que o módulo alvo exista na tabela — e um módulo no catálogo é um módulo que a
+conta consegue ativar. Adicionar PDV agora criaria um toggle que liga algo sem código
+atrás. Semeadas hoje: `COB→FIN` · `ROT→EST` · `CAN→VND+EST`.
 
 **Catálogo da V1:** os códigos completos não estão enumerados em `01_Veertex_Core.md`.
 Extraia de `00_Veertex_Visao_Geral.md`. **Se não estiverem lá, pare e pergunte** — não
@@ -171,24 +178,35 @@ Estes três pontos **não têm resposta em `01_Veertex_Core.md`**. Não escolha 
 **B4.1 — RESOLVIDA.** `plan.limits.modules` é **lista de códigos de módulo**, não
 contagem. Confirmado pela implementação e pela ordem do seed (módulos antes de planos).
 
-**B4.2 — Desativação com dependente ativo.** §3.7 exige validar dependência na
-ativação (COB exige FIN ativo), mas é silencioso sobre o caminho inverso: o que
-acontece ao desativar FIN com COB ativo? Bloquear, desativar em cascata ou permitir e
-quebrar o COB são três produtos diferentes. Pergunte.
+**B4.2 — RESOLVIDA** (Eliab, 10/08/2026). **Bloquear**, com a mensagem **nomeando os
+dependentes ativos**. Cascata desligaria num clique um módulo que o cliente estava usando
+sem ter pedido nada sobre ele; permitir deixaria o dependente ativo e quebrado. A
+`ListModules` já devolve `blockingDependents` para a UI mostrar o impedimento antes do
+clique. Implementado em `toggle-module.use-case.ts`.
 
-**B4.3 — Endpoint do menu efetivo.** §3.7 e §5 exigem que menu e rotas do frontend
-derivem de plano ∩ conta ∩ papel, mas §4 não lista o caso de uso correspondente.
-Confirme se cria-se um `GetEffectiveModules` (recomendado — sem ele o frontend teria
-que reimplementar a interseção, e regra de acesso duplicada é regra que diverge) ou se
-isso entra em outra fatia.
+**B4.3 — RESOLVIDA** (Eliab, 10/08/2026). **Não se expõe endpoint de menu efetivo.** O
+claim `modules` do token já é a fonte única, e a tela de administração usa o
+`ModuleController` existente (`GET /modules`), que devolve o catálogo com o estado de cada
+módulo na conta — incluindo `availableInPlan`, `blockingDependents` e
+`missingDependencies`. `GetEffectiveModules` permanece um caso de uso **interno**, chamado
+por login e refresh. Um segundo endpoint devolvendo a mesma interseção seria uma segunda
+fonte para a mesma verdade.
 
+**B4.4 — RESOLVIDA** (Eliab, 10/08/2026). O critério **§7.4 foi emendado** no
+`01_Veertex_Core.md`, com aprovação registrada no próprio arquivo:
 
-**B4.4 — Critério §7.4 vs. `modules` no JWT.** O ADR-0001 justifica a decisão (guards
-rodam antes da transação do RLS — restrição real, não custo). Mas o §7.4 do
-`01_Veertex_Core.md` diz "módulo desativado → 403 no endpoint", e a implementação tem
-janela até o refresh. **Uma das duas coisas precisa acontecer:** o teste do §7.4 encoda o
-refresh explicitamente, ou o critério é emendado no documento com aprovação do Eliab.
-O que não pode é o teste ser escrito para acomodar a implementação sem decisão registrada.
+> "Módulo desativado → 403 no endpoint a partir da renovação do token, que o `ToggleModule`
+> força para os usuários da conta; item some do menu; reativar restaura tudo."
+
+O teste do §7.4 encoda o refresh explicitamente
+(`test/integration/module-lifecycle.spec.ts`).
+
+> ⚠️ **Ressalva sobre "para os usuários da conta"** — a redação descreve mais do que a
+> Opção A entrega. O `ToggleModule` devolve `requiresTokenRefresh` e o frontend renova a
+> sessão **de quem fez o toggle**; os **demais** usuários da conta convergem ao renovarem os
+> próprios tokens (≤ 15 min). Forçar renovação imediata para todos exigiria o guard
+> consultar um "epoch" da conta no banco a cada request — que é precisamente a Opção B,
+> descartada no ADR-0001. Ver ressalva registrada ao final desta seção.
 
 ### B5. Entregáveis
 

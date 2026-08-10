@@ -97,21 +97,19 @@ export class ToggleModuleUseCase implements UseCase<ToggleModuleCommand, ToggleM
         throw new ModuleDependencyMissingException(definition.code, missing);
       }
     } else {
-      // ⚠️ DECISÃO PENDENTE — INSTRUCOES §B4.2. NÃO é uma escolha de arquitetura, é um provisório.
+      // DECIDIDO (Eliab, 10/08/2026 — INSTRUCOES §B4.2): BLOQUEAR, nomeando os dependentes ativos.
       //
       // O 01_Veertex_Core §3.7 manda validar dependência na ATIVAÇÃO (COB exige FIN ativo) e é
-      // silencioso sobre o caminho inverso: desativar FIN com COB ativo. As três saídas possíveis
-      // são três produtos diferentes:
+      // silencioso sobre o caminho inverso. As alternativas descartadas:
       //
-      //   (a) BLOQUEAR          — implementado aqui. O mais conservador: nenhum módulo fica com
-      //                           dependência faltando, e o usuário desativa na ordem correta.
-      //   (b) CASCATA           — desativa FIN e COB juntos. Conveniente e capaz de desligar, num
-      //                           clique, um módulo que o cliente estava usando.
-      //   (c) PERMITIR          — deixa o COB ativo e quebrado. Descartável na prática.
+      //   CASCATA   — desativaria FIN e COB juntos. Conveniente, e capaz de desligar num clique um
+      //               módulo que o cliente estava usando sem ter pedido nada sobre ele.
+      //   PERMITIR  — deixaria o COB ativo e quebrado.
       //
-      // (a) está aqui porque é o único que não pode causar perda de acesso inesperada — mas a
-      // escolha é do Eliab, não minha. Enquanto não houver decisão registrada, isto é pendência
-      // explícita (Visão Geral §9.2), não default silencioso.
+      // Bloquear é o único que não causa perda de acesso inesperada. A mensagem nomeia os
+      // dependentes porque "não é possível desativar" sozinho manda o usuário adivinhar qual dos
+      // módulos ativos está no caminho — e a `ListModules` já devolve `blockingDependents` para a
+      // UI mostrar o impedimento antes do clique.
       const dependents = dependentsOf(definition.code).filter((code) => activeCodes.has(code));
       if (dependents.length > 0) {
         throw new ModuleInUseByDependentsException(definition.code, dependents);
