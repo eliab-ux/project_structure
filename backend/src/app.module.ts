@@ -3,6 +3,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { validate } from './config/env.validation';
+import { ENV_FILES } from './config/load-env';
 import { BootstrapModule } from './infrastructure/persistence/bootstrap/bootstrap.module';
 import { PersistenceModule } from './infrastructure/persistence/persistence.module';
 import { RepositoriesModule } from './infrastructure/persistence/repositories.module';
@@ -21,7 +22,8 @@ import { AuthModule } from './contexts/auth/auth.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, validate, envFilePath: '.env' }),
+    // `.env.local` antes de `.env`: o primeiro encontrado ganha (ver config/load-env.ts).
+    ConfigModule.forRoot({ isGlobal: true, validate, envFilePath: [...ENV_FILES] }),
     EventEmitterModule.forRoot({ wildcard: true, delimiter: '.', maxListeners: 20 }),
     // Migrate → verify isolation → seed, before the first request is served. Listed first so its
     // lifecycle hook is the first to run; a failure here aborts the boot instead of serving traffic

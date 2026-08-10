@@ -1,4 +1,4 @@
-import { config as loadEnv } from 'dotenv';
+import { loadEnvFiles } from '../../../config/load-env';
 import { Client } from 'pg';
 import { DEFAULT_ISOLATION_ROLES, verifyIsolationInvariants } from '../isolation-invariants';
 import {
@@ -10,7 +10,7 @@ import {
 
 // Sem .env no container (o Dokploy injeta o ambiente); a chamada é inofensiva quando o arquivo não
 // existe e necessária quando existe, no uso local.
-loadEnv({ override: false });
+loadEnvFiles();
 
 /**
  * `npm run verify:rls:prod` — o critério de aceite §7.2, executável dentro do container.

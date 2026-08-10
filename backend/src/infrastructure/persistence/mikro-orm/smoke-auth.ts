@@ -1,6 +1,6 @@
-import { config as loadEnv } from 'dotenv';
+import { loadEnvFiles } from '../../../config/load-env';
 
-loadEnv({ override: false });
+loadEnvFiles();
 
 /**
  * `npm run smoke:auth:prod` — o fluxo de autenticação ponta a ponta, contra a API que já está no ar.

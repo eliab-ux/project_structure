@@ -4,6 +4,7 @@ import './cli-owner-connection';
 
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { Client } from 'pg';
 import { AppModule } from '../../../app.module';
 import { CreateAccountUseCase } from '../../../contexts/account/application/use-cases/create-account/create-account.use-case';
 import { CreateAccountCommand } from '../../../contexts/account/application/use-cases/create-account/create-account.command';
@@ -82,9 +83,63 @@ const DEV_ACCOUNTS: CreateAccountCommand[] = [
   ),
 ];
 
+/**
+ * Barreira de DADO: recusa se existir qualquer conta que não seja uma das demo.
+ *
+ * Substitui a checagem anterior de `NODE_ENV=production`, e a troca é a diferença entre uma barreira
+ * e um aviso. `NODE_ENV` é controlado por quem invoca o comando — um `-e NODE_ENV=development` no
+ * `docker exec` a derrubava, e é justamente quem tem acesso ao container que teria como fazê-lo. Já
+ * "este banco tem conta de cliente" não é negociável por variável de ambiente: ou tem, ou não tem.
+ *
+ * Roda como OWNER (o `cli-owner-connection` já trocou a conexão), então enxerga todas as contas
+ * independentemente de RLS — que é exatamente o necessário aqui: a pergunta é sobre o banco inteiro,
+ * não sobre um tenant.
+ *
+ * ⚠️ Resta um caso: um banco de produção AINDA VAZIO aceitaria o seed, porque não há conta não-demo.
+ * É a razão de a checagem de `NODE_ENV` continuar abaixo como segunda camada — env ser derrubável a
+ * torna insuficiente como única barreira, não inútil como segunda.
+ */
+async function assertDatabaseIsSafeToSeed(): Promise<void> {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error('DATABASE_URL ausente.');
+  }
+
+  const client = new Client({ connectionString });
+  await client.connect();
+  try {
+    const demoDocuments = DEV_ACCOUNTS.map((command) => command.accountDocument);
+    const { rows } = await client.query<{ name: string; document: string }>(
+      'select name, document from accounts where document <> all($1::text[]) limit 5',
+      [demoDocuments],
+    );
+
+    if (rows.length > 0) {
+      // Nomeia as contas encontradas: "há contas reais" sozinho deixa o operador sem saber se
+      // esbarrou num resto de teste ou num cliente de verdade.
+      const found = rows.map((row) => `"${row.name}"`).join(', ');
+      throw new Error(
+        `Este banco tem conta(s) que não são de demonstração: ${found}. O seed de desenvolvimento ` +
+          'não roda aqui — ele existe para popular um banco descartável, e num banco com dado real ' +
+          'criaria contas de mentira ao lado de contas de cliente.',
+      );
+    }
+  } finally {
+    await client.end().catch(() => undefined);
+  }
+}
+
 async function run(): Promise<void> {
+  // Barreira primária: o estado do BANCO.
+  await assertDatabaseIsSafeToSeed();
+
+  // Segunda camada. Mantida de propósito: cobre o caso que a barreira de dado não cobre — um banco
+  // de produção ainda vazio. Duas camadas independentes custam uma linha.
   if (process.env.NODE_ENV === 'production') {
-    throw new Error('seed:dev não roda com NODE_ENV=production.');
+    throw new Error(
+      'seed:dev não roda com NODE_ENV=production, mesmo num banco sem contas reais. ' +
+        'Se a intenção é popular um banco descartável, rode sem NODE_ENV=production.',
+    );
   }
 
   const app = await NestFactory.createApplicationContext(AppModule, { logger: ['error', 'warn'] });
