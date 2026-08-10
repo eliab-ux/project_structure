@@ -1,0 +1,51 @@
+# Postgres local de desenvolvimento — Veertex
+#
+# Objetivo: espelhar o mdantas no que importa para o RLS (dois papéis, app sem
+# BYPASSRLS e sem DDL). Um Postgres local onde a aplicação roda como superusuário
+# ou como dono das tabelas faz os testes de isolamento passarem sem significado.
+#
+# Uso:
+#   docker compose -f docker-compose.dev.yml up -d
+#
+#   docker exec -i veertex-pg-dev psql -U postgres -d veertex \
+#     -v ON_ERROR_STOP=1 \
+#     -v db_name=veertex \
+#     -v owner_password=SENHA_OWNER \
+#     -v app_password=SENHA_APP \
+#     -f /sql/001_create_roles.sql
+#
+# Os quatro `-v` são OBRIGATÓRIOS: o script usa `:'owner_password'` e `:'db_name'`, e sem eles o
+# psql aborta com erro de variável não definida. Senhas SEM aspas (o `:'var'` já produz o literal
+# SQL escapado). Os mesmos valores vão para o `.env.local` — ver README.md.
+#
+# Local do arquivo: apps/Veertex/backend/ (o mount ./deploy/sql é relativo a ele).
+#
+# ATENÇÃO: confirme a versão do Postgres do mdantas e alinhe a tag abaixo.
+# Divergência de major version aparece como surpresa em migration, não em teste.
+
+services:
+  postgres:
+    image: postgres:16-alpine      # <-- alinhar com a versão do mdantas
+    container_name: veertex-pg-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres      # superusuário do container — NÃO usar na aplicação
+      POSTGRES_PASSWORD: postgres  # local only; nunca replicar em ambiente exposto
+      POSTGRES_DB: veertex
+    ports:
+      - "5433:5432"                # 5433 no host para não colidir com Postgres local existente
+    volumes:
+      - veertex_pg_data:/var/lib/postgresql/data
+      # Provisionamento montado read-only, executado MANUALMENTE via psql (ver README).
+      # Deliberadamente NÃO em /docker-entrypoint-initdb.d: ali rodaria só na primeira
+      # criação do volume, e editar o script depois não teria efeito — confusão garantida.
+      # O 001_create_roles.sql é idempotente, então rodar à mão é reexecutável.
+      - ./deploy/sql:/sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d veertex"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  veertex_pg_data:

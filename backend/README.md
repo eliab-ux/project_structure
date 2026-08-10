@@ -29,13 +29,32 @@ docker compose -f docker-compose.dev.yml logs -f   # espere "database system is 
 **O mesmo script do mdantas**, sem variante local:
 
 ```bash
-docker compose -f docker-compose.dev.yml exec -T postgres \
-  psql -U postgres -v ON_ERROR_STOP=1 \
-    -v db_name=veertex \
-    -v owner_password=SENHA_OWNER \
-    -v app_password=SENHA_APP \
-  < deploy/sql/001_create_roles.sql
+docker exec -i veertex-pg-dev psql -U postgres -d veertex \
+  -v ON_ERROR_STOP=1 \
+  -v db_name=veertex \
+  -v owner_password=SENHA_OWNER \
+  -v app_password=SENHA_APP \
+  -f /sql/001_create_roles.sql
 ```
+
+O `-f /sql/...` usa o mount read-only que o compose cria para isso — deliberadamente **fora** de
+`/docker-entrypoint-initdb.d`, onde rodaria só na primeira criação do volume e editar o script
+depois não teria efeito. Os quatro `-v` são obrigatórios; sem eles o psql aborta em variável não
+definida. Senhas **sem aspas**.
+
+> **Git Bash no Windows:** prefixe com `MSYS_NO_PATHCONV=1`. Sem isso o shell converte
+> `/sql/001_create_roles.sql` em `C:/Program Files/Git/sql/001_create_roles.sql` antes de o docker
+> ver o argumento, e o psql responde `No such file or directory` — apontando para um caminho que
+> ninguém escreveu. No PowerShell e no cmd não é necessário.
+>
+> ```bash
+> MSYS_NO_PATHCONV=1 docker exec -i veertex-pg-dev psql -U postgres -d veertex \
+>   -v ON_ERROR_STOP=1 -v db_name=veertex \
+>   -v owner_password=SENHA_OWNER -v app_password=SENHA_APP \
+>   -f /sql/001_create_roles.sql
+> ```
+
+Ao final o script imprime os quatro atributos dos dois papéis. **Todos precisam ser `f`.**
 
 Um script por ambiente divergiria, e o que ficaria errado é o local — o que faria os testes de
 isolamento passarem contra um banco cuja configuração não é a de produção. Ele é idempotente:
