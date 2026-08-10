@@ -41,7 +41,24 @@ export interface RlsFixtures {
   roleB: string;
 }
 
-const TENANT_TABLES = ['companies', 'roles', 'users', 'password_reset_codes'] as const;
+/**
+ * As tabelas de negócio cujo isolamento é asseverado aqui.
+ *
+ * Lista estática, ao contrário do `isolation-invariants.ts`, que deriva de `pg_attribute`. A
+ * divisão de trabalho é deliberada: quem garante que nenhuma tabela nova escape é o verificador de
+ * INVARIANTES — ele descobre qualquer tabela com `account_id` e falha se faltar policy. Esta lista
+ * é sobre COBERTURA das asserções de comportamento, e uma tabela esquecida aqui reduz cobertura sem
+ * abrir furo.
+ *
+ * `account_modules` entrou com a F2.
+ */
+const TENANT_TABLES = [
+  'companies',
+  'roles',
+  'users',
+  'password_reset_codes',
+  'account_modules',
+] as const;
 const SCOPE_SQL = `select set_config('app.account_id', $1, true)`;
 
 /**
@@ -120,9 +137,7 @@ export async function createRlsFixtures(owner: OwnerQuery): Promise<RlsFixtures>
 export async function dropRlsFixtures(owner: OwnerQuery, fixtures: RlsFixtures): Promise<void> {
   for (const accountId of [fixtures.accountA, fixtures.accountB]) {
     await owner('delete from password_reset_codes where account_id = $1', [accountId]);
-    await owner('delete from account_modules where account_id = $1', [accountId]).catch(
-      () => undefined, // Tabela só existe a partir da F2; ausente é normal num banco só com F1.
-    );
+    await owner('delete from account_modules where account_id = $1', [accountId]);
     await owner('delete from companies where account_id = $1', [accountId]);
     await owner('delete from users where account_id = $1', [accountId]);
     await owner('delete from roles where account_id = $1', [accountId]);

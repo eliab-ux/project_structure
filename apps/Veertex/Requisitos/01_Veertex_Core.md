@@ -145,7 +145,15 @@ consulta CNPJ p/ auto-preenchimento de contato/empresa (provider port; fase 1.1)
    obrigatório); usuário runtime sem DDL/TRUNCATE.
 3. Usuário sem WhatsApp não é criável (nas 3 camadas); recuperação por código WhatsApp
    funcional.
-4. Módulo desativado → 403 no endpoint + item some do menu; reativar restaura tudo.
+4. Módulo desativado → 403 no endpoint a partir da renovação do token, que o `ToggleModule` força
+   para os usuários da conta; item some do menu; reativar restaura tudo.
+   <!-- Emendado em 10/08/2026 com aprovação do Eliab. Redação anterior: "Módulo desativado → 403
+        no endpoint + item some do menu; reativar restaura tudo." O acréscimo ("a partir da
+        renovação do token") registra a consequência da decisão do ADR-0001: os módulos efetivos
+        viajam no JWT porque guards rodam antes da transação que estabelece o escopo do RLS, então
+        existe uma janela até a renovação. Sem a emenda, o critério exigiria um 403 imediato, que só
+        a Opção B (guard abrindo transação própria) entregaria — e ela foi descartada no ADR. -->
+
 5. `field_config` marca campo obrigatório → API rejeita payload sem ele; form exibe.
 6. Contato com 2 tipos (cliente+fornecedor) funciona nos dois fluxos sem duplicar.
 7. Kit vendável com baixa nos componentes (validado junto com 02/03).

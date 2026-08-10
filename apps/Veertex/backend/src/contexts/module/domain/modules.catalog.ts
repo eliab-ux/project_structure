@@ -11,6 +11,21 @@
  * pareceriam óbvias — EXP→EST é a candidata mais tentadora, e continua fora justamente por isso:
  * seria um silent default (Visão Geral §9.2) numa regra que bloqueia ativação de módulo pago.
  * Quando o MD do módulo EXP definir, entra aqui.
+ *
+ * ── Arestas do §3.7 ainda NÃO semeadas (decisão do Eliab, 10/08/2026) ─────────────────────────
+ * O 01_Veertex_Core §3.7 declara, além das três acima, mais duas:
+ *
+ *     PDV → EST          (o PDV exige estoque)
+ *     FUNIL → CRM        (o funil exige CRM)
+ *
+ * Ficam fora porque PDV, FUNIL e CRM não estão no catálogo da V1. A FK é
+ * `account_modules.module_code → modules.code`, então a aresta exigiria o módulo alvo na tabela —
+ * e um módulo no catálogo é um módulo que a conta CONSEGUE ATIVAR. Adicioná-los agora criaria um
+ * toggle que liga algo sem código atrás, o que é pior do que a aresta ausente: o cliente pagaria
+ * por um módulo vazio.
+ *
+ * Cada uma entra junto com o módulo dela. Este comentário existe para que a aresta não seja
+ * redescoberta a partir do zero quando o PDV chegar.
  */
 export interface ModuleDefinition {
   code: string;
