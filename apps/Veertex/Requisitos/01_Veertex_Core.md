@@ -145,14 +145,20 @@ consulta CNPJ p/ auto-preenchimento de contato/empresa (provider port; fase 1.1)
    obrigatório); usuário runtime sem DDL/TRUNCATE.
 3. Usuário sem WhatsApp não é criável (nas 3 camadas); recuperação por código WhatsApp
    funcional.
-4. Módulo desativado → 403 no endpoint a partir da renovação do token, que o `ToggleModule` força
-   para os usuários da conta; item some do menu; reativar restaura tudo.
-   <!-- Emendado em 10/08/2026 com aprovação do Eliab. Redação anterior: "Módulo desativado → 403
-        no endpoint + item some do menu; reativar restaura tudo." O acréscimo ("a partir da
-        renovação do token") registra a consequência da decisão do ADR-0001: os módulos efetivos
-        viajam no JWT porque guards rodam antes da transação que estabelece o escopo do RLS, então
-        existe uma janela até a renovação. Sem a emenda, o critério exigiria um 403 imediato, que só
-        a Opção B (guard abrindo transação própria) entregaria — e ela foi descartada no ADR. -->
+4. Módulo desativado → 403 no endpoint a partir da renovação do token: imediata para o usuário que
+   executou o toggle, e em até o TTL do access token (15 min) para os demais usuários da conta;
+   item some do menu; reativar restaura tudo.
+   <!-- Emendado em 10/08/2026 com aprovação do Eliab.
+        Redação original: "Módulo desativado → 403 no endpoint + item some do menu; reativar
+        restaura tudo."
+        Primeira emenda (descartada no mesmo dia): dizia que o ToggleModule forçava a renovação
+        "para os usuários da conta" — o que descrevia a Opção B, não o que está implementado.
+        Redação atual: registra a consequência real da decisão do ADR-0001. Os módulos efetivos
+        viajam no JWT porque guards rodam ANTES da transação que estabelece o escopo do RLS; logo
+        existe uma janela. Ela é ZERO para quem fez o toggle (o ToggleModule devolve
+        `requiresTokenRefresh` e o frontend renova na hora) e no máximo o TTL do access token para
+        os demais. Um 403 imediato para todos exigiria o guard consultar um epoch da conta no banco
+        a cada request — precisamente a Opção B, descartada no ADR. -->
 
 5. `field_config` marca campo obrigatório → API rejeita payload sem ele; form exibe.
 6. Contato com 2 tipos (cliente+fornecedor) funciona nos dois fluxos sem duplicar.

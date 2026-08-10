@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { Client } from 'pg';
 import { EntityManager } from '@mikro-orm/core';
-import { Test } from '@nestjs/testing';
+import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../../src/app.module';
 import { TenantContextService } from '../../src/infrastructure/security/tenant-context.service';
 import {
@@ -20,22 +20,29 @@ import { MODULES } from '../../src/contexts/module/domain/modules.catalog';
 import {
   CoreModuleNotToggleableException,
   ModuleInUseByDependentsException,
+  ModuleInactiveForbiddenException,
 } from '../../src/contexts/module/domain/exceptions/module-exceptions';
 import {
   TOKEN_SERVICE,
   TokenServicePort,
 } from '../../src/contexts/auth/application/ports/output/token-service.port';
 import { ModuleGuard } from '../../src/infrastructure/security/guards/module.guard';
+import { makeValidCnpj } from '../helpers/valid-document';
 
 /**
  * Critério de aceite §7.4, **na redação emendada em 10/08/2026**:
  *
- *   "Módulo desativado → 403 no endpoint a partir da renovação do token, que o ToggleModule força
- *    para os usuários da conta; item some do menu; reativar restaura tudo."
+ *   "Módulo desativado → 403 no endpoint a partir da renovação do token: imediata para o usuário
+ *    que executou o toggle, e em até o TTL do access token (15 min) para os demais usuários da
+ *    conta; item some do menu; reativar restaura tudo."
  *
  * O refresh está encodado explicitamente, e não é um detalhe de implementação escondido no teste:
  * é a consequência registrada no ADR-0001. A sequência exercitada é a do critério —
  * desativar → renovar → recusar → reativar → renovar → liberar, com os dados intactos.
+ *
+ * **A janela também é asseverada**, e não apenas tolerada: um teste que só verificasse o estado
+ * pós-refresh deixaria a impressão de que o 403 é imediato para todos. O caso "token anterior ao
+ * toggle" prova que a janela existe e é exatamente o que o critério descreve.
  *
  * ── O que este teste NÃO cobre, e por quê ─────────────────────────────────────────────────────
  * A perna "403 no endpoint" ainda não tem endpoint: **nenhum controller usa `@RequireModule`
@@ -104,18 +111,27 @@ describe('Ciclo de vida de módulo — §7.4', () => {
       { getAllAndOverride: () => moduleCode } as never,
     );
 
+    // O request é criado UMA vez e sempre devolvido por referência. Com um literal novo a cada
+    // `getRequest()`, o `user` que o JwtAuthGuard grava iria para um objeto e o ModuleGuard leria de
+    // outro — o guard veria `modules: []` e recusaria tudo, parecendo que a regra de negócio está
+    // certa quando o errado é o dublê.
+    const request = { headers: { authorization: 'Bearer t' } };
     const context = {
-      switchToHttp: () => ({
-        getRequest: () => ({ headers: { authorization: 'Bearer t' } }),
-      }),
+      switchToHttp: () => ({ getRequest: () => request }),
       getHandler: () => () => undefined,
       getClass: () => class {},
     } as never;
 
     try {
       return guard.canActivate(context);
-    } catch {
-      return false;
+    } catch (error) {
+      // SÓ a recusa por módulo inativo vira `false`. Qualquer outro erro é relançado: um helper que
+      // transformasse tudo em "recusado" faria um bug de fiação parecer a regra de negócio
+      // funcionando — e foi o que quase aconteceu aqui.
+      if (error instanceof ModuleInactiveForbiddenException) {
+        return false;
+      }
+      throw error;
     }
   }
 
@@ -133,6 +149,29 @@ describe('Ciclo de vida de módulo — §7.4', () => {
     owner = new Client({ connectionString: OWNER_URL });
     await owner.connect();
 
+    // A APLICAÇÃO SOBE PRIMEIRO, e a ordem é obrigatória — não é preferência de organização.
+    // O catálogo de módulos é semeado pelo bootstrap do boot (`module-catalog.seed.ts`), e as
+    // fixtures abaixo inserem em `account_modules`, que tem FK para `modules(code)`. Criar as
+    // fixtures antes de subir o app falha com
+    // `violates foreign key constraint "account_modules_module_code_foreign"` — a tabela `modules`
+    // ainda está vazia.
+    //
+    // O bootstrap apaga `DATABASE_URL_MIGRATIONS` de `process.env` ao terminar; por isso a conexão
+    // de owner é aberta ACIMA, e a URL foi capturada na carga do módulo.
+    // `createApplicationContext` e não `createNestApplication`: este teste não faz requisição HTTP,
+    // e `createNestApplication` exigiria o `@nestjs/platform-express`, que não está instalado (o
+    // projeto usa Fastify). O contexto de aplicação dispara `onApplicationBootstrap` — que é o que
+    // importa aqui, porque é ele que semeia o catálogo de módulos.
+    const app = await NestFactory.createApplicationContext(AppModule, { logger: ['error'] });
+    close = () => app.close();
+
+    em = app.get(EntityManager);
+    tenantContext = app.get(TenantContextService);
+    toggleModule = app.get(ToggleModuleUseCase);
+    getEffectiveModules = app.get(GetEffectiveModulesUseCase);
+    listModules = app.get(ListModulesUseCase);
+    tokens = app.get<TokenServicePort>(TOKEN_SERVICE);
+
     // Fixtures pelo OWNER: a conta não existe ainda, então não há escopo a estabelecer — mesma
     // razão pela qual o onboarding é CLI e não endpoint.
     await owner.query(
@@ -149,7 +188,8 @@ describe('Ciclo de vida de módulo — §7.4', () => {
     await owner.query(
       `insert into accounts (id, name, document, plan_id, status, timezone)
             values ($1, 'Ciclo de vida', $2, $3, 'ACTIVE', 'America/Sao_Paulo')`,
-      [accountId, accountId.replace(/\D/g, '').padEnd(14, '0').slice(0, 14), plan.rows[0].id],
+      // CNPJ com dígitos verificadores válidos: a linha volta pelo mapper, que os confere.
+      [accountId, makeValidCnpj(accountId.replace(/\D/g, '')), plan.rows[0].id],
     );
     await owner.query(
       `insert into roles (id, account_id, code, name, permissions, is_system)
@@ -169,18 +209,6 @@ describe('Ciclo de vida de módulo — §7.4', () => {
         [randomUUID(), accountId, code],
       );
     }
-
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    const app = moduleRef.createNestApplication();
-    await app.init();
-    close = () => app.close();
-
-    em = app.get(EntityManager);
-    tenantContext = app.get(TenantContextService);
-    toggleModule = app.get(ToggleModuleUseCase);
-    getEffectiveModules = app.get(GetEffectiveModulesUseCase);
-    listModules = app.get(ListModulesUseCase);
-    tokens = app.get<TokenServicePort>(TOKEN_SERVICE);
   }, 120_000);
 
   afterAll(async () => {
@@ -210,14 +238,25 @@ describe('Ciclo de vida de módulo — §7.4', () => {
   maybe(
     'desativar → renovar → o token não traz mais o módulo, e o guard recusa (o 403 do §7.4)',
     async () => {
+      // O token que os OUTROS usuários da conta já têm em mãos, emitido antes do toggle.
+      const tokenBeforeToggle = await refreshedModules();
+      expect(tokenBeforeToggle).toContain(MODULES.VND);
+
       const result = await asRequest(() =>
         toggleModule.execute(new ToggleModuleCommand(accountId, MODULES.VND, false)),
       );
 
       // O sinal que o frontend usa para renovar a sessão na hora, em vez de esperar 15 minutos.
+      // É o que faz a janela ser ZERO para quem executou o toggle.
       expect(result.requiresTokenRefresh).toBe(true);
       expect(result.active).toBe(false);
 
+      // A JANELA do §7.4, asseverada em vez de apenas tolerada: um token emitido antes do toggle
+      // continua liberando o módulo. Não é defeito — é a consequência de os módulos viajarem no
+      // JWT (ADR-0001), limitada pelo TTL do access token.
+      expect(guardAllows(MODULES.VND, tokenBeforeToggle)).toBe(true);
+
+      // Após a renovação, o 403.
       const modules = await refreshedModules();
       expect(modules).not.toContain(MODULES.VND);
       // É aqui que o 403 nasce. Enquanto não houver controller com @RequireModule, esta é a
