@@ -1,0 +1,21 @@
+# Fim de linha LF na árvore de trabalho, independentemente de core.autocrlf.
+#
+# O repositório tem core.autocrlf=true e nenhum .gitattributes, então em Windows o git converte
+# LF→CRLF ao dar checkout. O prettier deste projeto usa o padrão `endOfLine: "lf"`, e o resultado é
+# que TODO arquivo recém-checkoutado falha o lint com "Delete ␍" em cada linha — sem que ninguém
+# tenha editado nada. Apareceu na prática depois de um rebase.
+#
+# `text=auto eol=lf` normaliza no índice (como já acontecia) E mantém LF na saída, o que elimina a
+# conversão. Escopado ao app de propósito: os outros apps do monorepo têm trabalho não commitado, e
+# um .gitattributes na raiz reescreveria o fim de linha deles no próximo checkout.
+* text=auto eol=lf
+
+# Binários — nunca converter.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.pfx binary
+*.p12 binary
