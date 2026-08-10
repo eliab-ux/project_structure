@@ -31,6 +31,11 @@ import {
 } from '../../../../role/application/ports/output/role-repository.port';
 import { ADMIN_ROLE_CODE } from '../../../../role/domain/default-roles';
 import { SeedDefaultRolesUseCase } from '../../../../role/application/use-cases/seed-default-roles/seed-default-roles.use-case';
+import { SeedAccountModulesUseCase } from '../../../../module/application/use-cases/seed-account-modules/seed-account-modules.use-case';
+import {
+  ACCOUNT_MODULE_REPOSITORY,
+  AccountModuleRepositoryPort,
+} from '../../../../module/application/ports/output/account-module-repository.port';
 import {
   USER_REPOSITORY,
   UserRepositoryPort,
@@ -80,8 +85,11 @@ export class CreateAccountUseCase implements UseCase<CreateAccountCommand, Creat
     @Inject(USER_REPOSITORY) private readonly users: UserRepositoryPort,
     @Inject(PLAN_REPOSITORY) private readonly plans: PlanRepositoryPort,
     @Inject(PASSWORD_HASHER) private readonly hasher: PasswordHasherPort,
+    @Inject(ACCOUNT_MODULE_REPOSITORY)
+    private readonly accountModules: AccountModuleRepositoryPort,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
     private readonly seedDefaultRoles: SeedDefaultRolesUseCase,
+    private readonly seedAccountModules: SeedAccountModulesUseCase,
   ) {}
 
   async execute(command: CreateAccountCommand): Promise<CreateAccountResult> {
@@ -141,9 +149,17 @@ export class CreateAccountUseCase implements UseCase<CreateAccountCommand, Creat
       roleId: adminRole.id.value,
     });
 
+    // Todo módulo que o plano permite já nasce ligado — o toggle existe para DESLIGAR o que a conta
+    // não usa, não para montar o produto peça por peça (critério §7.1: operável em menos de 5 min).
+    const accountModules = this.seedAccountModules.build({
+      accountId: account.id.value,
+      planModules: plan.limits.modules,
+    });
+
     return this.uow.execute(async () => {
       const savedAccount = await this.accounts.save(account);
       await this.roles.saveAll(roles);
+      await this.accountModules.saveAll(accountModules);
       const savedCompany = await this.companies.save(company);
       const savedAdmin = await this.users.save(admin);
 

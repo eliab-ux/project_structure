@@ -8,6 +8,8 @@ export interface AuthResultDto {
   accountId: string;
   /** Effective permissions, so the frontend can build the menu without a second call. */
   permissions: string[];
+  /** `plano ∩ conta` — a outra metade do que o menu precisa para decidir o que mostrar. */
+  modules: string[];
 }
 
 export interface RefreshResultDto {

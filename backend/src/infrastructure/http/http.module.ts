@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AccountModule } from '../../contexts/account/account.module';
 import { AuthModule } from '../../contexts/auth/auth.module';
 import { CompanyModule } from '../../contexts/company/company.module';
+import { ModuleModule } from '../../contexts/module/module.module';
 import { PlanModule } from '../../contexts/plan/plan.module';
 import { RoleModule } from '../../contexts/role/role.module';
 import { UserModule } from '../../contexts/user/user.module';
@@ -9,6 +10,7 @@ import { HealthController } from './controllers/health/health.controller';
 import { AuthController } from './controllers/auth/auth.controller';
 import { AccountController } from './controllers/account/account.controller';
 import { CompanyController } from './controllers/company/company.controller';
+import { ModuleController } from './controllers/module/module.controller';
 import { RoleController } from './controllers/role/role.controller';
 import { UserController } from './controllers/user/user.controller';
 
@@ -30,12 +32,21 @@ import { UserController } from './controllers/user/user.controller';
  * `create:account` CLI. See the use case's docblock.
  */
 @Module({
-  imports: [AuthModule, AccountModule, CompanyModule, PlanModule, RoleModule, UserModule],
+  imports: [
+    AuthModule,
+    AccountModule,
+    CompanyModule,
+    ModuleModule,
+    PlanModule,
+    RoleModule,
+    UserModule,
+  ],
   controllers: [
     HealthController,
     AuthController,
     AccountController,
     CompanyController,
+    ModuleController,
     RoleController,
     UserController,
   ],
