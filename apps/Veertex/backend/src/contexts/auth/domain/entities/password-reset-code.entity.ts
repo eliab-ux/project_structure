@@ -1,0 +1,147 @@
+import { AggregateRoot } from '@gitspread/domain-primitives';
+
+/**
+ * 15 minutes, and NOT an environment variable.
+ *
+ * The channel is instantaneous — the user reads the WhatsApp message in seconds — so a longer life
+ * only widens the window for whoever intercepted the phone. It is a business rule, not a knob.
+ */
+export const RESET_CODE_TTL_MINUTES = 15;
+
+/**
+ * Five guesses per code. Turns 1,000,000 combinations into five chances, which is what makes a
+ * six-digit secret defensible at all.
+ */
+export const MAX_RESET_CODE_ATTEMPTS = 5;
+
+/**
+ * A single password-recovery code.
+ *
+ * Only the bcrypt HASH of the code is ever stored: neither a database dump nor a log line reveals
+ * the value. The plaintext exists in exactly two places — the function that generated it, and the
+ * WhatsApp message the user received.
+ */
+export class PasswordResetCode extends AggregateRoot {
+  private constructor(
+    private readonly _id: string,
+    private readonly _accountId: string,
+    private readonly _userId: string,
+    private readonly _codeHash: string,
+    private readonly _expiresAt: Date,
+    private _attempts: number,
+    private _consumedAt: Date | null,
+    private _sentAt: Date | null,
+    private readonly _createdAt: Date,
+  ) {
+    super();
+  }
+
+  static issue(params: {
+    id: string;
+    accountId: string;
+    userId: string;
+    codeHash: string;
+    now: Date;
+  }): PasswordResetCode {
+    return new PasswordResetCode(
+      params.id,
+      params.accountId,
+      params.userId,
+      params.codeHash,
+      new Date(params.now.getTime() + RESET_CODE_TTL_MINUTES * 60_000),
+      0,
+      null,
+      null,
+      params.now,
+    );
+  }
+
+  static reconstitute(params: {
+    id: string;
+    accountId: string;
+    userId: string;
+    codeHash: string;
+    expiresAt: Date;
+    attempts: number;
+    consumedAt: Date | null;
+    sentAt: Date | null;
+    createdAt: Date;
+  }): PasswordResetCode {
+    return new PasswordResetCode(
+      params.id,
+      params.accountId,
+      params.userId,
+      params.codeHash,
+      params.expiresAt,
+      params.attempts,
+      params.consumedAt,
+      params.sentAt,
+      params.createdAt,
+    );
+  }
+
+  get id(): string {
+    return this._id;
+  }
+
+  get accountId(): string {
+    return this._accountId;
+  }
+
+  get userId(): string {
+    return this._userId;
+  }
+
+  /** Read only by the use case, to compare against the code the user typed. */
+  get codeHash(): string {
+    return this._codeHash;
+  }
+
+  get expiresAt(): Date {
+    return this._expiresAt;
+  }
+
+  get attempts(): number {
+    return this._attempts;
+  }
+
+  get consumedAt(): Date | null {
+    return this._consumedAt;
+  }
+
+  get sentAt(): Date | null {
+    return this._sentAt;
+  }
+
+  get createdAt(): Date {
+    return this._createdAt;
+  }
+
+  isUsable(now: Date): boolean {
+    return (
+      this._consumedAt === null && this._expiresAt > now && this._attempts < MAX_RESET_CODE_ATTEMPTS
+    );
+  }
+
+  /**
+   * Counted BEFORE the comparison, and persisted even when the guess is wrong. Counting after a
+   * successful compare would make the limit unenforceable — the attacker only needs the last try.
+   */
+  registerAttempt(): void {
+    this._attempts += 1;
+  }
+
+  consume(now: Date): void {
+    this._consumedAt = now;
+  }
+
+  /** Written only after the WhatsApp send actually succeeded — see RequestPasswordResetUseCase. */
+  markSent(now: Date): void {
+    this._sentAt = now;
+  }
+
+  /** Invalidates a still-live code, so only one is ever usable per user. */
+  invalidate(now: Date): void {
+    this._consumedAt ??= now;
+  }
+}

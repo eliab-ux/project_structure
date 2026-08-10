@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // The base tsconfig pins rootDir to ./src for the build output layout. This config never emits —
+    // it exists so typed linting and the test suite can parse files that live OUTSIDE src (the test
+    // tree and the root-level config files), which would otherwise fail with TS6059.
+    "rootDir": "./",
+    "types": ["jest", "node"]
+  },
+  "include": ["src/**/*", "test/**/*", "mikro-orm.config.ts", "jest.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}
