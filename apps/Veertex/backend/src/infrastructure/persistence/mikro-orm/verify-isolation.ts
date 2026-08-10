@@ -1,8 +1,8 @@
-import { config as loadEnv } from 'dotenv';
+import { loadEnvFiles } from '../../../config/load-env';
 import { Client } from 'pg';
 import { DEFAULT_ISOLATION_ROLES, verifyIsolationInvariants } from '../isolation-invariants';
 
-loadEnv({ override: false });
+loadEnvFiles();
 
 /**
  * `npm run verify:isolation` — checks that the database still satisfies the assumptions the F1

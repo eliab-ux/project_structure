@@ -1,9 +1,9 @@
-import { config as loadEnv } from 'dotenv';
+import { loadEnvFiles } from '../../../config/load-env';
 import { MikroORM } from '@mikro-orm/postgresql';
 import { Migrator } from '@mikro-orm/migrations';
 import { defineConfig } from '@mikro-orm/postgresql';
 
-loadEnv({ override: false });
+loadEnvFiles();
 
 /**
  * Runs pending migrations once, then exits. Called by the deploy (`npm run migrate:prod`) BEFORE

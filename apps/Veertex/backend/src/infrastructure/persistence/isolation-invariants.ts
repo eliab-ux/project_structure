@@ -95,6 +95,22 @@ export async function verifyIsolationInvariants(
         detail: `Papel "${roleName}" tem BYPASSRLS — todo o isolamento entre contas fica decorativo.`,
       });
     }
+    // CREATEDB e CREATEROLE não furam o RLS diretamente, mas dão o caminho: com CREATEROLE um papel
+    // se concede BYPASSRLS a si mesmo, e com CREATEDB cria um banco onde é dono de tudo. São
+    // escalada de privilégio em um passo, e o `001_create_roles.sql` os nega explicitamente — este
+    // invariante existe para detectar quando alguém os devolve.
+    if (row.rolcreatedb === true) {
+      violations.push({
+        check: 'roles',
+        detail: `Papel "${roleName}" tem CREATEDB — pode criar um banco onde é dono de todas as tabelas.`,
+      });
+    }
+    if (row.rolcreaterole === true) {
+      violations.push({
+        check: 'roles',
+        detail: `Papel "${roleName}" tem CREATEROLE — pode conceder BYPASSRLS a si mesmo.`,
+      });
+    }
   }
 
   // ── D/E. RLS ligado e com policy em toda tabela de tenant ─────────────────────────────────

@@ -1,4 +1,4 @@
-import { config as loadEnv } from 'dotenv';
+import { loadEnvFiles } from '../../../config/load-env';
 
 /**
  * Side-effect module: makes an operator CLI connect as the OWNER role.
@@ -16,7 +16,7 @@ import { config as loadEnv } from 'dotenv';
  *
  * `override: false` keeps a value exported in the shell winning over the file — what a deploy needs.
  */
-loadEnv({ override: false });
+loadEnvFiles();
 
 if (process.env.DATABASE_URL_MIGRATIONS) {
   process.env.DATABASE_URL = process.env.DATABASE_URL_MIGRATIONS;

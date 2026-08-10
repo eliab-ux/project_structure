@@ -1,4 +1,4 @@
-import { config as loadEnv } from 'dotenv';
+import { loadEnvFiles } from '../src/config/load-env';
 
 /**
  * Carrega o `.env` antes de qualquer teste.
@@ -13,4 +13,4 @@ import { config as loadEnv } from 'dotenv';
  * `override: false` mantém uma variável exportada no shell — ou injetada pelo CI — ganhando do
  * arquivo, que é o comportamento que um pipeline espera.
  */
-loadEnv({ override: false });
+loadEnvFiles();

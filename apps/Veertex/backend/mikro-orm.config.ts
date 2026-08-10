@@ -15,11 +15,11 @@
  *      tenants — which is exactly the power the runtime role must never have.
  * See `deploy/sql/001_create_roles.sql`.
  */
-import { config as loadEnv } from 'dotenv';
+import { loadEnvFiles } from './src/config/load-env';
 import { defineConfig } from '@mikro-orm/postgresql';
 import { Migrator } from '@mikro-orm/migrations';
 
-loadEnv({ override: false });
+loadEnvFiles();
 
 const clientUrl = process.env.DATABASE_URL_MIGRATIONS ?? process.env.DATABASE_URL;
 if (!clientUrl) {
