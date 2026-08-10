@@ -18,6 +18,10 @@ import {
 } from '../../../../user/application/ports/output/user-repository.port';
 import { InvalidCredentialsException } from '../../../../user/domain/exceptions/user-exceptions';
 import { UserDto } from '../../../../user/application/dto/user.dto';
+import {
+  GetEffectiveModulesQuery,
+  GetEffectiveModulesUseCase,
+} from '../../../../module/application/use-cases/get-effective-modules/get-effective-modules.use-case';
 import { AuthResultDto } from '../../dto/auth-result.dto';
 import { PASSWORD_HASHER, PasswordHasherPort } from '../../ports/output/password-hasher.port';
 import { TENANT_SCOPE, TenantScopePort } from '../../ports/output/tenant-scope.port';
@@ -68,6 +72,7 @@ export class LoginUseCase implements UseCase<LoginCommand, AuthResultDto> {
     @Inject(PASSWORD_HASHER) private readonly hasher: PasswordHasherPort,
     @Inject(TOKEN_SERVICE) private readonly tokens: TokenServicePort,
     @Inject(TENANT_SCOPE) private readonly tenantScope: TenantScopePort,
+    private readonly getEffectiveModules: GetEffectiveModulesUseCase,
   ) {}
 
   async execute(command: LoginCommand): Promise<AuthResultDto> {
@@ -108,6 +113,13 @@ export class LoginUseCase implements UseCase<LoginCommand, AuthResultDto> {
     const role = await this.roles.findById(RoleId.from(user.roleId));
     const permissions = role ? [...role.permissions.values] : [];
 
+    // `plano ∩ conta`, resolvido aqui e gravado no token. É o que o ModuleGuard vai consultar em
+    // toda requisição — ele não consegue ler `account_modules` por si só (roda antes da transação
+    // que carrega o escopo do RLS).
+    const modules = await this.getEffectiveModules.execute(
+      new GetEffectiveModulesQuery(found.accountId),
+    );
+
     user.registerSuccessfulLogin();
     await this.users.save(user);
 
@@ -116,6 +128,7 @@ export class LoginUseCase implements UseCase<LoginCommand, AuthResultDto> {
       accountId: found.accountId,
       roleId: user.roleId,
       permissions,
+      modules,
     });
 
     this.logger.log('Usuário autenticado', { userId: user.id.value, accountId: found.accountId });
@@ -125,6 +138,7 @@ export class LoginUseCase implements UseCase<LoginCommand, AuthResultDto> {
       user: UserDto.fromDomain(user),
       accountId: found.accountId,
       permissions,
+      modules,
     };
   }
 }

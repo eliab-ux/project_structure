@@ -8,6 +8,7 @@ import { JwtTokenService } from './jwt-token.service';
 import { TenantContextService } from './tenant-context.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PermissionGuard } from './guards/permission.guard';
+import { ModuleGuard } from './guards/module.guard';
 
 /**
  * Global so every controller can use the guards without re-importing, and so TenantContextService
@@ -25,6 +26,7 @@ import { PermissionGuard } from './guards/permission.guard';
     { provide: TENANT_SCOPE, useExisting: TenantContextService },
     JwtAuthGuard,
     PermissionGuard,
+    ModuleGuard,
   ],
   exports: [
     TOKEN_SERVICE,
@@ -33,6 +35,7 @@ import { PermissionGuard } from './guards/permission.guard';
     TenantContextService,
     JwtAuthGuard,
     PermissionGuard,
+    ModuleGuard,
   ],
 })
 export class SecurityModule {}

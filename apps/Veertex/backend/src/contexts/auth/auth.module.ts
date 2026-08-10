@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ModuleModule } from '../module/module.module';
 import { LoginUseCase } from './application/use-cases/login/login.use-case';
 import { RefreshTokenUseCase } from './application/use-cases/refresh/refresh-token.use-case';
 import { GetMeUseCase } from './application/use-cases/me/get-me.use-case';
@@ -11,6 +12,8 @@ import { ChangePasswordUseCase } from './application/use-cases/change-password/c
  * RESET_CODE_MESSENGER from the @Global WhatsAppModule; the repositories from RepositoriesModule.
  */
 @Module({
+  // Login e refresh resolvem `plano ∩ conta` para gravar no token.
+  imports: [ModuleModule],
   providers: [
     LoginUseCase,
     RefreshTokenUseCase,

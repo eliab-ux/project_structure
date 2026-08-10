@@ -15,6 +15,10 @@ import {
   AccountRepositoryPort,
 } from '../../../../account/application/ports/output/account-repository.port';
 import { AccountId } from '../../../../account/domain/value-objects/account-id.vo';
+import {
+  GetEffectiveModulesQuery,
+  GetEffectiveModulesUseCase,
+} from '../../../../module/application/use-cases/get-effective-modules/get-effective-modules.use-case';
 import { UnauthorizedTokenException } from '../../../domain/exceptions/invalid-token.exception';
 import { RefreshResultDto } from '../../dto/auth-result.dto';
 import { TENANT_SCOPE, TenantScopePort } from '../../ports/output/tenant-scope.port';
@@ -42,6 +46,7 @@ export class RefreshTokenUseCase implements UseCase<RefreshTokenCommand, Refresh
     @Inject(ACCOUNT_REPOSITORY) private readonly accounts: AccountRepositoryPort,
     @Inject(TOKEN_SERVICE) private readonly tokens: TokenServicePort,
     @Inject(TENANT_SCOPE) private readonly tenantScope: TenantScopePort,
+    private readonly getEffectiveModules: GetEffectiveModulesUseCase,
   ) {}
 
   async execute(command: RefreshTokenCommand): Promise<RefreshResultDto> {
@@ -65,11 +70,18 @@ export class RefreshTokenUseCase implements UseCase<RefreshTokenCommand, Refresh
     const role = await this.roles.findById(RoleId.from(user.roleId));
     const permissions = role ? [...role.permissions.values] : [];
 
+    // Relidos do banco, como as permissões — é justamente isto que limita a defasagem da Opção A:
+    // um módulo ligado ou desligado agora vale no próximo refresh, e não só no próximo login.
+    const modules = await this.getEffectiveModules.execute(
+      new GetEffectiveModulesQuery(payload.accountId),
+    );
+
     return this.tokens.issueForUser({
       sub: user.id.value,
       accountId: payload.accountId,
       roleId: user.roleId,
       permissions,
+      modules,
     });
   }
 }

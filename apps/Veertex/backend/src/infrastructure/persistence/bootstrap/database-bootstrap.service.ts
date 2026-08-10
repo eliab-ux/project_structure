@@ -8,6 +8,7 @@ import {
   IsolationRoles,
   verifyIsolationInvariants,
 } from '../isolation-invariants';
+import { seedModuleCatalog } from './module-catalog.seed';
 import { seedPlanCatalog } from './plan-catalog.seed';
 
 /**
@@ -181,11 +182,19 @@ export class DatabaseBootstrapService implements OnApplicationBootstrap {
   }
 
   private async seed(client: Client): Promise<void> {
-    const result = await seedPlanCatalog(
-      async (sql, params) => (await client.query(sql, params as unknown[])).rows,
-    );
+    const query = async (sql: string, params?: unknown[]) =>
+      (await client.query(sql, params as unknown[])).rows;
+
+    // Módulos ANTES de planos: `plan.limits.modules` referencia códigos de módulo, e semear na
+    // ordem inversa produziria, num banco novo, um plano apontando para módulo que ainda não existe.
+    const modules = await seedModuleCatalog(query);
     this.logger.log(
-      `Catálogo de planos reconciliado: ${result.inserted} inserido(s), ${result.unchanged} já existente(s).`,
+      `Catálogo de módulos reconciliado: ${modules.inserted} inserido(s), ${modules.updated} atualizado(s).`,
+    );
+
+    const plans = await seedPlanCatalog(query);
+    this.logger.log(
+      `Catálogo de planos reconciliado: ${plans.inserted} inserido(s), ${plans.unchanged} já existente(s).`,
     );
   }
 }

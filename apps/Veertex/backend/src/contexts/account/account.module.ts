@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ModuleModule } from '../module/module.module';
 import { RoleModule } from '../role/role.module';
 import { CreateAccountUseCase } from './application/use-cases/create-account/create-account.use-case';
 import { GetCurrentAccountUseCase } from './application/use-cases/get-current-account/get-current-account.use-case';
@@ -10,7 +11,7 @@ import { RequestAccountCancellationUseCase } from './application/use-cases/reque
  * RoleModule is imported for `SeedDefaultRolesUseCase`, which onboarding calls directly.
  */
 @Module({
-  imports: [RoleModule],
+  imports: [RoleModule, ModuleModule],
   providers: [
     CreateAccountUseCase,
     GetCurrentAccountUseCase,

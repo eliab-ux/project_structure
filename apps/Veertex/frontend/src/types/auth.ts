@@ -37,6 +37,28 @@ export interface LoginResponse {
   user: AuthUser;
   accountId: string;
   permissions: string[];
+  /** `plano ∩ conta` — os módulos que esta conta pode usar agora. */
+  modules: string[];
+}
+
+export interface AccountModule {
+  code: string;
+  name: string;
+  description: string;
+  dependsOn: string[];
+  core: boolean;
+  availableInPlan: boolean;
+  active: boolean;
+  /** Módulos ativos que dependem deste — impedem a desativação. */
+  blockingDependents: string[];
+  /** Dependências inativas — impedem a ativação. */
+  missingDependencies: string[];
+}
+
+export interface ToggleModuleResponse {
+  moduleCode: string;
+  active: boolean;
+  requiresTokenRefresh: boolean;
 }
 
 export interface MeResponse {

@@ -21,6 +21,15 @@ export interface AuthTokenPayload {
   roleId: string;
   /** Effective permission strings, including wildcards (`*`, `companies.*`). */
   permissions: string[];
+  /**
+   * Effective module codes — `plano ∩ conta`, já intersectado quando o token foi emitido.
+   *
+   * Viaja no token pelo mesmo motivo das permissões, e não por simetria: guards rodam ANTES da
+   * transação que carrega o escopo do RLS, então um guard não consegue ler `account_modules`. A
+   * consequência aceita é a defasagem de até um ciclo de access token; `ToggleModule` devolve
+   * `requiresTokenRefresh` para que o frontend a elimine no caso que mais incomoda.
+   */
+  modules: string[];
 }
 
 export interface IssuedTokens {

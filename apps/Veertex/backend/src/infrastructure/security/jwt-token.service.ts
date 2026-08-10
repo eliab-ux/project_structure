@@ -63,21 +63,30 @@ export class JwtTokenService implements TokenServicePort, OnModuleInit {
 
   private verifyUser(token: string, secret: string, expected: TokenKind): AuthTokenPayload {
     const claims = this.verify(token, secret, expected);
-    const { sub, accountId, roleId, permissions } = claims as unknown as AuthTokenPayload;
+    const { sub, accountId, roleId, permissions, modules } = claims as unknown as AuthTokenPayload;
 
     // A token without accountId is unusable: it would produce an unscoped request, and an unscoped
     // request under RLS silently reads nothing — a confusing failure instead of a clear refusal.
-    if (!sub || !accountId || !roleId || !Array.isArray(permissions)) {
+    //
+    // `modules` é exigido desde a F2. Um token emitido antes dela não o tem e é REJEITADO — de
+    // propósito: aceitá-lo como "sem módulo nenhum" deixaria o usuário logado numa sessão que falha
+    // em toda rota de módulo sem explicar por quê, e tratá-lo como "todos os módulos" seria abrir a
+    // porta. Na prática, todo mundo reloga no deploy da F2.
+    if (!sub || !accountId || !roleId || !Array.isArray(permissions) || !Array.isArray(modules)) {
       throw new UnauthorizedTokenException();
     }
+
+    const strings = (values: unknown[]): string[] =>
+      values.filter((item): item is string => typeof item === 'string');
 
     return {
       sub,
       accountId,
       roleId,
-      // Defensive copy of a value that came off the wire: nothing downstream should be able to
+      // Defensive copy of values that came off the wire: nothing downstream should be able to
       // mutate the guard's view of what this request may do.
-      permissions: permissions.filter((item): item is string => typeof item === 'string'),
+      permissions: strings(permissions),
+      modules: strings(modules),
     };
   }
 

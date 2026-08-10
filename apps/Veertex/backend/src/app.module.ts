@@ -16,6 +16,7 @@ import { TenantTransactionInterceptor } from './infrastructure/http/interceptors
 import { PlanModule } from './contexts/plan/plan.module';
 import { AccountModule } from './contexts/account/account.module';
 import { CompanyModule } from './contexts/company/company.module';
+import { ModuleModule } from './contexts/module/module.module';
 import { RoleModule } from './contexts/role/role.module';
 import { UserModule } from './contexts/user/user.module';
 import { AuthModule } from './contexts/auth/auth.module';
@@ -40,6 +41,7 @@ import { AuthModule } from './contexts/auth/auth.module';
     PlanModule,
     AccountModule,
     CompanyModule,
+    ModuleModule,
     RoleModule,
     UserModule,
     AuthModule,
