@@ -2,7 +2,6 @@
 // carregue o .env. Mesmo motivo do create-account.cli.ts.
 import './cli-owner-connection';
 
-import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { Client } from 'pg';
 import { AppModule } from '../../../app.module';
@@ -12,6 +11,7 @@ import {
   ACCOUNT_REPOSITORY,
   AccountRepositoryPort,
 } from '../../../contexts/account/application/ports/output/account-repository.port';
+import { runInRequestContext } from './cli-request-context';
 
 /**
  * `npm run seed:dev` — duas contas de desenvolvimento com dados plausíveis.
@@ -27,6 +27,12 @@ import {
  * Reusa `CreateAccountUseCase` em vez de INSERTs diretos: hash de senha, papéis padrão e as
  * invariantes de domínio ficam com uma implementação só. Um seed que montasse as linhas na mão
  * envelheceria em silêncio na primeira regra nova.
+ *
+ * ⚠️ Os CNPJs abaixo são fictícios mas têm DÍGITO VERIFICADOR VÁLIDO, e precisam ter. O VO
+ * `Document` valida os dois dígitos no construtor, então um CNPJ inventado à mão (`4455566600017`
+ * com um dígito qualquer no fim) derruba o seed inteiro com "CNPJ inválido" — foi o que aconteceu
+ * na primeira execução real deste comando. Ao acrescentar uma conta aqui, gere o número com o
+ * cálculo dos dígitos; não o digite.
  */
 const DEV_ACCOUNTS: CreateAccountCommand[] = [
   new CreateAccountCommand(
@@ -57,10 +63,10 @@ const DEV_ACCOUNTS: CreateAccountCommand[] = [
   ),
   new CreateAccountCommand(
     'Kaza Tem (dev)',
-    '44555666000172',
+    '44555666000181',
     'ESSENCIAL',
     'Kaza Tem Comércio Ltda',
-    '44555666000172',
+    '44555666000181',
     'SIMPLES',
     {
       street: 'Rua das Palmeiras',
@@ -142,24 +148,35 @@ async function run(): Promise<void> {
     );
   }
 
+  // `logger: ['error','warn']` cala o banner de boot do Nest, que enterraria o resultado sob
+  // dezenas de linhas de rotas mapeadas. O preço é que `Logger.log()` também some — o nível `log`
+  // está fora da lista —, e por isso o retorno ao operador sai por `console.log` daqui para baixo.
+  // A versão anterior usava `logger.log()` e o comando rodava sem imprimir NADA sobre as contas:
+  // o seed parecia não ter feito nada, e só o banco dizia o contrário.
   const app = await NestFactory.createApplicationContext(AppModule, { logger: ['error', 'warn'] });
-  const logger = new Logger('seed:dev');
 
   try {
     const createAccount = app.get(CreateAccountUseCase);
     const accounts = app.get<AccountRepositoryPort>(ACCOUNT_REPOSITORY);
 
+    // Um contexto POR CONTA, não um só para o laço inteiro: cada conta é uma unidade de trabalho
+    // independente, e compartilhar identity map entre elas faria a segunda enxergar as entidades
+    // pendentes da primeira — justamente o vazamento entre tenants que este seed existe para expor.
     for (const command of DEV_ACCOUNTS) {
-      // Idempotência por documento, não por try/catch no erro de unicidade: rodar o seed duas vezes
-      // é o caso NORMAL (toda vez que alguém recria o banco local), não uma exceção a tratar.
-      const existing = await accounts.findByDocument(command.accountDocument);
-      if (existing) {
-        logger.log(`Conta "${command.accountName}" já existe — nada a fazer.`);
-        continue;
-      }
+      await runInRequestContext(app, async () => {
+        // Idempotência por documento, não por try/catch no erro de unicidade: rodar o seed duas
+        // vezes é o caso NORMAL (toda vez que alguém recria o banco local), não uma exceção.
+        const existing = await accounts.findByDocument(command.accountDocument);
+        if (existing) {
+          // eslint-disable-next-line no-console
+          console.log(`  • "${command.accountName}" já existe — nada a fazer.`);
+          return;
+        }
 
-      const result = await createAccount.execute(command);
-      logger.log(`Conta "${command.accountName}" criada (${result.account.id}).`);
+        const result = await createAccount.execute(command);
+        // eslint-disable-next-line no-console
+        console.log(`  • "${command.accountName}" criada (${result.account.id}).`);
+      });
     }
 
     // eslint-disable-next-line no-console

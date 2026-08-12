@@ -24,6 +24,7 @@ import {
 } from '../../../../module/application/use-cases/get-effective-modules/get-effective-modules.use-case';
 import { AuthResultDto } from '../../dto/auth-result.dto';
 import { PASSWORD_HASHER, PasswordHasherPort } from '../../ports/output/password-hasher.port';
+import { LOGIN_THROTTLE, LoginThrottlePort } from '../../ports/output/login-throttle.port';
 import { TENANT_SCOPE, TenantScopePort } from '../../ports/output/tenant-scope.port';
 import { TOKEN_SERVICE, TokenServicePort } from '../../ports/output/token-service.port';
 
@@ -70,18 +71,47 @@ export class LoginUseCase implements UseCase<LoginCommand, AuthResultDto> {
     @Inject(ACCOUNT_REPOSITORY) private readonly accounts: AccountRepositoryPort,
     @Inject(ROLE_REPOSITORY) private readonly roles: RoleRepositoryPort,
     @Inject(PASSWORD_HASHER) private readonly hasher: PasswordHasherPort,
+    @Inject(LOGIN_THROTTLE) private readonly throttle: LoginThrottlePort,
     @Inject(TOKEN_SERVICE) private readonly tokens: TokenServicePort,
     @Inject(TENANT_SCOPE) private readonly tenantScope: TenantScopePort,
     private readonly getEffectiveModules: GetEffectiveModulesUseCase,
   ) {}
 
+  /**
+   * O atraso da camada 2. `setTimeout` e não espera ocupada: o processo continua atendendo as outras
+   * requisições enquanto esta espera — atraso que travasse o event loop seria a negação de serviço
+   * que o desenho existe para evitar.
+   */
+  private static sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
   async execute(command: LoginCommand): Promise<AuthResultDto> {
+    // ── Camada 1: teto de falhas por IP ─────────────────────────────────────────────────────────
+    // Primeiro de tudo, antes de tocar o banco: é a recusa mais barata, e é o ponto de ter um teto.
+    // Independe de qual e-mail foi tentado, então não diz nada sobre quais contas existem.
+    this.throttle.assertIpWithinLimit(command.ip);
+
+    // ── Camada 2: atraso progressivo por credencial ─────────────────────────────────────────────
+    // Aplicado ANTES do lookup, e a ordem é a garantia anti-enumeração: um e-mail inexistente espera
+    // exatamente o mesmo tempo que um existente com o mesmo histórico de falhas. Se o atraso viesse
+    // depois de saber que o usuário existe, o tempo de resposta passaria a revelar quais e-mails
+    // estão cadastrados — e desfaria o desenho que o resto deste método mantém (mesma exceção, mesma
+    // mensagem, comparação contra hash falso para igualar o tempo).
+    const delay = this.throttle.delayForCredential(command.email);
+    if (delay > 0) {
+      await LoginUseCase.sleep(delay);
+    }
+
     const email = Email.create(command.email);
     const found = await this.users.findForAuthentication(email);
 
     if (!found) {
       // Same work, same time, same exception as a wrong password.
       await this.hasher.compare(command.password, LoginUseCase.DUMMY_HASH);
+      this.throttle.registerFailure(command.email, command.ip);
       this.logger.warn('Falha na autenticação', { reason: 'unknown_email', ip: command.ip });
       throw new InvalidCredentialsException();
     }
@@ -92,6 +122,7 @@ export class LoginUseCase implements UseCase<LoginCommand, AuthResultDto> {
     const { user } = found;
     const matches = await this.hasher.compare(command.password, user.passwordHashForPersistence());
     if (!matches) {
+      this.throttle.registerFailure(command.email, command.ip);
       this.logger.warn('Falha na autenticação', {
         reason: 'invalid_password',
         userId: user.id.value,
@@ -112,6 +143,10 @@ export class LoginUseCase implements UseCase<LoginCommand, AuthResultDto> {
 
     const role = await this.roles.findById(RoleId.from(user.roleId));
     const permissions = role ? [...role.permissions.values] : [];
+
+    // Autenticação concluída. Zera o atraso desta credencial — mas o teto por IP NÃO é perdoado por
+    // um acerto: um atacante que varre milhares de senhas e acerta uma continuaria varrendo as outras.
+    this.throttle.registerSuccess(command.email);
 
     // `plano ∩ conta`, resolvido aqui e gravado no token. É o que o ModuleGuard vai consultar em
     // toda requisição — ele não consegue ler `account_modules` por si só (roda antes da transação

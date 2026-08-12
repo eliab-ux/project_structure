@@ -17,5 +17,17 @@ export interface PasswordResetCodeRepositoryPort {
   /** Invalidates every live code of the user — only one may be usable at a time. */
   invalidateAllForUser(userId: string, now: Date): Promise<void>;
 
+  /**
+   * Conta uma tentativa errada de forma que ela SOBREVIVA ao rollback da requisição, e devolve o
+   * total já gravado.
+   *
+   * Está no port, e não escondido na implementação, porque é uma exigência de comportamento e não
+   * um detalhe de persistência: quem lê a interface precisa saber que esta escrita é independente
+   * da transação em curso. Uma tentativa errada termina em exceção, a exceção derruba a transação
+   * da requisição, e um contador gravado dentro dela seria desfeito — que foi exatamente o que
+   * acontecia. O limite de cinco tentativas existia no código e não existia no banco.
+   */
+  registerFailedAttempt(codeId: string): Promise<number>;
+
   save(code: PasswordResetCode): Promise<PasswordResetCode>;
 }

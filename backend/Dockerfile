@@ -1,9 +1,9 @@
 # VEERTEX backend (NestJS + Fastify) — build a partir da RAIZ do monorepo.
-# No Dokploy: Build Type = Dockerfile | Dockerfile Path = apps/Veertex/backend/Dockerfile
+# No Dokploy: Build Type = Dockerfile | Dockerfile Path = backend/Dockerfile
 #             Docker Context Path = /        (a raiz do repo — sem isso os COPY falham)
 #             Domains: Host <sub>.<dominio> | Path /api | Strip Path OFF | Container Port 3020
 #
-# Depende de @gitspread/domain-primitives e @gitspread/shared-kernel (precisam ser buildados, pois
+# Depende de @veertex/domain-primitives e @veertex/shared-kernel (precisam ser buildados, pois
 # seus package.json apontam main: dist/index.js). O backend usa imports relativos, então
 # `node dist/main` roda sem tsconfig-paths.
 
@@ -15,16 +15,16 @@ WORKDIR /repo
 COPY package.json package-lock.json tsconfig.json tsconfig.base.json ./
 COPY packages/domain-primitives/package.json ./packages/domain-primitives/
 COPY packages/shared-kernel/package.json ./packages/shared-kernel/
-COPY apps/Veertex/backend/package.json ./apps/Veertex/backend/
-COPY apps/Veertex/frontend/package.json ./apps/Veertex/frontend/
+COPY backend/package.json ./backend/
+COPY frontend/package.json ./frontend/
 RUN npm ci
 
 COPY packages ./packages
-COPY apps/Veertex/backend ./apps/Veertex/backend
+COPY backend ./backend
 
-RUN npm run build -w @gitspread/domain-primitives \
- && npm run build -w @gitspread/shared-kernel \
- && npm run build -w @gitspread/veertex-backend
+RUN npm run build -w @veertex/domain-primitives \
+ && npm run build -w @veertex/shared-kernel \
+ && npm run build -w @veertex/backend
 
 # ---------- runtime ----------
 FROM node:22-alpine AS runner
@@ -34,10 +34,10 @@ ENV NODE_ENV=production
 COPY --from=builder /repo/node_modules ./node_modules
 COPY --from=builder /repo/package.json ./package.json
 COPY --from=builder /repo/packages ./packages
-COPY --from=builder /repo/apps/Veertex/backend/dist ./apps/Veertex/backend/dist
-COPY --from=builder /repo/apps/Veertex/backend/package.json ./apps/Veertex/backend/package.json
+COPY --from=builder /repo/backend/dist ./backend/dist
+COPY --from=builder /repo/backend/package.json ./backend/package.json
 
-WORKDIR /repo/apps/Veertex/backend
+WORKDIR /repo/backend
 EXPOSE 3020
 # Healthcheck em 127.0.0.1 (não localhost — evita IPv6 no Alpine)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

@@ -6,8 +6,13 @@
 # tenha editado nada. Apareceu na prática depois de um rebase.
 #
 # `text=auto eol=lf` normaliza no índice (como já acontecia) E mantém LF na saída, o que elimina a
-# conversão. Escopado ao app de propósito: os outros apps do monorepo têm trabalho não commitado, e
-# um .gitattributes na raiz reescreveria o fim de linha deles no próximo checkout.
+# conversão.
+#
+# ⚠️ ESCOPADO A apps/Veertex/ DE PROPÓSITO, e não na raiz do monorepo. Os outros cinco apps (Batuta,
+# Ecoa, Kaza Tem, EMDR Remoto, Plano Diário) têm trabalho não commitado em disco, e um .gitattributes
+# na raiz reescreveria o fim de linha de todos eles no próximo checkout — produzindo um diff gigante
+# em código que ninguém tocou. O aviso estava escrito aqui antes de o Veertex voltar para o monorepo,
+# e valeu: o lint acusou "Delete ␍" em cada linha logo depois da transferência.
 * text=auto eol=lf
 
 # Binários — nunca converter.

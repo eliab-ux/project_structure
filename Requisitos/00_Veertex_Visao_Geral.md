@@ -1,7 +1,7 @@
 # VERTEX — Visão Geral do Sistema (documento de apoio para Claude Code)
 
 > **Papel deste documento:** contexto obrigatório antes de trabalhar em QUALQUER módulo
-> do Veertex. Os documentos por módulo (em `apps/Veertex/Requisitos/`) detalham cada entrega; este
+> do Veertex. Os documentos por módulo (em `Requisitos/`) detalham cada entrega; este
 > define o que o sistema É, as decisões que valem para todos, e o vocabulário.
 > **Constituição técnica: `CLAUDE.md` do monorepo** — tudo aqui respeita e complementa;
 > em conflito, avisar o Eliab antes de codificar.
@@ -155,9 +155,9 @@ expedição→`fulfillment`/`shipment` · etiqueta→`shipping_label` · naturez
 `operation_nature` · ficha técnica→`bill_of_materials` · ordem de produção→
 `production_order` · etapa de produção→`production_step`.
 
-## 8. Documentos por módulo (apps/Veertex/Requisitos/)
+## 8. Documentos por módulo (Requisitos/)
 
-Cada módulo terá `apps/Veertex/Requisitos/NN_Veertex_<Modulo>.md` (numerados na ordem de construção: 00_Visao_Geral, 01_Core, 02_Vnd, 03_Est, 04_Rot, 05_Fin, 06_Cob, 07_Fis, 08_Can, 09_Exp) com: objetivo, papéis envolvidos,
+Cada módulo terá `Requisitos/NN_Veertex_<Modulo>.md` (numerados na ordem de construção: 00_Visao_Geral, 01_Core, 02_Vnd, 03_Est, 04_Rot, 05_Fin, 06_Cob, 07_Fis, 08_Can, 09_Exp) com: objetivo, papéis envolvidos,
 regras de negócio (com exemplos numéricos quando houver — comissões têm massa de teste
 real), entidades e relações (descritivas; SQL só na fatia de modelagem aprovada),
 casos de uso, telas, integrações, critérios de aceite. **Marketplace (CAN) e Expedição
@@ -185,10 +185,10 @@ o e-commerce Kaza Tem).**
 ## 10. Estrutura de pastas (DEFINIDA pelo Eliab — 08/ago)
 
 - **Raiz do monorepo:** `C:\HD\Eliab\Veertex\`
-- **TUDO do Veertex vive em `apps/Veertex/`** (`backend/` e `frontend/` dentro dela,
+- **TUDO do Veertex vive em ``** (`backend/` e `frontend/` dentro dela,
   seguindo o padrão do CLAUDE.md).
-- **Fora de `apps/Veertex/` ficam APENAS os módulos compartilhados** (`packages/*` —
+- **Fora de `` ficam APENAS os módulos compartilhados** (`packages/*` —
   domain-primitives, shared-kernel etc.).
-- Documentos de módulo: `apps/Veertex/Requisitos/NN_Veertex_<Modulo>.md`.
+- Documentos de módulo: `Requisitos/NN_Veertex_<Modulo>.md`.
 - Grafia oficial do nome: **Veertex** (com dois "e"). Corrigir qualquer ocorrência
   de "Vertex" em código/docs.

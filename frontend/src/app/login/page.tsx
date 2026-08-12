@@ -1,5 +1,6 @@
 'use client';
 
+import { MESA } from 'src/constants/routes';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -45,7 +46,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await signIn(values.email, values.password);
-      router.replace('/dashboard');
+      router.replace(MESA);
     } catch (error) {
       // The API answers the same "E-mail ou senha inválidos" for an unknown e-mail and a wrong
       // password, and this shows it verbatim — distinguishing them here would undo that.

@@ -14,12 +14,12 @@ import { RoleId } from '../../../../role/domain/value-objects/role-id.vo';
 import { RoleNotFoundException } from '../../../../role/domain/exceptions/role-exceptions';
 import { UserId } from '../../../domain/value-objects/user-id.vo';
 import {
-  LastAdministratorException,
   UserAlreadyExistsException,
   UserNotFoundException,
 } from '../../../domain/exceptions/user-exceptions';
 import { USER_REPOSITORY, UserRepositoryPort } from '../../ports/output/user-repository.port';
 import { UserDto } from '../../dto/user.dto';
+import { RoleAdministrationPolicy } from '../../../../role/application/policies/role-administration.policy';
 
 export class UpdateUserCommand {
   constructor(
@@ -43,6 +43,7 @@ export class UpdateUserUseCase implements UseCase<UpdateUserCommand, UserDto> {
     @Inject(USER_REPOSITORY) private readonly users: UserRepositoryPort,
     @Inject(ROLE_REPOSITORY) private readonly roles: RoleRepositoryPort,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
+    private readonly roleAdministration: RoleAdministrationPolicy,
   ) {}
 
   async execute(command: UpdateUserCommand): Promise<UserDto> {
@@ -80,15 +81,14 @@ export class UpdateUserUseCase implements UseCase<UpdateUserCommand, UserDto> {
         throw new RoleNotFoundException();
       }
 
-      const currentRole = await this.roles.findById(RoleId.from(user.roleId));
-      // Demoting the last active administrator would leave nobody able to manage users or roles,
-      // and no path inside the product to undo it.
-      if (currentRole?.isAdministrative && !role.isAdministrative) {
-        const administrators = await this.users.countActiveAdministrators();
-        if (administrators <= 1) {
-          throw new LastAdministratorException();
-        }
-      }
+      // Simulado antes de trocar. A checagem anterior comparava `isAdministrative` (curinga `*`) do
+      // papel atual com o do novo, e contava usuários com curinga — cega para o último usuário de um
+      // papel com `roles.update` explícito. Ver `RoleAdministrationPolicy`.
+      await this.roleAdministration.assertSurvives({
+        kind: 'user-role',
+        userId: user.id.value,
+        roleId: role.id.value,
+      });
 
       user.changeRole(role.id.value);
     }

@@ -5,8 +5,6 @@ export class PlanDto {
   id!: string;
   code!: string;
   name!: string;
-  maxCompanies!: number | null;
-  maxUsers!: number | null;
   modules!: string[];
 
   static fromDomain(plan: Plan): PlanDto {
@@ -14,8 +12,6 @@ export class PlanDto {
     dto.id = plan.id;
     dto.code = plan.code;
     dto.name = plan.name;
-    dto.maxCompanies = plan.limits.maxCompanies;
-    dto.maxUsers = plan.limits.maxUsers;
     dto.modules = [...plan.limits.modules];
     return dto;
   }

@@ -1,7 +1,7 @@
 # Veertex — backend
 
 NestJS + Fastify + MikroORM sobre PostgreSQL, arquitetura hexagonal (ver `CLAUDE.md` na raiz do
-monorepo e `apps/Veertex/Requisitos/`).
+monorepo e `Requisitos/`).
 
 ## Os dois ambientes
 

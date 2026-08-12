@@ -27,15 +27,13 @@ export const PLAN_CATALOG: readonly PlanCatalogEntry[] = [
     id: '00000000-0000-4000-8000-000000000001',
     code: 'ESSENCIAL',
     name: 'Essencial',
-    limits: { maxCompanies: 1, maxUsers: 5, modules: ['CORE', 'VND', 'EST', 'FIN'] },
+    limits: { modules: ['CORE', 'VND', 'EST', 'FIN'] },
   },
   {
     id: '00000000-0000-4000-8000-000000000002',
     code: 'COMPLETO',
     name: 'Completo',
     limits: {
-      maxCompanies: 3,
-      maxUsers: 20,
       modules: ['CORE', 'VND', 'EST', 'FIN', 'ROT', 'COB', 'FIS'],
     },
   },
@@ -44,8 +42,6 @@ export const PLAN_CATALOG: readonly PlanCatalogEntry[] = [
     code: 'DIGITAL',
     name: 'Digital',
     limits: {
-      maxCompanies: null,
-      maxUsers: null,
       modules: ['CORE', 'VND', 'EST', 'FIN', 'ROT', 'COB', 'FIS', 'CAN', 'EXP'],
     },
   },

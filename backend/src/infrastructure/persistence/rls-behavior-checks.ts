@@ -84,7 +84,7 @@ export async function createRlsFixtures(owner: OwnerQuery): Promise<RlsFixtures>
 
   await owner(
     `insert into plans (id, code, name, limits, active)
-          values ($1, $2, 'Plano de verificação', '{"maxCompanies":null,"maxUsers":null,"modules":["CORE"]}'::jsonb, true)`,
+          values ($1, $2, 'Plano de verificação', '{"modules":["CORE"]}'::jsonb, true)`,
     [randomUUID(), fixtures.planCode],
   );
   const plan = await owner('select id from plans where code = $1', [fixtures.planCode]);

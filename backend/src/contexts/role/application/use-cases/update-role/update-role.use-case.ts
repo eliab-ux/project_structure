@@ -6,12 +6,10 @@ import {
 } from '../../../../../infrastructure/persistence/ports/unit-of-work.port';
 import { PermissionSet } from '../../../domain/value-objects/permission-set.vo';
 import { RoleId } from '../../../domain/value-objects/role-id.vo';
-import {
-  LastAdministrativeRoleException,
-  RoleNotFoundException,
-} from '../../../domain/exceptions/role-exceptions';
+import { RoleNotFoundException } from '../../../domain/exceptions/role-exceptions';
 import { ROLE_REPOSITORY, RoleRepositoryPort } from '../../ports/output/role-repository.port';
 import { RoleDto } from '../../dto/role.dto';
+import { RoleAdministrationPolicy } from '../../policies/role-administration.policy';
 
 export class UpdateRoleCommand {
   constructor(
@@ -31,6 +29,7 @@ export class UpdateRoleUseCase implements UseCase<UpdateRoleCommand, RoleDto> {
   constructor(
     @Inject(ROLE_REPOSITORY) private readonly roles: RoleRepositoryPort,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
+    private readonly roleAdministration: RoleAdministrationPolicy,
   ) {}
 
   async execute(command: UpdateRoleCommand): Promise<RoleDto> {
@@ -46,17 +45,16 @@ export class UpdateRoleUseCase implements UseCase<UpdateRoleCommand, RoleDto> {
     }
 
     if (command.permissions) {
-      const wasAdministrative = role.isAdministrative;
-      role.changePermissions(PermissionSet.create(command.permissions));
+      // Simulado ANTES de aplicar. A checagem anterior comparava `isAdministrative` (ter o curinga
+      // `*`) antes e depois, e contava papéis com curinga — o que deixava passar a remoção do último
+      // papel com `roles.update` EXPLÍCITO, trancando a conta. Ver `RoleAdministrationPolicy`.
+      await this.roleAdministration.assertSurvives({
+        kind: 'role-permissions',
+        roleId: role.id.value,
+        permissions: command.permissions,
+      });
 
-      // Stripping the last administrative role locks everyone out of user and role management, and
-      // nothing inside the product could undo it — only a database edit. Refused.
-      if (wasAdministrative && !role.isAdministrative) {
-        const remaining = await this.roles.countAdministrative();
-        if (remaining <= 1) {
-          throw new LastAdministrativeRoleException();
-        }
-      }
+      role.changePermissions(PermissionSet.create(command.permissions));
     }
 
     return this.uow.execute(async () => {
