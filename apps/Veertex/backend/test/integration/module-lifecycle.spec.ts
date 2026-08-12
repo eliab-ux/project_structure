@@ -177,11 +177,7 @@ describe('Ciclo de vida de módulo — §7.4', () => {
     await owner.query(
       `insert into plans (id, code, name, limits, active)
             values ($1, $2, 'Plano de ciclo de vida', $3::jsonb, true)`,
-      [
-        randomUUID(),
-        planCode,
-        JSON.stringify({ maxCompanies: null, maxUsers: null, modules: PLAN_MODULES }),
-      ],
+      [randomUUID(), planCode, JSON.stringify({ modules: PLAN_MODULES })],
     );
     const plan = await owner.query('select id from plans where code = $1', [planCode]);
 

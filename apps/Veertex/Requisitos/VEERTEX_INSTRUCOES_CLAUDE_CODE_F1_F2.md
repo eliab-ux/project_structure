@@ -2,7 +2,7 @@
 
 > **Escopo deste documento:** desbloquear a verificação da **F1** sem depender da porta
 > externa do Postgres, e executar a **F2** (module / account_module + guard de módulo).
-> **Base normativa:** `CLAUDE.md` (raiz do monorepo) e `apps/Veertex/Requisitos/01_Veertex_Core.md`.
+> **Base normativa:** `CLAUDE.md` (raiz do monorepo) e `Requisitos/01_Veertex_Core.md`.
 > Em conflito, o `CLAUDE.md` prevalece.
 
 ---
@@ -27,7 +27,7 @@
 
 ### Estado atual (ago/2026)
 
-O runner **já existe**: `apps/Veertex/backend/deploy/verify/run-verification.sh` (sh POSIX
+O runner **já existe**: `backend/deploy/verify/run-verification.sh` (sh POSIX
 — a imagem é alpine) + `deploy/verify/README.md`.
 
 **Correção de premissa registrada:** a versão anterior deste documento mandava rodar
@@ -91,7 +91,7 @@ gatilho do precedente de invalidação de tokens. Registrar no ADR.
 
 ### A5. Separação por commit (estrutura, não disciplina)
 
-Hoje `apps/Veertex/` é integralmente untracked na branch `Deploy` (`git ls-files` → 0), F1
+Hoje `` é integralmente untracked na branch `Deploy` (`git ls-files` → 0), F1
 e F2 coexistem na mesma árvore, e isolar a F1 exige mover arquivos para diretório
 temporário — frágil.
 
@@ -163,7 +163,7 @@ deduza a lista a partir dos nomes dos documentos de requisitos.
   guard de papel/permissão (§3.3).
 - **O estado do módulo VAI no JWT** (`modules`, resolvido no login e no refresh) —
   decisão aprovada em 09/08/2026 e registrada em
-  `apps/Veertex/Requisitos/ADR-0001_Modulos_no_JWT.md`. Motivo: os guards rodam **antes**
+  `Requisitos/ADR-0001_Modulos_no_JWT.md`. Motivo: os guards rodam **antes**
   da transação que estabelece o contexto do RLS, então consultar a fonte de verdade dentro
   do guard exigiria abrir transação própria em todo request. Alternativas B e C descartadas
   no ADR.

@@ -23,7 +23,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     // DomainException → the business message is safe to expose. The status follows the semantics
     // encoded in the exception's NAME, which keeps the domain free of HTTP concepts:
-    //   *NotFound* → 404, *InvalidCredentials*/*Unauthorized* → 401, *Forbidden* → 403, else 400.
+    //   *NotFound* → 404, *InvalidCredentials*/*Unauthorized* → 401, *Forbidden* → 403,
+    //   *TooMany* → 429, else 400.
     if (exception instanceof DomainException) {
       const name = exception.constructor?.name ?? '';
       let status = 400;
@@ -33,6 +34,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         status = 401;
       } else if (/Forbidden/i.test(name)) {
         status = 403;
+      } else if (/TooMany/i.test(name)) {
+        // 429, e sem `Retry-After`: o cabeçalho diria ao atacante exatamente quando voltar, e a
+        // janela é curta o bastante para um humano simplesmente tentar de novo.
+        status = 429;
       }
       response.status(status).send({ statusCode: status, message: exception.message });
       return;

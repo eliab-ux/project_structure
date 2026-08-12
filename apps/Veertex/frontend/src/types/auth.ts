@@ -65,4 +65,12 @@ export interface MeResponse {
   user: AuthUser;
   account: AuthAccount;
   role: AuthRole | null;
+  /**
+   * Os módulos efetivos da conta (`plano ∩ conta`).
+   *
+   * Vem daqui, e não do claim do JWT: o access token vive 15 minutos, e é esta rota que o frontend
+   * consulta para redesenhar depois de um toggle de módulo. Decodificar o token faria o frontend
+   * conhecer o formato interno dele — e trocar o claim quebraria a tela sem nada avisar.
+   */
+  modules: string[];
 }

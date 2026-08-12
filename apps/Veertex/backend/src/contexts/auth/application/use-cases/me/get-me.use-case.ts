@@ -20,6 +20,10 @@ import {
 } from '../../../../user/application/ports/output/user-repository.port';
 import { UserId } from '../../../../user/domain/value-objects/user-id.vo';
 import { UserNotFoundException } from '../../../../user/domain/exceptions/user-exceptions';
+import {
+  GetEffectiveModulesQuery,
+  GetEffectiveModulesUseCase,
+} from '../../../../module/application/use-cases/get-effective-modules/get-effective-modules.use-case';
 
 export class GetMeQuery {
   constructor(
@@ -32,6 +36,15 @@ export interface MeDto {
   user: UserDto;
   account: AccountDto;
   role: RoleDto | null;
+  /**
+   * Os módulos efetivos da conta (`plano ∩ conta`).
+   *
+   * Precisa vir por aqui, e não só no login, porque o access token vive 15 minutos: depois de um
+   * toggle de módulo, é o `/auth/me` que o frontend consulta para redesenhar o menu sem exigir novo
+   * login. O claim `modules` do JWT serve ao `ModuleGuard` no backend; o frontend não decodifica
+   * token, e não deveria.
+   */
+  modules: string[];
 }
 
 /**
@@ -46,6 +59,7 @@ export class GetMeUseCase implements UseCase<GetMeQuery, MeDto> {
     @Inject(USER_REPOSITORY) private readonly users: UserRepositoryPort,
     @Inject(ACCOUNT_REPOSITORY) private readonly accounts: AccountRepositoryPort,
     @Inject(ROLE_REPOSITORY) private readonly roles: RoleRepositoryPort,
+    private readonly getEffectiveModules: GetEffectiveModulesUseCase,
   ) {}
 
   async execute(query: GetMeQuery): Promise<MeDto> {
@@ -60,11 +74,16 @@ export class GetMeUseCase implements UseCase<GetMeQuery, MeDto> {
     }
 
     const role = await this.roles.findById(RoleId.from(user.roleId));
+    // Mesmo use case que o login usa — uma fonte só para "quais módulos valem nesta conta".
+    const modules = await this.getEffectiveModules.execute(
+      new GetEffectiveModulesQuery(query.accountId),
+    );
 
     return {
       user: UserDto.fromDomain(user),
       account: AccountDto.fromDomain(account),
       role: role ? RoleDto.fromDomain(role) : null,
+      modules,
     };
   }
 }

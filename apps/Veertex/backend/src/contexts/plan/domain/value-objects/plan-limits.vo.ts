@@ -2,10 +2,7 @@ import { DomainException, ValueObject } from '@gitspread/domain-primitives';
 
 export class InvalidPlanLimitsException extends DomainException {}
 
-/** `null` means "no ceiling" — an explicit value, not a missing one. */
 export interface PlanLimitsProps {
-  maxCompanies: number | null;
-  maxUsers: number | null;
   /**
    * Module codes the plan allows (`CORE`, `VND`, `EST`, …). The plan is the CEILING; what the
    * account actually has switched on lives in `account_module` (F2). The final visibility is
@@ -15,25 +12,37 @@ export interface PlanLimitsProps {
 }
 
 /**
- * The commercial ceiling of a plan, persisted as jsonb.
+ * O teto comercial de um plano: **quais módulos ele permite**, e nada além disso.
  *
- * jsonb and not columns because this is the one place where a shapeless value is the right answer:
- * every new module or metered resource would otherwise be an ALTER TABLE on a table with one row
- * per plan. It is NOT the `field_config` situation — nothing here is a business entity's attribute,
- * and the schema is owned by this value object, which validates it.
+ * ⚠️ **Não há teto de empresas nem de usuários, e a ausência é deliberada** (decidido por Eliab em
+ * 12/08/2026). O §3.1 do CORE diz que "plano define teto de MÓDULOS" e o §3.2 diz "N empresas por
+ * conta" — nenhum dos dois menciona limite de empresa ou de usuário.
+ *
+ * Uma versão anterior deste VO tinha `maxCompanies` e `maxUsers`, e os planos semeados vinham com
+ * `COMPLETO → 3 empresas / 20 usuários` e `ESSENCIAL → 1 / 5`. Ninguém pediu esses números: eram
+ * **default silencioso**, que a regra da casa trata como defeito, não como conveniência. O efeito
+ * seria uma conta recusando a quarta empresa em produção com uma mensagem que requisito nenhum
+ * prevê — e ninguém saberia dizer se era regra ou bug.
+ *
+ * Se limitar empresa ou usuário por plano vier a fazer sentido comercial, nasce como decisão de
+ * produto com preço atrelado, não como constante em arquivo de seed.
+ *
+ * jsonb e não colunas porque este é o lugar em que um valor sem forma fixa é a resposta certa: cada
+ * módulo novo seria um ALTER TABLE numa tabela com uma linha por plano. Não é a situação do
+ * `field_config` — nada aqui é atributo de entidade de negócio, e o schema pertence a este value
+ * object, que o valida.
  */
 export class PlanLimits extends ValueObject<PlanLimitsProps> {
   private constructor(props: PlanLimitsProps) {
     super(props);
   }
 
-  static create(input: {
-    maxCompanies?: number | null;
-    maxUsers?: number | null;
-    modules?: readonly string[];
-  }): PlanLimits {
-    const maxCompanies = PlanLimits.normalizeCeiling(input.maxCompanies, 'maxCompanies');
-    const maxUsers = PlanLimits.normalizeCeiling(input.maxUsers, 'maxUsers');
+  /**
+   * Chaves desconhecidas no `input` são IGNORADAS, e isso importa na transição: bancos existentes têm
+   * `maxCompanies`/`maxUsers` gravados no jsonb das três linhas de plano. Elas ficam inertes — nada
+   * as lê — em vez de exigir migration destrutiva sobre dado de configuração.
+   */
+  static create(input: { modules?: readonly string[] }): PlanLimits {
     const modules = Array.from(new Set(input.modules ?? [])).sort();
 
     // CORE is not optional (01_Veertex_Core §preâmbulo: "sempre ativo, não desativável"), so a plan
@@ -43,27 +52,13 @@ export class PlanLimits extends ValueObject<PlanLimitsProps> {
       modules.unshift('CORE');
     }
 
-    return new PlanLimits({ maxCompanies, maxUsers, modules: Object.freeze(modules) });
-  }
-
-  private static normalizeCeiling(value: number | null | undefined, field: string): number | null {
-    if (value === null || value === undefined) {
-      return null;
-    }
-    if (!Number.isInteger(value) || value < 1) {
+    if (modules.some((code) => typeof code !== 'string' || code.trim() === '')) {
       throw new InvalidPlanLimitsException(
-        `${field} deve ser um inteiro ≥ 1 ou nulo (sem limite).`,
+        'Códigos de módulo do plano devem ser strings não vazias.',
       );
     }
-    return value;
-  }
 
-  get maxCompanies(): number | null {
-    return this.props.maxCompanies;
-  }
-
-  get maxUsers(): number | null {
-    return this.props.maxUsers;
+    return new PlanLimits({ modules: Object.freeze(modules) });
   }
 
   get modules(): readonly string[] {
@@ -74,20 +69,7 @@ export class PlanLimits extends ValueObject<PlanLimitsProps> {
     return this.props.modules.includes(code);
   }
 
-  /** `true` when adding one more would exceed the ceiling. `null` ceiling never blocks. */
-  wouldExceedCompanies(current: number): boolean {
-    return this.props.maxCompanies !== null && current + 1 > this.props.maxCompanies;
-  }
-
-  wouldExceedUsers(current: number): boolean {
-    return this.props.maxUsers !== null && current + 1 > this.props.maxUsers;
-  }
-
   toJSON(): PlanLimitsProps {
-    return {
-      maxCompanies: this.props.maxCompanies,
-      maxUsers: this.props.maxUsers,
-      modules: [...this.props.modules],
-    };
+    return { modules: [...this.props.modules] };
   }
 }

@@ -72,8 +72,11 @@ export class ResetPasswordUseCase implements UseCase<ResetPasswordCommand, void>
       throw new InvalidResetCodeException();
     }
 
-    live.registerAttempt();
-    await this.codes.save(live);
+    // Contada ANTES da comparação, e numa transação própria: esta requisição termina em exceção
+    // quando o palpite erra, e a exceção derruba a transação em curso. Um contador gravado dentro
+    // dela seria desfeito — era o que acontecia, e deixava o limite de cinco tentativas valendo
+    // nada contra força bruta num código de seis dígitos.
+    live.syncAttempts(await this.codes.registerFailedAttempt(live.id));
 
     const matches = await this.hasher.compare(command.code, live.codeHash);
     if (!matches) {

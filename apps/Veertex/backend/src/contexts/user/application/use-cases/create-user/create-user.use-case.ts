@@ -18,11 +18,6 @@ import {
 import { AccountId } from '../../../../account/domain/value-objects/account-id.vo';
 import { AccountNotFoundException } from '../../../../account/domain/exceptions/account-not-found.exception';
 import {
-  PLAN_REPOSITORY,
-  PlanRepositoryPort,
-} from '../../../../plan/application/ports/output/plan-repository.port';
-import { PlanLimitExceededException } from '../../../../plan/domain/exceptions/plan-limit-exceeded.exception';
-import {
   ROLE_REPOSITORY,
   RoleRepositoryPort,
 } from '../../../../role/application/ports/output/role-repository.port';
@@ -51,7 +46,6 @@ export class CreateUserUseCase implements UseCase<CreateUserCommand, UserDto> {
     @Inject(USER_REPOSITORY) private readonly users: UserRepositoryPort,
     @Inject(ROLE_REPOSITORY) private readonly roles: RoleRepositoryPort,
     @Inject(ACCOUNT_REPOSITORY) private readonly accounts: AccountRepositoryPort,
-    @Inject(PLAN_REPOSITORY) private readonly plans: PlanRepositoryPort,
     @Inject(PASSWORD_HASHER) private readonly hasher: PasswordHasherPort,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
   ) {}
@@ -80,14 +74,8 @@ export class CreateUserUseCase implements UseCase<CreateUserCommand, UserDto> {
       throw new AccountNotFoundException();
     }
 
-    const plan = await this.plans.findById(account.planId);
-    if (plan) {
-      const current = await this.users.countAll();
-      if (plan.limits.wouldExceedUsers(current)) {
-        throw new PlanLimitExceededException('usuários', plan.limits.maxUsers as number);
-      }
-    }
-
+    // Sem teto de usuários por plano — mesmo motivo do teto de empresas: `maxUsers` era default
+    // silencioso, não requisito. Ver o docblock de `PlanLimits`.
     const user = User.create({
       accountId: command.accountId,
       name: command.name,

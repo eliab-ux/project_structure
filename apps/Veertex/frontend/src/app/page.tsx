@@ -1,5 +1,6 @@
 'use client';
 
+import { MESA } from 'src/constants/routes';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Box from '@mui/material/Box';
@@ -19,7 +20,7 @@ export default function RootPage() {
     if (loading) {
       return;
     }
-    router.replace(user ? '/dashboard' : '/login');
+    router.replace(user ? MESA : '/login');
   }, [loading, user, router]);
 
   return (

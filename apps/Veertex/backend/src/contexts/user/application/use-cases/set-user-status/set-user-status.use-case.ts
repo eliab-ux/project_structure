@@ -4,19 +4,14 @@ import {
   UNIT_OF_WORK,
   UnitOfWorkPort,
 } from '../../../../../infrastructure/persistence/ports/unit-of-work.port';
-import {
-  ROLE_REPOSITORY,
-  RoleRepositoryPort,
-} from '../../../../role/application/ports/output/role-repository.port';
-import { RoleId } from '../../../../role/domain/value-objects/role-id.vo';
 import { UserId } from '../../../domain/value-objects/user-id.vo';
 import {
   CannotDisableSelfException,
-  LastAdministratorException,
   UserNotFoundException,
 } from '../../../domain/exceptions/user-exceptions';
 import { USER_REPOSITORY, UserRepositoryPort } from '../../ports/output/user-repository.port';
 import { UserDto } from '../../dto/user.dto';
+import { RoleAdministrationPolicy } from '../../../../role/application/policies/role-administration.policy';
 
 export class SetUserStatusCommand {
   constructor(
@@ -35,8 +30,8 @@ export class SetUserStatusCommand {
 export class SetUserStatusUseCase implements UseCase<SetUserStatusCommand, UserDto> {
   constructor(
     @Inject(USER_REPOSITORY) private readonly users: UserRepositoryPort,
-    @Inject(ROLE_REPOSITORY) private readonly roles: RoleRepositoryPort,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
+    private readonly roleAdministration: RoleAdministrationPolicy,
   ) {}
 
   async execute(command: SetUserStatusCommand): Promise<UserDto> {
@@ -50,13 +45,15 @@ export class SetUserStatusUseCase implements UseCase<SetUserStatusCommand, UserD
         throw new CannotDisableSelfException();
       }
 
-      const role = await this.roles.findById(RoleId.from(user.roleId));
-      if (role?.isAdministrative && user.isActive) {
-        const administrators = await this.users.countActiveAdministrators();
-        if (administrators <= 1) {
-          throw new LastAdministratorException();
-        }
-      }
+      // Simulado antes de desabilitar. A checagem anterior olhava `isAdministrative` (curinga `*`)
+      // e não via o último usuário de um papel com `roles.update` explícito — ver
+      // `RoleAdministrationPolicy`.
+      await this.roleAdministration.assertSurvives({
+        kind: 'user-status',
+        userId: user.id.value,
+        active: false,
+      });
+
       user.disable();
     } else {
       user.enable();

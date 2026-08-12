@@ -18,7 +18,7 @@
 # psql aborta com erro de variável não definida. Senhas SEM aspas (o `:'var'` já produz o literal
 # SQL escapado). Os mesmos valores vão para o `.env.local` — ver README.md.
 #
-# Local do arquivo: apps/Veertex/backend/ (o mount ./deploy/sql é relativo a ele).
+# Local do arquivo: backend/ (o mount ./deploy/sql é relativo a ele).
 #
 # ATENÇÃO: confirme a versão do Postgres do mdantas e alinhe a tag abaixo.
 # Divergência de major version aparece como surpresa em migration, não em teste.

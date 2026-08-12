@@ -33,11 +33,21 @@ export class RoleInUseException extends DomainException {
 }
 
 /**
- * An account must keep at least one role that can administer it. Removing the last administrative
- * role locks every user out of user and role management — a state only a database edit could undo.
+ * A conta tem de manter ao menos um usuário ATIVO capaz de administrar papéis (`roles.update`).
+ *
+ * A mensagem diz o que fazer, e não só o que foi recusado: quem esbarra nesta trava normalmente está
+ * no meio de uma reorganização de permissões e precisa saber qual é a ordem certa das operações.
+ *
+ * Substitui `LastAdministrativeRoleException` e `LastAdministratorException`, que contavam quem tem
+ * o curinga `*` — deixando de fora um papel com `roles.update` explícito. Ver
+ * `RoleAdministrationPolicy` para o buraco que isso abria.
  */
-export class LastAdministrativeRoleException extends DomainException {
+export class AccountWouldLoseRoleAdministrationException extends DomainException {
   constructor() {
-    super('A conta precisa de ao menos um papel com permissão total de administração.');
+    super(
+      'Esta alteração deixaria a conta sem nenhum usuário ativo capaz de administrar papéis, e ' +
+        'não haveria como devolver a permissão a ninguém depois. Garanta que outro usuário ativo ' +
+        'tenha um papel com permissão de editar papéis antes de aplicar esta mudança.',
+    );
   }
 }

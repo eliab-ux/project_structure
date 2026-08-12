@@ -51,8 +51,7 @@ export class PlanResponseDto {
   id!: string;
   code!: string;
   name!: string;
-  maxCompanies!: number | null;
-  maxUsers!: number | null;
+  /** Os módulos que o plano permite — o único teto que o plano define (§3.1 do CORE). */
   modules!: string[];
 }
 

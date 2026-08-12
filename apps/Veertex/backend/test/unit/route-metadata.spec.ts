@@ -47,6 +47,32 @@ const SELF_SERVICE_ROUTES: ReadonlySet<string> = new Set([
   'AuthController.changePassword',
 ]);
 
+/**
+ * Rotas cuja autorização é **POR COMANDO**, e não por rota.
+ *
+ * As três rotas de intenção recebem um comando no corpo, e cada comando exige uma permissão
+ * diferente: `SetRolePermissions` pede `roles.update`, `InviteUser` pede `users.create`,
+ * `ToggleModule` pede `account.update`. Um `@RequirePermission` fixo aqui seria errado nas duas
+ * direções — largo demais para o comando mais restrito, estreito demais para o mais aberto — e a
+ * versão larga é a perigosa: daria a quem tem `users.create` o poder de alterar permissões.
+ *
+ * ⚠️ **Isto NÃO é dispensa de autorização, e a diferença precisa ser verificável.** Quem autoriza é o
+ * `AuthorizeIntentCommandUseCase`, com a MESMA função `grants()` do `PermissionGuard` e a MESMA
+ * permissão que o controller equivalente declara. A prova está em
+ * `test/execution/intent-authorization.spec.ts`, que monta o ataque real — usuário autenticado sem
+ * `roles.update` tentando alterar permissões pela rota de intenção — e exige 403 mais o papel intacto
+ * no banco.
+ *
+ * Esse teste foi sabotado de propósito duas vezes antes de ser aceito (verificação desligada, e
+ * controller passando `['*']` no lugar do token). Nas duas, ficou vermelho. Uma entrada nesta lista só
+ * se justifica com uma prova assim ao lado — senão é exatamente o buraco que a lista aparenta cobrir.
+ */
+const COMMAND_AUTHORIZED_ROUTES: ReadonlySet<string> = new Set([
+  'IntentController.parse',
+  'IntentController.draft',
+  'IntentController.approve',
+]);
+
 interface RouteInfo {
   id: string;
   controller: string;
@@ -105,9 +131,14 @@ describe('Metadata das rotas HTTP', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('toda rota não pública declara permissão (salvo as de autoatendimento)', () => {
+  it('toda rota não pública declara permissão (salvo autoatendimento e autorização por comando)', () => {
     const offenders = routes
-      .filter((route) => !PUBLIC_ROUTES.has(route.id) && !SELF_SERVICE_ROUTES.has(route.id))
+      .filter(
+        (route) =>
+          !PUBLIC_ROUTES.has(route.id) &&
+          !SELF_SERVICE_ROUTES.has(route.id) &&
+          !COMMAND_AUTHORIZED_ROUTES.has(route.id),
+      )
       .filter((route) => !route.permissions || route.permissions.length === 0)
       .map((route) => route.id);
 
@@ -129,7 +160,9 @@ describe('Metadata das rotas HTTP', () => {
     // Uma rota renomeada ou removida deixaria a exceção para trás, e a exceção órfã aliviaria a
     // rota errada no dia em que alguém criasse um método com o mesmo nome.
     const existing = new Set(routes.map((route) => route.id));
-    const orphans = [...PUBLIC_ROUTES, ...SELF_SERVICE_ROUTES].filter((id) => !existing.has(id));
+    const orphans = [...PUBLIC_ROUTES, ...SELF_SERVICE_ROUTES, ...COMMAND_AUTHORIZED_ROUTES].filter(
+      (id) => !existing.has(id),
+    );
 
     expect(orphans).toEqual([]);
   });

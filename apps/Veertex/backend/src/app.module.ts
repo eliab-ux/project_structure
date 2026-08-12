@@ -19,6 +19,7 @@ import { CompanyModule } from './contexts/company/company.module';
 import { ModuleModule } from './contexts/module/module.module';
 import { RoleModule } from './contexts/role/role.module';
 import { UserModule } from './contexts/user/user.module';
+import { IntentModule } from './contexts/intent/intent.module';
 import { AuthModule } from './contexts/auth/auth.module';
 
 @Module({
@@ -45,6 +46,7 @@ import { AuthModule } from './contexts/auth/auth.module';
     RoleModule,
     UserModule,
     AuthModule,
+    IntentModule,
     // HTTP adapter last — it depends on the contexts above.
     HttpModule,
   ],

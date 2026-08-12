@@ -54,34 +54,16 @@ function grants(granted: string[], permission: string): boolean {
 }
 
 /**
- * Lê os módulos efetivos do payload do access token.
+ * ⚠️ Não há decodificação de JWT aqui, e a ausência é deliberada.
  *
- * O backend não expõe os módulos em `/auth/me` — eles são um claim do token, resolvido na emissão.
- * Ler daqui evita uma rota a mais e mantém uma fonte só: o mesmo valor que o `ModuleGuard` usa do
- * outro lado.
+ * Uma versão anterior lia o claim `modules` do access token, decodificando o payload em base64 sem
+ * verificar assinatura. Era defensável — o navegador não tem a chave, e o valor só decide o que
+ * desenhar. Mas o `/auth/me` passou a expor `modules` no corpo, e aí a decodificação virou a pior das
+ * duas opções: o frontend passa a conhecer o formato interno do token, e conhecer significa que trocar
+ * o claim quebra a tela sem nada avisar.
  *
- * Decodifica SEM verificar assinatura, e isso é correto aqui: o navegador não tem — nem deve ter —
- * a chave. O conteúdo serve apenas para decidir o que desenhar; toda decisão que importa é
- * reverificada no servidor, com a assinatura conferida.
+ * A fonte é a resposta da API — a mesma que traz usuário, conta e papel.
  */
-function readModulesFromToken(): string[] {
-  const token = getStoredToken(ACCESS_TOKEN_KEY);
-  if (!token) {
-    return [];
-  }
-  try {
-    const payload = token.split('.')[1];
-    const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
-    const claims = JSON.parse(json) as { modules?: unknown };
-    return Array.isArray(claims.modules)
-      ? claims.modules.filter((item): item is string => typeof item === 'string')
-      : [];
-  } catch {
-    // Token malformado: sem módulo nenhum. O menu encolhe, e a próxima requisição de verdade
-    // recebe 401 e manda para o login — nunca o contrário, que seria abrir o que não deve.
-    return [];
-  }
-}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -114,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAccount(me.account);
         setRole(me.role);
         setPermissions(me.role?.permissions ?? []);
-        setModules(readModulesFromToken());
+        setModules(me.modules ?? []);
       } catch {
         // The axios interceptor already redirects on an unrecoverable 401; anything else means the
         // session is unusable and the safe state is "signed out".
@@ -174,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccount(me.account);
     setRole(me.role);
     setPermissions(me.role?.permissions ?? []);
-    setModules(readModulesFromToken());
+    setModules(me.modules ?? []);
   }, []);
 
   const value = useMemo(

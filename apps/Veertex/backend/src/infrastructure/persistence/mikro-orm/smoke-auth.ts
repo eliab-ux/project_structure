@@ -124,11 +124,32 @@ async function run(): Promise<void> {
 
   // O token nunca é impresso. O que interessa saber é a FORMA do payload, não o valor.
   record(
-    'o token traz permissions e modules',
-    Array.isArray(session.permissions) && Array.isArray(session.modules),
-    `permissions=${session.permissions?.length ?? 'ausente'}, modules=${
-      session.modules?.length ?? 'ausente'
-    }`,
+    'o token traz permissions',
+    Array.isArray(session.permissions),
+    `permissions=${session.permissions?.length ?? 'ausente'}`,
+  );
+
+  // O claim `modules` (ADR-0001, Módulos no JWT). **Verificado sempre**, desde a integração da F2:
+  // todo login desta base emite o claim, então exigi-lo é exigir o comportamento real.
+  //
+  // ⚠️ Não estava assim antes, e o histórico vale porque a regra que ele produziu continua valendo.
+  // Enquanto a F2 era branch separada, esta asserção viveu na F1 por engano — e lá o claim não
+  // existia, de modo que o gate da F1 ficou **impossível de passar verde**. Teria falhado na
+  // primeira execução contra produção por um motivo que não é defeito do produto, e gate que não
+  // pode passar ensina a ignorar gate.
+  //
+  // A regra: **a asserção mora onde o comportamento é entregue, nunca antes dele.** Antes da
+  // integração isso significava "só na branch da F2"; depois dela significa "sempre". A condição
+  // caiu junto com a separação das branches — e deixá-la escrita aqui, depois do merge, faria o
+  // próximo leitor achar que a asserção não deveria estar neste arquivo.
+  //
+  // Nota sobre como ela vazou duas vezes: editar este arquivo numa branch e trocar de branch sem
+  // commitar leva a alteração para a outra, porque o git carrega modificação não commitada quando o
+  // arquivo é idêntico nas duas pontas.
+  record(
+    'o token traz modules',
+    Array.isArray(session.modules),
+    `modules=${session.modules?.length ?? 'ausente'}`,
   );
 
   // ── 5. /auth/me com o token ───────────────────────────────────────────────────────────────

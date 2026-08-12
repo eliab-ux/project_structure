@@ -21,7 +21,7 @@ export class PlanOrmEntity {
   name!: string;
 
   /**
-   * The commercial ceiling: `{ maxCompanies, maxUsers, modules[] }`. jsonb because every new module
+   * The commercial ceiling: `{ modules[] }` — quais módulos o plano permite. jsonb because every new module
    * or metered resource would otherwise be an ALTER TABLE — and because the shape is owned and
    * validated by the `PlanLimits` value object, not by whoever writes the row.
    */

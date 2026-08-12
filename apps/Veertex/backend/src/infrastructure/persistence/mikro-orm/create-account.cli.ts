@@ -3,11 +3,11 @@
 // funcionar.
 import './cli-owner-connection';
 
-import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../../../app.module';
 import { CreateAccountUseCase } from '../../../contexts/account/application/use-cases/create-account/create-account.use-case';
 import { CreateAccountCommand } from '../../../contexts/account/application/use-cases/create-account/create-account.command';
+import { runInRequestContext } from './cli-request-context';
 
 interface CliArgs {
   [key: string]: string | boolean;
@@ -46,6 +46,41 @@ function optional(args: CliArgs, key: string): string | undefined {
   return typeof value === 'string' && value.trim() !== '' ? value : undefined;
 }
 
+/**
+ * A senha do admin, preferencialmente de `VEERTEX_ADMIN_PASSWORD`.
+ *
+ * **Por que a variável de ambiente é o caminho recomendado.** Argumento de linha de comando não é
+ * secreto: ele aparece no `ps` para qualquer usuário da máquina, fica no histórico do shell e — o
+ * que descobrimos na primeira execução real deste comando — é ECOADO INTEIRO pelo `npm run` antes
+ * de executar. A senha ia parar no scrollback do terminal e em qualquer log de CI que capturasse a
+ * saída, sem que nada avisasse.
+ *
+ * O flag continua aceito porque tirá-lo quebraria o uso documentado, mas avisa. O aviso não
+ * transcreve a senha (CLAUDE.md), só diz que ela foi exposta — quem leu já sabe qual é.
+ */
+function resolveAdminPassword(args: CliArgs): string {
+  const fromEnv = process.env.VEERTEX_ADMIN_PASSWORD;
+  if (fromEnv && fromEnv.trim() !== '') {
+    return fromEnv;
+  }
+
+  const fromFlag = optional(args, 'admin-password');
+  if (fromFlag) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '⚠️  Senha passada em --admin-password. Ela fica visível no `ps`, no histórico do shell e no ' +
+        'eco do `npm run`. Prefira VEERTEX_ADMIN_PASSWORD no ambiente; e troque esta senha se o ' +
+        'terminal onde você rodou for compartilhado ou gravado.',
+    );
+    return fromFlag;
+  }
+
+  throw new Error(
+    'Senha do admin ausente: defina VEERTEX_ADMIN_PASSWORD no ambiente (recomendado) ou passe ' +
+      '--admin-password.',
+  );
+}
+
 const USAGE = `
 Cria a primeira conta do Veertex (conta + empresa + papéis padrão + admin), tudo numa transação.
 
@@ -60,7 +95,14 @@ Cria a primeira conta do Veertex (conta + empresa + papéis padrão + admin), tu
     --street "Av. Central" --number "1000" --district "Centro" \\
     --city "Goiânia" --state GO --zip "74000000" --ibge "5208707" \\
     --admin-name "Eliab" --admin-email "eliab@exemplo.com.br" \\
-    --admin-phone "62999999999" --admin-password "<senha-forte>"
+    --admin-phone "62999999999"
+
+A SENHA vem de VEERTEX_ADMIN_PASSWORD no ambiente — não de argumento. Argumento de linha de comando
+aparece no \`ps\`, no histórico do shell e no eco do \`npm run\`.
+
+  VEERTEX_ADMIN_PASSWORD='<senha-forte>' npm run create:account -- ...
+
+O flag --admin-password ainda funciona, para não quebrar uso existente, mas avisa ao ser usado.
 
 Opcionais: --company-trade-name, --state-registration, --complement, --timezone
 Regimes: SIMPLES | NORMAL | MEI
@@ -96,25 +138,30 @@ async function run(): Promise<void> {
     required(args, 'admin-name'),
     required(args, 'admin-email'),
     required(args, 'admin-phone'),
-    required(args, 'admin-password'),
+    resolveAdminPassword(args),
     optional(args, 'company-trade-name') ?? null,
     optional(args, 'state-registration') ?? null,
     optional(args, 'timezone'),
   );
 
-  // `logger: false` on the context, then an explicit logger: Nest's boot banner would otherwise
-  // bury the one line the operator is here to read.
+  // `logger: ['error','warn']` cala o banner de boot do Nest, que enterraria o resumo abaixo sob
+  // dezenas de linhas de rotas mapeadas. Consequência a não esquecer: `Logger.log()` também some
+  // (o nível `log` está fora da lista), então tudo o que o operador precisa ler sai por
+  // `console.log`. Uma versão anterior anunciava o sucesso por `logger.log()` e a linha nunca
+  // apareceu.
   const app = await NestFactory.createApplicationContext(AppModule, { logger: ['error', 'warn'] });
-  const logger = new Logger('create:account');
 
   try {
-    const result = await app.get(CreateAccountUseCase).execute(command);
+    const result = await runInRequestContext(app, () =>
+      app.get(CreateAccountUseCase).execute(command),
+    );
 
     // The password is NEVER echoed back, not even here — whoever ran the command typed it, and a
     // terminal scrollback is a log like any other (CLAUDE.md).
-    logger.log('✅ Conta criada com sucesso');
     // eslint-disable-next-line no-console
     console.log(`
+✅ Conta criada com sucesso
+
   Conta ......... ${result.account.name} (${result.account.id})
   Documento ..... ${result.account.documentFormatted}
   Empresa ....... ${result.companyId}

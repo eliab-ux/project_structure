@@ -14,11 +14,6 @@ import {
 } from '../../../../account/application/ports/output/account-repository.port';
 import { AccountId } from '../../../../account/domain/value-objects/account-id.vo';
 import { AccountNotFoundException } from '../../../../account/domain/exceptions/account-not-found.exception';
-import {
-  PLAN_REPOSITORY,
-  PlanRepositoryPort,
-} from '../../../../plan/application/ports/output/plan-repository.port';
-import { PlanLimitExceededException } from '../../../../plan/domain/exceptions/plan-limit-exceeded.exception';
 import { Company } from '../../../domain/entities/company.entity';
 import { StateRegistration } from '../../../domain/value-objects/state-registration.vo';
 import { TaxRegime } from '../../../domain/value-objects/tax-regime.vo';
@@ -42,7 +37,6 @@ export class CreateCompanyUseCase implements UseCase<CreateCompanyCommand, Compa
   constructor(
     @Inject(COMPANY_REPOSITORY) private readonly companies: CompanyRepositoryPort,
     @Inject(ACCOUNT_REPOSITORY) private readonly accounts: AccountRepositoryPort,
-    @Inject(PLAN_REPOSITORY) private readonly plans: PlanRepositoryPort,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
   ) {}
 
@@ -52,14 +46,10 @@ export class CreateCompanyUseCase implements UseCase<CreateCompanyCommand, Compa
       throw new AccountNotFoundException();
     }
 
-    const plan = await this.plans.findById(account.planId);
-    if (plan) {
-      const current = await this.companies.countAll();
-      if (plan.limits.wouldExceedCompanies(current)) {
-        throw new PlanLimitExceededException('empresas', plan.limits.maxCompanies as number);
-      }
-    }
-
+    // Sem teto de empresas por plano, e a ausência é deliberada: o §3.2 do CORE diz "N empresas por
+    // conta", e `plan.limits` é lista de códigos de MÓDULO (§3.1). A checagem que existia aqui usava
+    // `maxCompanies`, um número que requisito nenhum pediu — default silencioso, removido em
+    // 12/08/2026. Ver o docblock de `PlanLimits`.
     const document = Document.cnpj(command.document);
 
     // Friendly message for the common case. The unique index is what actually guarantees it —

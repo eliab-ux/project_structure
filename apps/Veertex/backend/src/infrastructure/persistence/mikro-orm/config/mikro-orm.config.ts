@@ -19,7 +19,7 @@ export function createMikroOrmConfig(configService: ConfigService) {
   const nodeEnv = configService.get<string>('NODE_ENV') ?? 'development';
 
   if (!clientUrl) {
-    throw new Error('DATABASE_URL is required. Set it in apps/Veertex/backend/.env');
+    throw new Error('DATABASE_URL is required. Set it in backend/.env');
   }
 
   try {

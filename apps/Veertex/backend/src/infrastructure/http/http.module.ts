@@ -13,6 +13,8 @@ import { CompanyController } from './controllers/company/company.controller';
 import { ModuleController } from './controllers/module/module.controller';
 import { RoleController } from './controllers/role/role.controller';
 import { UserController } from './controllers/user/user.controller';
+import { IntentController } from './controllers/intent/intent.controller';
+import { IntentModule } from '../../contexts/intent/intent.module';
 
 /**
  * The HTTP inbound adapter. Controllers stay thin: validate (DTO), call the use case, map to a
@@ -40,6 +42,7 @@ import { UserController } from './controllers/user/user.controller';
     PlanModule,
     RoleModule,
     UserModule,
+    IntentModule,
   ],
   controllers: [
     HealthController,
@@ -49,6 +52,7 @@ import { UserController } from './controllers/user/user.controller';
     ModuleController,
     RoleController,
     UserController,
+    IntentController,
   ],
 })
 export class HttpModule {}

@@ -124,11 +124,24 @@ export class PasswordResetCode extends AggregateRoot {
   }
 
   /**
-   * Counted BEFORE the comparison, and persisted even when the guess is wrong. Counting after a
-   * successful compare would make the limit unenforceable — the attacker only needs the last try.
+   * Alinha o contador em memória ao valor que o BANCO acabou de gravar.
+   *
+   * A contagem de tentativas é feita por `UPDATE ... attempts = attempts + 1` numa transação
+   * PRÓPRIA (ver `PasswordResetCodeRepositoryPort.registerFailedAttempt`), e não por incremento
+   * aqui seguido de `save`. Duas razões, ambas descobertas na prática:
+   *
+   *  1. **Rollback.** Toda requisição roda dentro de uma transação, e uma tentativa errada termina
+   *     em exceção — que derruba a transação inteira e leva junto o `update` do contador. O limite
+   *     de cinco existia no código e valia zero no banco: `attempts` ficava em 0 para sempre, e o
+   *     código de seis dígitos ficava exposto a força bruta pelos 15 minutos de validade.
+   *  2. **Concorrência.** Ler, somar 1 e gravar faz duas tentativas simultâneas lerem 0 e gravarem
+   *     1 — duas chances pelo preço de uma. `attempts + 1` no SQL não tem esse buraco.
+   *
+   * Este método existe para que a entidade em memória não fique desatualizada e um `save` posterior
+   * (o do caminho de sucesso) não regrave o valor antigo por cima do que o banco tem.
    */
-  registerAttempt(): void {
-    this._attempts += 1;
+  syncAttempts(attempts: number): void {
+    this._attempts = attempts;
   }
 
   consume(now: Date): void {

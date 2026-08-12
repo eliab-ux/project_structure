@@ -27,7 +27,7 @@ psql "postgresql://postgres:<senha-do-postgres>@<host>:5432/postgres" \
   -v db_name=veertex \
   -v owner_password=SENHA_DO_OWNER \
   -v app_password=SENHA_DO_APP \
-  -f apps/Veertex/backend/deploy/sql/001_create_roles.sql
+  -f backend/deploy/sql/001_create_roles.sql
 ```
 
 **Senhas SEM aspas no `-v`.** O script usa `:'variavel'`, que já transforma o valor num literal SQL
@@ -115,7 +115,7 @@ cada boot e continua abortando o processo.
 ## 3. Primeira conta
 
 ```bash
-cd apps/Veertex/backend
+cd backend
 npm run create:account -- \
   --account-name "Tudodicasa" \
   --account-document "12345678000195" \
@@ -163,8 +163,8 @@ ainda; ele entra com a fatia que precisar de fila (geocodificação de endereço
 
 | Serviço | Dockerfile | Context Path | Domain | Container Port |
 |---|---|---|---|---|
-| Backend | `apps/Veertex/backend/Dockerfile` | `/` | `<sub>.<dominio>` · Path `/api` · Strip Path **OFF** | 3020 |
-| Frontend | `apps/Veertex/frontend/Dockerfile` | `/` | `<sub>.<dominio>` · Path `/` | 3021 |
+| Backend | `backend/Dockerfile` | `/` | `<sub>.<dominio>` · Path `/api` · Strip Path **OFF** | 3020 |
+| Frontend | `frontend/Dockerfile` | `/` | `<sub>.<dominio>` · Path `/` | 3021 |
 
 **Docker Context Path = `/`** (a raiz do repo) nos dois — sem isso os `COPY` do monorepo falham.
 

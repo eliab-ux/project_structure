@@ -82,6 +82,17 @@ export class LoginResponseDto {
   user!: UserResponseDto;
   accountId!: string;
   permissions!: string[];
+  /**
+   * Os módulos efetivos da conta (`plano ∩ conta`).
+   *
+   * Exposto porque o frontend monta o menu com `plano ∩ conta ∩ papel` (Visão Geral §2.1) e não tem
+   * outra fonte: o claim `modules` do JWT existe para o `ModuleGuard` no backend, e o frontend não
+   * decodifica token. Sem este campo, a F2 emitia o claim e o menu continuava sem como ser montado —
+   * defeito encontrado na primeira execução do smoke com a asserção de `modules`.
+   *
+   * Não é dado sensível: é a lista de códigos de módulo ativos da própria conta do usuário.
+   */
+  modules!: string[];
 
   static from(result: AuthResultDto): LoginResponseDto {
     const dto = new LoginResponseDto();
@@ -91,6 +102,7 @@ export class LoginResponseDto {
     dto.user = UserResponseDto.from(result.user);
     dto.accountId = result.accountId;
     dto.permissions = result.permissions;
+    dto.modules = result.modules;
     return dto;
   }
 }
@@ -113,12 +125,21 @@ export class MeResponseDto {
   user!: UserResponseDto;
   account!: AccountResponseDto;
   role!: RoleResponseDto | null;
+  /**
+   * Os módulos efetivos, também aqui — e não só no login.
+   *
+   * O access token vive 15 minutos: depois de um toggle de módulo, é esta rota que o frontend
+   * consulta para redesenhar o menu sem exigir novo login. É o que faz valer o §7.4 do CORE ("até o
+   * TTL do access token para os demais usuários da conta").
+   */
+  modules!: string[];
 
   static from(me: MeDto): MeResponseDto {
     const dto = new MeResponseDto();
     dto.user = UserResponseDto.from(me.user);
     dto.account = AccountResponseDto.from(me.account);
     dto.role = me.role ? RoleResponseDto.from(me.role) : null;
+    dto.modules = me.modules;
     return dto;
   }
 }
