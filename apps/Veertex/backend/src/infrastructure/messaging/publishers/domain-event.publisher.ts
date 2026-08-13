@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { DomainEvent } from '@gitspread/domain-primitives';
+import { DomainEvent } from '@veertex/domain-primitives';
 import { EventPublisherPort } from '../../persistence/ports/event-publisher.port';
 
 /**

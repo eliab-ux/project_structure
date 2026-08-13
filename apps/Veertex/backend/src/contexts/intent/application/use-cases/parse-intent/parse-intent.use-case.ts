@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { UseCase } from '@gitspread/shared-kernel';
+import { UseCase } from '@veertex/shared-kernel';
 import { INTENT_PARSER, IntentParserPort } from '../../ports/output/intent-parser.port';
-import { IntentResult } from '../../../domain/intent-command';
+import { describeCommands, IntentApiResult } from '../../../domain/intent-command';
 import { AuthorizeIntentCommandUseCase } from '../authorize-intent-command/authorize-intent-command.use-case';
 
 export class ParseIntentCommand {
@@ -33,7 +33,7 @@ export class ParseIntentCommand {
  * intenção é gastar o tempo dele para nada.
  */
 @Injectable()
-export class ParseIntentUseCase implements UseCase<ParseIntentCommand, IntentResult> {
+export class ParseIntentUseCase implements UseCase<ParseIntentCommand, IntentApiResult> {
   private readonly logger = new Logger(ParseIntentUseCase.name);
 
   constructor(
@@ -41,7 +41,7 @@ export class ParseIntentUseCase implements UseCase<ParseIntentCommand, IntentRes
     private readonly authorize: AuthorizeIntentCommandUseCase,
   ) {}
 
-  async execute(command: ParseIntentCommand): Promise<IntentResult> {
+  async execute(command: ParseIntentCommand): Promise<IntentApiResult> {
     this.parser.ensureAvailable();
 
     const availableCommands = this.authorize.availableFor(
@@ -51,9 +51,10 @@ export class ParseIntentUseCase implements UseCase<ParseIntentCommand, IntentRes
 
     if (availableCommands.length === 0) {
       // Papel sem nenhuma permissão de escrita: nada a propor. Responder "não sei fazer isso" é
-      // honesto e não revela quais comandos existem para quem não pode executá-los.
+      // honesto e não revela quais comandos existem para quem não pode executá-los — por isso
+      // `available` sai VAZIO, e não com o catálogo. A lista é o que ESTE ator pode fazer.
       this.logger.log('Nenhum comando disponível para este ator');
-      return { command: null, guess: null, screenHint: null };
+      return { command: null, guess: null, screenHint: null, available: [] };
     }
 
     // O texto do operador NÃO vai para log — é dado de negócio do cliente, e um log de intenções é o
@@ -64,6 +65,13 @@ export class ParseIntentUseCase implements UseCase<ParseIntentCommand, IntentRes
       reconhecido: result.command !== null,
       comandosDisponiveis: availableCommands.length,
     });
+
+    if (result.command === null) {
+      // A recusa sai acompanhada do que este ator pode fazer. `availableCommands` é exatamente a
+      // lista que o tradutor recebeu — a tela não pode oferecer nada além do que foi autorizado a
+      // propor, senão a recusa passaria a ser o canal por onde capacidade indisponível é anunciada.
+      return { ...result, available: describeCommands(availableCommands) };
+    }
 
     return result;
   }

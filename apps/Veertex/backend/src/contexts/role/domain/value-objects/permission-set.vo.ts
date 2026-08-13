@@ -1,4 +1,4 @@
-import { ValueObject } from '@gitspread/domain-primitives';
+import { ValueObject } from '@veertex/domain-primitives';
 import { InvalidPermissionException } from '../exceptions/invalid-permission.exception';
 import { grants, isKnownPermission, WILDCARD } from '../permissions.catalog';
 

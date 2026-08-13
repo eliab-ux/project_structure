@@ -121,7 +121,7 @@ export interface IntentPlan {
  * Intenção que o catálogo não cobre.
  *
  * Resolve em "ainda não sei fazer isso" com o caminho de tela correspondente, e o §2 diz que **essa
- * resposta é parte do produto, não falha** — é o estado mais frequente nesta fase de nove comandos.
+ * resposta é parte do produto, não falha** — é o estado mais frequente nesta fase de oito comandos.
  * Modelá-la como resultado legítimo, e não como erro, é o que impede a tela de pedir desculpas por
  * funcionar como projetado.
  */
@@ -132,7 +132,40 @@ export interface IntentNotSupported {
   screenHint: string | null;
 }
 
+/** Um comando oferecível ao operador: o nome técnico e o rótulo que ele lê. */
+export interface IntentCommandOption {
+  command: IntentCommandName;
+  label: string;
+}
+
+/**
+ * A recusa como ela chega na tela: "não sei isso" **acompanhado do que eu sei**.
+ *
+ * Por que a lista viaja com a recusa, e não numa rota de catálogo: sem ela, os oito comandos só se
+ * descobrem por tentativa e erro, e um campo aberto que não revela seu alcance treina o operador a
+ * desistir dele. A recusa é o momento exato em que a pergunta "então o que você faz?" existe.
+ *
+ * A lista é `plano ∩ conta ∩ papel` — a MESMA de `availableFor()` que o tradutor recebeu. Ela nunca
+ * pode ser o catálogo inteiro: oferecer comando de módulo desligado contradiz o §3 ("módulo inativo
+ * nunca é proposto"), e oferecer comando que o papel não tem enumera capacidade para quem não a
+ * possui e termina em 403 previsível. Papel sem nenhuma permissão de escrita recebe lista vazia.
+ */
+export interface IntentRejection extends IntentNotSupported {
+  available: IntentCommandOption[];
+}
+
+/**
+ * O que o PARSER devolve. Ele não conhece `available` — de propósito: quem pode fazer o quê é
+ * decisão de autorização, e o tradutor não participa dela (§8).
+ */
 export type IntentResult = IntentPlan | IntentNotSupported;
+
+/** O que a ROTA devolve. Só o use case, que autorizou, sabe montar a recusa completa. */
+export type IntentApiResult = IntentPlan | IntentRejection;
+
+export function describeCommands(names: readonly IntentCommandName[]): IntentCommandOption[] {
+  return names.map((command) => ({ command, label: INTENT_COMMANDS[command].label }));
+}
 
 export function isSupported(result: IntentResult): result is IntentPlan {
   return result.command !== null;

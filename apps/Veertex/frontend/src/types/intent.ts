@@ -32,10 +32,23 @@ export interface IntentPlan {
   unresolved: string[];
 }
 
+export interface IntentCommandOption {
+  command: string;
+  label: string;
+}
+
+/**
+ * A recusa — e ela vem com a lista do que o sistema sabe fazer **para este usuário**.
+ *
+ * `available` é `plano ∩ conta ∩ papel`, montada no backend. A tela não filtra nada e não guarda
+ * catálogo próprio: uma segunda lista no frontend divergiria da primeira no dia em que um comando
+ * entrasse, e passaria a oferecer o que a aprovação recusa.
+ */
 export interface IntentNotSupported {
   command: null;
   guess: string | null;
   screenHint: string | null;
+  available: IntentCommandOption[];
 }
 
 export type IntentResult = IntentPlan | IntentNotSupported;

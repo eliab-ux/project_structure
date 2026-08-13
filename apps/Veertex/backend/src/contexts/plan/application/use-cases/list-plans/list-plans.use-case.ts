@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { UseCase } from '@gitspread/shared-kernel';
+import { UseCase } from '@veertex/shared-kernel';
 import { PLAN_REPOSITORY, PlanRepositoryPort } from '../../ports/output/plan-repository.port';
 import { PlanDto } from '../../dto/plan.dto';
 

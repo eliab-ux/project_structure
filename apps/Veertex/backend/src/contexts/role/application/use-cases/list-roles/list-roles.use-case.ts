@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { UseCase } from '@gitspread/shared-kernel';
+import { UseCase } from '@veertex/shared-kernel';
 import { ROLE_REPOSITORY, RoleRepositoryPort } from '../../ports/output/role-repository.port';
 import { RoleDto } from '../../dto/role.dto';
 

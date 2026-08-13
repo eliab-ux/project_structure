@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { DomainException, ValueObject } from '@gitspread/domain-primitives';
+import { DomainException, ValueObject } from '@veertex/domain-primitives';
 
 export class InvalidIdException extends DomainException {
   constructor(entity: string) {

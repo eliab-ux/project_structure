@@ -1,0 +1,24 @@
+{
+  "name": "@veertex/domain-primitives",
+  "version": "1.0.0",
+  "description": "Base classes para Domain-Driven Design (Entities, Value Objects, Domain Events)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts --max-warnings=0"
+  },
+  "keywords": [
+    "ddd",
+    "domain",
+    "entity",
+    "value-object",
+    "domain-event"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

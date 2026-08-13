@@ -1,4 +1,4 @@
-import { DomainException } from '@gitspread/domain-primitives';
+import { DomainException } from '@veertex/domain-primitives';
 
 /** Name contains "NotFound", which GlobalExceptionFilter maps to HTTP 404. */
 export class PlanNotFoundException extends DomainException {
