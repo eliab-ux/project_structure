@@ -1,4 +1,4 @@
-import { AggregateRoot } from '@gitspread/domain-primitives';
+import { AggregateRoot } from '@veertex/domain-primitives';
 
 /**
  * A ativação de um módulo por uma conta.

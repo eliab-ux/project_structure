@@ -1,4 +1,4 @@
-import { DomainException } from '@gitspread/domain-primitives';
+import { DomainException } from '@veertex/domain-primitives';
 
 export class UserNotFoundException extends DomainException {
   constructor() {

@@ -1,4 +1,4 @@
-import { AggregateRoot, DomainException } from '@gitspread/domain-primitives';
+import { AggregateRoot, DomainException } from '@veertex/domain-primitives';
 import { PlanLimits } from '../value-objects/plan-limits.vo';
 
 export class InvalidPlanException extends DomainException {}

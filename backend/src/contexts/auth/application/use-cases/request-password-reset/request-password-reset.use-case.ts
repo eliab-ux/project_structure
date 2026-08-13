@@ -1,6 +1,6 @@
 import { randomInt, randomUUID } from 'crypto';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { UseCase } from '@gitspread/shared-kernel';
+import { UseCase } from '@veertex/shared-kernel';
 import { Email } from '../../../../../shared/domain/value-objects/email.vo';
 import {
   USER_REPOSITORY,

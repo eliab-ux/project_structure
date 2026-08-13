@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { UseCase } from '@gitspread/shared-kernel';
+import { UseCase } from '@veertex/shared-kernel';
 import {
   CreateRoleCommand,
   CreateRoleUseCase,

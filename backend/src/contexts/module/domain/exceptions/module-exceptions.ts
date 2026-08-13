@@ -1,4 +1,4 @@
-import { DomainException } from '@gitspread/domain-primitives';
+import { DomainException } from '@veertex/domain-primitives';
 
 export class UnknownModuleException extends DomainException {
   constructor(code: string) {

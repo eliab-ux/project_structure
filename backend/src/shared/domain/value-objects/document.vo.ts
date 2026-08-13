@@ -1,4 +1,4 @@
-import { ValueObject } from '@gitspread/domain-primitives';
+import { ValueObject } from '@veertex/domain-primitives';
 import { InvalidDocumentException } from '../exceptions/invalid-document.exception';
 
 export enum DocumentType {
@@ -17,7 +17,7 @@ export enum DocumentType {
  * DTO layer catches a malformed payload; this catches a document that is well-formed and still
  * impossible — the invariant survives an import, a seed and the CLI, none of which pass through a DTO.
  *
- * `ValidationUtil` of `@gitspread/shared-kernel` advertises `isValidCPF` in CLAUDE.md but does not
+ * `ValidationUtil` of `@veertex/shared-kernel` advertises `isValidCPF` in CLAUDE.md but does not
  * actually implement it, so the algorithm lives here rather than in a package five apps depend on.
  */
 export class Document extends ValueObject<{ value: string; type: DocumentType }> {

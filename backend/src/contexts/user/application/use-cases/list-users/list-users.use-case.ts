@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { UseCase } from '@gitspread/shared-kernel';
+import { UseCase } from '@veertex/shared-kernel';
 import { USER_REPOSITORY, UserRepositoryPort } from '../../ports/output/user-repository.port';
 import { UserDto } from '../../dto/user.dto';
 

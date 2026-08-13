@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { UseCase } from '@gitspread/shared-kernel';
+import { UseCase } from '@veertex/shared-kernel';
 import { Address } from '../../../../../shared/domain/value-objects/address.vo';
 import { Document } from '../../../../../shared/domain/value-objects/document.vo';
 import { Email } from '../../../../../shared/domain/value-objects/email.vo';

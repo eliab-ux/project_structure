@@ -18,7 +18,40 @@ import { IntentDraftPanel } from 'src/components/IntentDraftPanel';
 import { useAuth } from 'src/contexts/AuthContext';
 import { apiErrorMessage } from 'src/services/api';
 import intentService from 'src/services/intentService';
-import { IntentDraft, IntentField, IntentPlan, isSupported } from 'src/types/intent';
+import {
+  IntentDraft,
+  IntentField,
+  IntentNotSupported,
+  IntentPlan,
+  isSupported,
+} from 'src/types/intent';
+
+/**
+ * Exemplos do placeholder — todos são comandos que EXISTEM no catálogo e que o tradutor reconhece.
+ *
+ * Isto não é detalhe de redação. Um exemplo sugerido pela própria tela que termina em "ainda não sei
+ * fazer isso" queima a confiança na primeira tentativa, e é a primeira tentativa que decide se o
+ * operador volta ao campo ou vai direto ao menu. Consulta ("quem pode dar desconto") está fora de
+ * propósito: o catálogo tem oito comandos de ESCRITA e nenhum de leitura — e, pior, uma pergunta
+ * dessas cai na regra de permissões e proporia uma ALTERAÇÃO de papel para quem só perguntou.
+ *
+ * Ao acrescentar comando ao catálogo, este texto é candidato a mudar; ao remover, é obrigatório.
+ */
+const PLACEHOLDER_EXAMPLES = [
+  'criar papel de supervisor',
+  'cadastrar empresa',
+  'criar usuário',
+  'ativar módulo',
+].join(' · ');
+
+/** CORE primeiro; o resto em ordem alfabética. Ver o comentário em `ModuleChips`. */
+function orderModules(codes: readonly string[]): string[] {
+  return [...codes].sort((a, b) => {
+    if (a === 'CORE') return -1;
+    if (b === 'CORE') return 1;
+    return a.localeCompare(b);
+  });
+}
 
 /**
  * A Mesa — a superfície de intenção (§4 da especificação de frontend).
@@ -50,7 +83,9 @@ export default function MesaPage() {
   const [saving, setSaving] = useState(false);
   const [plan, setPlan] = useState<IntentPlan | null>(null);
   const [draft, setDraft] = useState<IntentDraft | null>(null);
-  const [notSupported, setNotSupported] = useState<string | null>(null);
+  // O objeto inteiro, e não só a frase: a recusa carrega a lista do que o sistema sabe fazer, e é
+  // nela que o operador descobre o alcance do campo sem ter de adivinhar comando por comando.
+  const [rejection, setRejection] = useState<IntentNotSupported | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -74,7 +109,7 @@ export default function MesaPage() {
   const reset = useCallback(() => {
     setPlan(null);
     setDraft(null);
-    setNotSupported(null);
+    setRejection(null);
   }, []);
 
   async function handleSubmit() {
@@ -91,11 +126,7 @@ export default function MesaPage() {
       if (!isSupported(result)) {
         // "Ainda não sei fazer isso" é **parte do produto, não falha** (§2) — e é o estado mais
         // frequente nesta fase de oito comandos. Por isso vai em `info`, não em `error`.
-        setNotSupported(
-          result.guess
-            ? `Entendi que você quer: ${result.guess}. Isso eu ainda não sei fazer daqui.`
-            : 'Isso eu ainda não sei fazer daqui.',
-        );
+        setRejection(result);
         return;
       }
 
@@ -163,7 +194,7 @@ export default function MesaPage() {
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        if (draft || plan || notSupported) {
+        if (draft || plan || rejection) {
           event.preventDefault();
           reset();
         }
@@ -182,15 +213,28 @@ export default function MesaPage() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft, plan, notSupported, saving, reset]);
+  }, [draft, plan, rejection, saving, reset]);
 
   return (
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) 320px' },
-        gap: { xs: 4, lg: 6 },
-        maxWidth: 1320,
+        /*
+         * A coluna da direita é CONTEXTO, não conteúdo — por isso ela é a menor e é a que encolhe.
+         * Antes eram 320px contra um centro limitado a 1320: numa tela larga sobrava um terço da
+         * página vazio, e a lateral (que é curta por natureza) terminava no meio da altura, parecendo
+         * interrompida. Três mudanças resolvem, e nenhuma é decoração:
+         *
+         *  - 280px em vez de 320: o conteúdo dela é chip curto e texto de apoio;
+         *  - centro até 1520 no total: a intenção é o elemento dominante do §4, e largura é o que
+         *    torna um campo dominante — encolhê-lo para caber uma lateral inverte a hierarquia;
+         *  - `alignItems: start` + lateral em painel `sticky`: ela deixa de ser uma coluna que para no
+         *    meio e passa a ser um painel que acompanha a leitura e termina onde declara terminar.
+         */
+        gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) 280px' },
+        alignItems: 'start',
+        gap: { xs: 4, lg: 5 },
+        maxWidth: 1520,
         mx: 'auto',
         pt: { xs: 2, md: 5 },
       }}
@@ -219,7 +263,7 @@ export default function MesaPage() {
               void handleSubmit();
             }
           }}
-          placeholder="criar papel · quem pode dar desconto · ativar módulo · cadastrar empresa"
+          placeholder={PLACEHOLDER_EXAMPLES}
           size="medium"
           autoFocus
           inputProps={{ 'aria-label': 'O que você precisa' }}
@@ -251,11 +295,7 @@ export default function MesaPage() {
           }}
         />
 
-        {notSupported ? (
-          <Alert severity="info" role="status" sx={{ mt: 3 }}>
-            {notSupported} Use o menu de telas — <strong>Esc</strong> traz você de volta para cá.
-          </Alert>
-        ) : null}
+        {rejection ? <RejectionPanel rejection={rejection} /> : null}
 
         {draft ? (
           <Box sx={{ mt: 3 }}>
@@ -297,15 +337,42 @@ export default function MesaPage() {
         </Paper>
       </Box>
 
-      <Box component="aside" aria-label="Contexto da conta">
+      <Paper
+        component="aside"
+        aria-label="Contexto da conta"
+        variant="outlined"
+        sx={{
+          p: 2.5,
+          bgcolor: 'vx.panel',
+          // Acompanha a rolagem: a Mesa cresce para baixo com o rascunho, e o contexto da conta é
+          // justamente o que se quer ver enquanto se confere o rascunho.
+          position: { lg: 'sticky' },
+          top: { lg: 88 },
+        }}
+      >
         <Typography variant="overline" component="h2">
           Módulos ativos nesta conta
         </Typography>
 
         <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" sx={{ mt: 1.5 }}>
-          {/* Reais, vindos do token via /auth/me — não uma lista fixa. */}
+          {/*
+           * Reais, vindos do token via /auth/me — não uma lista fixa.
+           *
+           * CORE PRIMEIRO, e visualmente distinto: ele é o único módulo que não se desativa, e em
+           * ordem alfabética aparecia no meio, como um entre iguais. Ordem e preenchimento dizem o
+           * que ele é sem precisar de legenda.
+           */}
           {modules.length > 0 ? (
-            modules.map((code) => <Chip key={code} label={code} size="small" variant="outlined" />)
+            orderModules(modules).map((code) => (
+              <Chip
+                key={code}
+                label={code}
+                size="small"
+                variant={code === 'CORE' ? 'filled' : 'outlined'}
+                color={code === 'CORE' ? 'secondary' : 'default'}
+                title={code === 'CORE' ? 'Base do sistema — sempre ativa' : undefined}
+              />
+            ))
           ) : (
             <Typography variant="body2" color="text.secondary">
               Nenhum módulo ativo além do CORE.
@@ -346,7 +413,59 @@ export default function MesaPage() {
           As ações operam na empresa da conta. A escolha de empresa ativa chega com a fatia que
           fizer os endpoints receberem a empresa.
         </Typography>
-      </Box>
+      </Paper>
     </Box>
+  );
+}
+
+/**
+ * A recusa — "ainda não sei fazer isso" **acompanhada do que eu sei fazer**.
+ *
+ * Por que a lista vive aqui e não num painel permanente de ajuda: a recusa é o único momento em que a
+ * pergunta "então o que você faz?" está de fato na cabeça do operador. Um catálogo sempre visível
+ * viraria mobília ignorada; aqui ele é resposta.
+ *
+ * Os itens NÃO são clicáveis, e isso é decisão, não falta de acabamento. O rótulo de um comando não é
+ * uma frase que o tradutor reconheça em todos os casos — "Ativar ou desativar módulo" não é o que se
+ * escreve. Um item clicável que preenchesse o campo com texto que volta em recusa seria exatamente o
+ * defeito que estamos corrigindo, uma camada mais fundo.
+ *
+ * `severity="info"`, nunca `error`: a resposta é parte do produto (§2). E `role="status"`, não
+ * `alert` — leitor de tela anuncia sem interromper o que o usuário está fazendo.
+ */
+function RejectionPanel({ rejection }: { rejection: IntentNotSupported }) {
+  return (
+    <Alert severity="info" role="status" sx={{ mt: 3 }}>
+      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+        {rejection.guess
+          ? `Entendi que você quer: ${rejection.guess}. Isso eu ainda não sei fazer daqui.`
+          : 'Isso eu ainda não sei fazer daqui.'}
+      </Typography>
+
+      {rejection.available.length > 0 ? (
+        <Box sx={{ mt: 1.5 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            O que eu sei fazer por escrito hoje:
+          </Typography>
+          <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5 }}>
+            {rejection.available.map((option) => (
+              <Typography key={option.command} component="li" variant="body2">
+                {option.label}
+              </Typography>
+            ))}
+          </Box>
+        </Box>
+      ) : (
+        // Lista vazia tem significado próprio: o papel deste usuário não tem permissão de escrita
+        // nenhuma. Dizer "nada" aqui é mais honesto do que listar o que ele receberia um 403 ao tentar.
+        <Typography variant="body2" sx={{ mt: 1.5 }}>
+          Seu papel não permite alterações por aqui — fale com quem administra a conta.
+        </Typography>
+      )}
+
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+        O resto ainda é pelas telas. <strong>Esc</strong> traz você de volta para cá.
+      </Typography>
+    </Alert>
   );
 }

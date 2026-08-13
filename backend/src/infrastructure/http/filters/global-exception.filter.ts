@@ -1,6 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { DomainException } from '@gitspread/domain-primitives';
+import { DomainException } from '@veertex/domain-primitives';
 import { ErrorReporterPort } from '../../observability/ports/error-reporter.port';
 
 /**

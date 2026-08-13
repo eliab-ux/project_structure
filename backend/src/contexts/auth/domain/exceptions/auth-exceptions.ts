@@ -1,4 +1,4 @@
-import { DomainException } from '@gitspread/domain-primitives';
+import { DomainException } from '@veertex/domain-primitives';
 
 /**
  * ONE exception for every way a reset code can fail: wrong, expired, already used, too many

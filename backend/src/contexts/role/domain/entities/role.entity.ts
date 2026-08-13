@@ -1,4 +1,4 @@
-import { AggregateRoot, DomainException } from '@gitspread/domain-primitives';
+import { AggregateRoot, DomainException } from '@veertex/domain-primitives';
 import { RoleId } from '../value-objects/role-id.vo';
 import { PermissionSet } from '../value-objects/permission-set.vo';
 import { SystemRoleImmutableException } from '../exceptions/role-exceptions';

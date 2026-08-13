@@ -14,7 +14,7 @@ import {
   ParseIntentCommand,
   ParseIntentUseCase,
 } from '../../../../contexts/intent/application/use-cases/parse-intent/parse-intent.use-case';
-import { IntentField, IntentResult } from '../../../../contexts/intent/domain/intent-command';
+import { IntentApiResult, IntentField } from '../../../../contexts/intent/domain/intent-command';
 import { CurrentUser } from '../../../security/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../../security/guards/jwt-auth.guard';
 import {
@@ -62,7 +62,7 @@ export class IntentController {
   async parse(
     @Body() dto: ParseIntentRequestDto,
     @CurrentUser() actor: AuthTokenPayload,
-  ): Promise<IntentResult> {
+  ): Promise<IntentApiResult> {
     return this.parseIntentUseCase.execute(
       new ParseIntentCommand(dto.text, actor.permissions, actor.modules),
     );
