@@ -8,6 +8,7 @@ import {
   IntentCommandName,
   IntentResult,
 } from '../../contexts/intent/domain/intent-command';
+import { looksLikeQuestion, QUESTION_GUESS } from '../../contexts/intent/domain/question-detection';
 
 /**
  * Tradutor DETERMINÍSTICO, por palavra-chave. É o adapter dos testes e do desenvolvimento sem chave.
@@ -109,6 +110,19 @@ export class DeterministicIntentParser implements IntentParserPort {
 
   async parse(request: IntentParseRequest): Promise<IntentResult> {
     const text = (request.text ?? '').toLowerCase();
+
+    /*
+     * PERGUNTA NUNCA VIRA ESCRITA — antes de qualquer regra.
+     *
+     * Este parser errava as quatro interrogativas que o de produção acertava (medido em 13/08/2026):
+     * `'pode '` casava com "quem pode dar desconto" e devolvia `SetRolePermissions`. A guarda vem
+     * primeiro porque a decisão é sobre a FORMA da frase, e nenhuma regra de palavra-chave deve ter a
+     * chance de opinar sobre uma pergunta. Ver `looksLikeQuestion()`.
+     */
+    if (looksLikeQuestion(text)) {
+      this.logger.debug('Frase interrogativa — nenhum comando de escrita é proposto');
+      return { command: null, guess: QUESTION_GUESS, screenHint: null };
+    }
 
     const rule = DeterministicIntentParser.RULES.find(
       (candidate) =>
