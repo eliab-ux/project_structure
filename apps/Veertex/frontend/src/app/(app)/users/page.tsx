@@ -8,6 +8,7 @@ import { useSnackbar } from 'notistack';
 import { IMaskInput } from 'react-imask';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Dialog from '@mui/material/Dialog';
@@ -36,6 +37,9 @@ import { apiErrorMessage } from 'src/services/api';
 import roleService from 'src/services/roleService';
 import userService from 'src/services/userService';
 import { AdminUser, Role } from 'src/types/admin';
+
+/** Largura das telas de administração — a mesma nas quatro, para a troca entre elas não deslocar a página. */
+const ADMIN_MAX_WIDTH = 1200;
 
 /**
  * Usuários da conta (01_Veertex_Core §3.3).
@@ -200,7 +204,7 @@ export default function UsersPage() {
   );
 
   return (
-    <section aria-label="Usuários">
+    <Box component="section" aria-label="Usuários" sx={{ maxWidth: ADMIN_MAX_WIDTH, mx: 'auto' }}>
       <PageHeader
         title="Usuários"
         description="Quem entra no sistema, e com qual papel."
@@ -423,6 +427,6 @@ export default function UsersPage() {
           </DialogActions>
         </form>
       </Dialog>
-    </section>
+    </Box>
   );
 }

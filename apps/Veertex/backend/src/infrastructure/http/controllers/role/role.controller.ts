@@ -33,7 +33,16 @@ import { PermissionGuard } from '../../../security/guards/permission.guard';
 import { RequirePermission } from '../../../security/decorators/require-permission.decorator';
 import { CurrentUser } from '../../../security/decorators/current-user.decorator';
 import { RoleResponseDto } from '../auth/dto/auth-response.dto';
-import { CreateRoleRequestDto, UpdateRoleRequestDto } from './dto/role-request.dto';
+import {
+  CreateRoleRequestDto,
+  ReadPhraseRequestDto,
+  UpdateRoleRequestDto,
+} from './dto/role-request.dto';
+import {
+  ReadPermissionPhraseQuery,
+  ReadPermissionPhraseUseCase,
+} from '../../../../contexts/role/application/use-cases/read-permission-phrase/read-permission-phrase.use-case';
+import { PermissionPhraseReading } from '../../../../contexts/role/domain/permission-phrase';
 
 @Controller('roles')
 @UseGuards(PermissionGuard)
@@ -43,6 +52,7 @@ export class RoleController {
     private readonly createRoleUseCase: CreateRoleUseCase,
     private readonly updateRoleUseCase: UpdateRoleUseCase,
     private readonly deleteRoleUseCase: DeleteRoleUseCase,
+    private readonly readPermissionPhraseUseCase: ReadPermissionPhraseUseCase,
   ) {}
 
   @Get()
@@ -62,6 +72,24 @@ export class RoleController {
   @RequirePermission(PERMISSIONS.roles.read)
   catalog(): { areas: string[]; permissions: string[] } {
     return { areas: PERMISSION_AREAS, permissions: ALL_PERMISSIONS };
+  }
+
+  /**
+   * Traduz uma frase em permissões (§5.1). **Não grava nada** — devolve a leitura para conferência.
+   *
+   * `POST` e não `GET` porque a frase é o corpo: uma frase sobre quem pode o quê na organização do
+   * cliente não deve viajar na URL, onde entra em log de proxy e em histórico de navegador.
+   * `@HttpCode(200)` porque nada foi criado.
+   *
+   * Exige `roles.update`, a MESMA permissão de alterar um papel — e não `roles.read`. Ler a
+   * tradução é o primeiro passo de alterar; dar a quem só lê uma ferramenta que só serve para
+   * quem escreve seria oferecer um caminho que termina em 403 na gravação.
+   */
+  @Post('read-phrase')
+  @HttpCode(200)
+  @RequirePermission(PERMISSIONS.roles.update)
+  async readPhrase(@Body() dto: ReadPhraseRequestDto): Promise<PermissionPhraseReading> {
+    return this.readPermissionPhraseUseCase.execute(new ReadPermissionPhraseQuery(dto.phrase));
   }
 
   @Post()

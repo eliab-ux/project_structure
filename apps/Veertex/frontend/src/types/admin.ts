@@ -133,3 +133,24 @@ export interface PermissionCatalog {
   areas: string[];
   permissions: string[];
 }
+
+/**
+ * A tradução de uma frase em permissões (§5.1). Espelha `GET /roles/read-phrase` do backend.
+ *
+ * `undecided` não é "sem resposta" — é a resposta: a frase não falou daquela permissão, e o sistema
+ * não supõe. É o estado que a tela é obrigada a exibir, e a razão de ele existir no contrato.
+ */
+export type PermissionDecision = 'granted' | 'denied' | 'undecided';
+
+export interface PermissionVerdict {
+  permission: string;
+  decision: PermissionDecision;
+  /** Trecho LITERAL da frase que originou a decisão. `null` quando a frase não disse. */
+  quote: string | null;
+  reason: string;
+}
+
+export interface PermissionPhraseReading {
+  lines: string[];
+  verdicts: PermissionVerdict[];
+}

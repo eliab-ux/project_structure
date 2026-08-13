@@ -1,5 +1,11 @@
 import api from 'src/services/api';
-import { CreateRolePayload, PermissionCatalog, Role, UpdateRolePayload } from 'src/types/admin';
+import {
+  CreateRolePayload,
+  PermissionCatalog,
+  PermissionPhraseReading,
+  Role,
+  UpdateRolePayload,
+} from 'src/types/admin';
 
 async function list(): Promise<Role[]> {
   const response = await api.get<Role[]>('/roles');
@@ -33,6 +39,18 @@ async function remove(id: string): Promise<void> {
   await api.delete(`/roles/${id}`);
 }
 
-const roleService = { list, permissionCatalog, create, update, remove };
+/**
+ * Traduz uma frase em permissões. **Não grava nada** — devolve o plano para o humano conferir.
+ *
+ * `POST` com a frase no CORPO, nunca em query string: a frase descreve quem pode o quê dentro da
+ * empresa do cliente, e URL entra em log de proxy e em histórico de navegador. Quem grava é o
+ * `update()` acima, pela rota de sempre e com o guard de sempre.
+ */
+async function readPhrase(phrase: string): Promise<PermissionPhraseReading> {
+  const response = await api.post<PermissionPhraseReading>('/roles/read-phrase', { phrase });
+  return response.data;
+}
+
+const roleService = { list, permissionCatalog, readPhrase, create, update, remove };
 
 export default roleService;

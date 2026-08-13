@@ -37,6 +37,12 @@ const ADMIN_NAV = [
   { href: '/companies', label: 'Empresas', permission: 'companies.read' },
   { href: '/users', label: 'Usuários', permission: 'users.read' },
   { href: '/roles', label: 'Papéis', permission: 'roles.read' },
+  // Módulos é tela de CONFIGURAÇÃO DA CONTA, não de módulo — por isso entra aqui, fixa, e não no
+  // menu derivado de `plano ∩ conta ∩ papel`. Ela é justamente onde esse cruzamento se administra:
+  // um menu que sumisse ao desligar módulos tiraria o caminho de voltar a ligá-los.
+  // `account.read` e não `account.update`: ver a configuração não é alterá-la (esconder não é
+  // proteger — quem só lê continua vendo, com os controles inertes e explicados).
+  { href: '/modules', label: 'Módulos', permission: 'account.read' },
 ] as const;
 
 /**

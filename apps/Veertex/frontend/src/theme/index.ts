@@ -142,8 +142,38 @@ const theme = createTheme({
     },
     MuiTableCell: {
       styleOverrides: {
-        head: { fontWeight: 700, color: NEUTRAL[600] },
+        head: {
+          fontWeight: 700,
+          color: NEUTRAL[600],
+          // O cabeçalho ganha o tom de painel, e não o fundo da linha: é o que separa "o que a
+          // coluna é" de "o que a linha traz" sem precisar de uma régua entre os dois.
+          backgroundColor: PANEL,
+          textTransform: 'uppercase',
+          fontSize: '0.75rem',
+          letterSpacing: '0.06em',
+        },
         root: { borderColor: NEUTRAL[300] },
+      },
+    },
+    /*
+     * O ACABAMENTO DAS TELAS DE CADASTRO (§5.3), no tema e não em cada página.
+     *
+     * Empresas, Usuários e Papéis usam `<TableContainer component={Paper} variant="outlined">` e
+     * `<Dialog>` — e por isso o revestimento é feito AQUI. Três páginas ajustadas à mão divergiriam
+     * no primeiro acerto de espaçamento, e tela nova nasceria com o visual antigo. Nenhum contrato
+     * muda: é só a superfície.
+     */
+    MuiTableContainer: {
+      styleOverrides: { root: { borderColor: ACCENT[300] } },
+    },
+    MuiTableRow: {
+      styleOverrides: {
+        root: { '&:last-child td': { borderBottom: 0 } },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: { backgroundColor: PANEL, border: `1px solid ${ACCENT[300]}` },
       },
     },
     MuiChip: { styleOverrides: { outlined: { borderColor: ACCENT[300] } } },

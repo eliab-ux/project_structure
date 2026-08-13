@@ -1,3 +1,8 @@
+// ⚠️ PRIMEIRO import: escolhe o tradutor determinístico. O `RoleModule` passou a ter um tradutor de
+// frase (§5.1), e o PADRÃO dele é o Gemini — sem esta linha, `POST /roles/read-phrase` faria chamada
+// externa paga e não determinística dentro da suíte.
+import '../helpers/intent-test-env';
+
 import { randomBytes } from 'node:crypto';
 import { AddressInfo } from 'node:net';
 import { Client } from 'pg';
@@ -330,6 +335,46 @@ describe('Contrato HTTP das telas de administração', () => {
 
       expect(response.status).toBe(200);
       expect((response.body as { permissions: string[] }).permissions).toEqual(['companies.read']);
+    });
+
+    it('POST /roles/read-phrase — readPhrase() traduz sem gravar nada', async () => {
+      const before = await call('/roles');
+
+      const response = await call('/roles/read-phrase', {
+        method: 'POST',
+        body: { phrase: 'pode ver empresas, mas não pode excluir empresa' },
+      });
+
+      expect(response.status).toBe(200);
+      const reading = response.body as {
+        lines: string[];
+        verdicts: { permission: string; decision: string; quote: string | null }[];
+      };
+
+      // A leitura cobre o catálogo INTEIRO: o silêncio aparece como "a decidir", nunca some.
+      const catalog = (await call('/roles/catalog')).body as { permissions: string[] };
+      expect(reading.verdicts).toHaveLength(catalog.permissions.length);
+
+      const find = (permission: string) =>
+        reading.verdicts.find((verdict) => verdict.permission === permission);
+      expect(find('companies.read')?.decision).toBe('granted');
+      expect(find('companies.delete')?.decision).toBe('denied');
+      expect(find('companies.create')?.decision).toBe('undecided');
+      expect(find('companies.create')?.quote).toBeNull();
+
+      // **Não gravou nada.** É a promessa da rota, e ela é verificada contra o estado real dos
+      // papéis — não contra o que a resposta afirma sobre si mesma.
+      const after = await call('/roles');
+      expect(after.body).toEqual(before.body);
+    });
+
+    it('POST /roles/read-phrase recusa corpo com campo a mais (forbidNonWhitelisted)', async () => {
+      const response = await call('/roles/read-phrase', {
+        method: 'POST',
+        body: { phrase: 'pode ver empresas', roleId: 'qualquer-coisa' },
+      });
+
+      expect(response.status).toBe(400);
     });
 
     it('DELETE /roles/:id — remove() devolve 204 sem corpo', async () => {

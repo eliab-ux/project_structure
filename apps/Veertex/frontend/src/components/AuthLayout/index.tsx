@@ -11,7 +11,18 @@ interface AuthLayoutProps {
   footer?: React.ReactNode;
 }
 
-/** The frame shared by login, forgot-password and reset-password. Semantic HTML per CLAUDE.md §3. */
+/**
+ * A moldura de login, esqueci-a-senha e redefinir-senha. HTML semântico conforme o CLAUDE.md §3.
+ *
+ * Revestida com os tokens do tema (§5.3): o mesmo `vx.panel` e a mesma borda `vx.accent` da Mesa e
+ * dos painéis de administração. A tela de entrada é a primeira coisa que o operador vê do sistema, e
+ * um login com acabamento de outro produto faz o resto parecer emendado.
+ *
+ * **O que NÃO mudou, e não pode mudar:** as mensagens genéricas. O login não diz "e-mail não
+ * cadastrado" e a recuperação responde igual para e-mail que existe e para e-mail que não existe —
+ * a diferença entregaria quais contas existem. O atraso progressivo por credencial também não é
+ * anunciado: dizer "aguarde 4s" ensina o atacante a medir o próprio progresso.
+ */
 export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProps) {
   return (
     <Box
@@ -34,7 +45,8 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
           maxWidth: 420,
           p: { xs: 3, sm: 4 },
           border: 1,
-          borderColor: 'divider',
+          bgcolor: 'vx.panel',
+          borderColor: 'vx.accent.300',
         }}
       >
         <Box component="header" sx={{ mb: 3 }}>

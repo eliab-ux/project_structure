@@ -9,6 +9,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import LockIcon from '@mui/icons-material/Lock';
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
@@ -38,7 +39,11 @@ import { PageHeader } from 'src/components/PageHeader';
 import { useAuth } from 'src/contexts/AuthContext';
 import { apiErrorMessage } from 'src/services/api';
 import roleService from 'src/services/roleService';
+import { RolePhraseComposer } from 'src/components/RolePhraseComposer';
 import { PermissionCatalog, Role } from 'src/types/admin';
+
+/** Largura das telas de administração — a mesma nas quatro, para a troca entre elas não deslocar a página. */
+const ADMIN_MAX_WIDTH = 1200;
 
 /**
  * Papéis e permissões (01_Veertex_Core §3.3).
@@ -227,7 +232,7 @@ export default function RolesPage() {
   );
 
   return (
-    <section aria-label="Papéis">
+    <Box component="section" aria-label="Papéis" sx={{ maxWidth: ADMIN_MAX_WIDTH, mx: 'auto' }}>
       <PageHeader
         title="Papéis"
         description="O que cada perfil de usuário pode fazer."
@@ -239,6 +244,20 @@ export default function RolesPage() {
           ) : null
         }
       />
+
+      {/*
+        A ENTRADA PRINCIPAL É A FRASE (§5.1). A tabela abaixo continua sendo a árvore completa —
+        ninguém *precisa* começar pela frase, e quem prefere marcar permissão a permissão continua
+        com o caminho de sempre, intacto.
+
+        A ordem na tela é a tese: quem administra um papel pensa em "a Ana pode vender mas não pode
+        dar desconto", não em `companies.update`. Deixar a frase no fim, como recurso avançado,
+        seria manter a tradução como enfeite de uma tela que continua exigindo o vocabulário do
+        sistema.
+      */}
+      {can('roles.update') && roles.length > 0 ? (
+        <RolePhraseComposer roles={roles} onApplied={load} />
+      ) : null}
 
       {state ?? (
         <TableContainer component={Paper} variant="outlined">
@@ -433,6 +452,6 @@ export default function RolesPage() {
           </Button>
         </DialogActions>
       </Dialog>
-    </section>
+    </Box>
   );
 }

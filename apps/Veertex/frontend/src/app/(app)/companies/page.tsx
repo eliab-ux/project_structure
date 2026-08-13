@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSnackbar } from 'notistack';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import FormControlLabel from '@mui/material/FormControlLabel';
@@ -26,6 +27,9 @@ import { useAuth } from 'src/contexts/AuthContext';
 import companyService from 'src/services/companyService';
 import { apiErrorMessage } from 'src/services/api';
 import { Company, CreateCompanyPayload, TAX_REGIME_LABEL } from 'src/types/admin';
+
+/** Largura das telas de administração — a mesma nas quatro, para a troca entre elas não deslocar a página. */
+const ADMIN_MAX_WIDTH = 1200;
 
 /**
  * Empresas da conta (01_Veertex_Core §3.2).
@@ -117,7 +121,7 @@ export default function CompaniesPage() {
   );
 
   return (
-    <section aria-label="Empresas">
+    <Box component="section" aria-label="Empresas" sx={{ maxWidth: ADMIN_MAX_WIDTH, mx: 'auto' }}>
       <PageHeader
         title="Empresas"
         description="As empresas (CNPJs) que operam sob esta conta."
@@ -235,6 +239,6 @@ export default function CompaniesPage() {
         }}
         onSubmit={handleSubmit}
       />
-    </section>
+    </Box>
   );
 }
