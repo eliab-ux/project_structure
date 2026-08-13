@@ -5,7 +5,6 @@
   "description": "Monorepo com arquitetura hexagonal usando NestJS + MikroORM",
   "workspaces": [
     "packages/*",
-    "apps/*",
     "apps/kaza-tem-system/backend",
     "apps/kaza-tem-system/frontend",
     "apps/ecoa-system/backend",

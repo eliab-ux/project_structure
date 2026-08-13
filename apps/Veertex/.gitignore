@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+yarn.lock
+pnpm-lock.yaml
+# package-lock.json IS versioned — required by `npm ci` no build Docker (deploy reprodutível).
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+# Next.js: saída de build. Sem esta linha, 128 arquivos gerados entravam no commit do Veertex.
+# `next-env.d.ts` fica VERSIONADO de propósito, ao contrário do template do create-next-app:
+# `npm run typecheck` num clone novo roda antes de qualquer `next build`, e sem o arquivo o tsc
+# perderia as declarações de tipo do Next.
+.next/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+# Arquivo lixo de nome reservado do Windows (criado por engano)
+/nul
+
+# Logs
+logs/
+*.log
+*.err
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# MikroORM
+# NADA de migration é ignorado, e isso é deliberado.
+#
+# O monorepo de origem tinha aqui uma regra ignorando `apps/*/src/**/migrations/*.ts`. Ela nunca
+# pegou arquivo nenhum (o glob `apps/*` não atravessa dois níveis de diretório), mas a INTENÇÃO
+# contradiz a regra 8 do CLAUDE.md: migration é artefato versionado, e é o que permite reproduzir o
+# schema — inclusive as policies de RLS, que existem só na migration. Uma migration ignorada é um
+# banco de produção que ninguém consegue recriar.
+
+# Saída de compilação que o tsc dos pacotes NÃO deveria produzir dentro de src/ — o tsconfig deles
+# tem outDir: ./dist. Vinham do monorepo, onde alguém rodou `tsc` sem a config do pacote e o
+# resultado foi versionado por engano. A regra impede que voltem.
+packages/*/src/**/*.js
+packages/*/src/**/*.js.map
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.d.ts.map
