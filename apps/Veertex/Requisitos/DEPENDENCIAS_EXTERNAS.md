@@ -174,6 +174,42 @@ Não é vazamento nem defeito de código; é uma condição do canal que ningué
 canal ficou correto", que é uma pergunta de auditoria — e uma data escrita por antecipação seria uma
 afirmação sobre algo que ainda não foi verificado.
 
+### Chave PRÓPRIA do Veertex — decidido em 14/08/2026, aguardando a chave
+
+Hoje o Veertex usa **a mesma chave do SpreadGuard**, copiada em 13/08/2026 do `.env` daquele projeto
+porque era o caminho mais curto para a Mesa funcionar. Eliab vai criar **projeto e chave próprios do
+Veertex** no Google Cloud.
+
+**Os três motivos, escritos para não se perderem** — nenhum deles é sobre a Mesa funcionar melhor:
+
+| Motivo | O que quebra hoje |
+|---|---|
+| **Custo não é atribuível** | Toda chamada dos dois produtos cai na mesma fatura, sem separação. Não dá para responder "quanto custa a Mesa por mês" — e sem essa resposta não dá para decidir se um comando caro vale a pena |
+| **A cota é dividida** | Rate limit e quota são do projeto, não do produto. Um pico no SpreadGuard degrada a Mesa do Veertex, e vice-versa — com a agravante de que o culpado não aparece em lugar nenhum: a tela só fica lenta ou recusa |
+| **Um vazamento derruba os dois** | Chave comprometida obriga a rotacionar nos dois produtos ao mesmo tempo, e a janela entre "vazou" e "todos rotacionaram" é o dobro da necessária. Raio de explosão é o que a separação reduz |
+
+⚠️ **Atenção ao criar o projeto:** projeto novo **não vem com billing ligado**, e chave sem billing é
+free tier — ou seja, criar a chave própria resolveria o isolamento e **manteria** o compartilhamento
+de conteúdo para melhoria de produto descrito acima. As duas coisas precisam acontecer juntas:
+**projeto próprio + billing ativo nele**. Se só uma acontecer, esta seção continua aberta.
+
+**Quando a chave chegar**, a fila é:
+
+1. trocar `GEMINI_API_KEY` no `.env.local` (a chave nunca passa pelo chat — leio e escrevo direto no
+   arquivo, e o valor não é impresso);
+2. confirmar a chamada de verdade contra a API, com o modelo em uso;
+3. preencher aqui: **data da troca**, e que a chave **deixou de ser compartilhada com o SpreadGuard**;
+4. preencher a linha "Canal correto a partir de" acima, se o billing estiver ativo no projeto novo.
+
+| | |
+|---|---|
+| **Chave própria a partir de** | ⏳ *a preencher quando a chave nova estiver em uso e verificada* |
+| **Compartilhamento com o SpreadGuard** | ⏳ *em vigor até a troca* |
+
+Nota de higiene, menor: a chave do SpreadGuard hoje existe em dois `.env.local` da mesma máquina. A
+troca a remove daqui. Não é vazamento — não saiu do ambiente do Eliab —, então não exige rotação no
+SpreadGuard; só deixa de estar em dois lugares.
+
 ### ⚠️ O gatilho — volta ao Eliab ANTES de ser implementado
 
 **No momento em que o input passar a incluir mensagem recebida de cliente** — texto de WhatsApp de um
