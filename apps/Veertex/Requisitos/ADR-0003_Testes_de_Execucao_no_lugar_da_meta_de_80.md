@@ -140,6 +140,33 @@ sensível a carga. Isso é fatia própria.
 2. Falhou nessas duas? Rode **só elas**. Passaram → o vermelho era da máquina, e diga isso em voz
    alta em vez de deixar passar como "flaky".
 3. Falhou por asserção (`expect(received)`) e não por `Exceeded timeout`? Aí é código. Investigue.
+4. **Anote na tabela abaixo.** Terceira ocorrência da mesma suíte → deixa de ser da máquina e vira
+   defeito a corrigir, na frente do que estiver na fila.
+
+### O limite de três — por que a regra precisa de um teto
+
+Decisão de Eliab, 14/08/2026: *"se a mesma suíte precisar da explicação 'era da máquina' três vezes,
+ela deixa de ser da máquina e vira defeito a corrigir. Sem esse limite, a regra que protege contra
+ignorar vermelho vira a justificativa para ignorá-lo."*
+
+O ponto é exato. Uma explicação **verdadeira** e **ilimitada** é indistinguível de uma desculpa: as
+duas produzem o mesmo comportamento — seguir sem olhar. E a explicação aqui é verdadeira, o que a
+torna mais perigosa do que uma desculpa qualquer, porque não há atrito em repeti-la. Três é o ponto em
+que "ambiente" deixa de ser a hipótese mais simples: uma suíte que falha com essa frequência está
+frágil por construção, e a fragilidade **é** o defeito.
+
+### Registro de ocorrências
+
+Contagem por escrito, não de memória — contagem que vive na cabeça de alguém reinicia em cada sessão,
+e três vezes esquecidas são três vezes que não aconteceram.
+
+| # | Data | Suíte | Sintoma | Contexto |
+|---|---|---|---|---|
+| 1 | 2026-08-13 | `login-throttle` + specs com `runCli` | 14 falhas, depois 4, na mesma árvore | dois dev servers + `next build` concorrendo |
+
+Na **terceira linha** de uma mesma suíte, o item sai desta tabela e entra como fatia: medir o atraso
+por instrumentação (o port do throttle informando a espera calculada) em vez de por cronômetro, e
+manter o cronômetro num único teste marcado como sensível a carga.
 
 Registrado também no `CLAUDE.md`, em *Regras aprendidas com defeito real*.
 

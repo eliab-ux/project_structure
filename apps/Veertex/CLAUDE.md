@@ -1188,6 +1188,20 @@ vermelho era da máquina. E não normalize isso: um vermelho que às vezes não 
 não olhar o vermelho que significa. Alargar tolerância **não** é a correção — esconderia o defeito
 oposto (o atraso que parou de acontecer). Ver o ADR-0003.
 
+**O limite, e ele é a parte que impede a regra de se virar contra si mesma** (Eliab, 14/08/2026):
+**"era da máquina" vale duas vezes. Na terceira, a suíte deixa de ser da máquina e vira defeito a
+corrigir** — e a correção entra na frente do que estiver na fila.
+
+Sem esse teto, a explicação que existe para *proteger* contra ignorar vermelho passa a ser a
+*justificativa* para ignorá-lo: basta repeti-la. Uma explicação verdadeira e ilimitada é
+indistinguível de uma desculpa — as duas produzem exatamente o mesmo comportamento, que é seguir sem
+olhar. Três é o ponto em que a hipótese "ambiente" deixa de ser a mais simples: uma suíte que falha
+com essa frequência está frágil por construção, e a fragilidade é o defeito.
+
+Contar de verdade, e não de memória: registre no adendo do ADR-0003 cada vez que a frase for usada,
+com data e suíte. Contagem que vive na cabeça de alguém reinicia sozinha em cada sessão — e três
+vezes esquecidas são três vezes que não aconteceram.
+
 ## Testing Strategy
 
 - **Unit tests** (`test/unit/`): Domain entities, value objects, use cases (mock repositories)
