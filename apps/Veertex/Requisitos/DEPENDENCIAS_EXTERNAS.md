@@ -149,6 +149,31 @@ o que se tentou fazer na conta).
 servidores do Google** — não é reconhecimento local. É o que mais pesa na decisão, e o parser de texto
 prova a arquitetura inteira sem esse peso.
 
+### ⚠️ Free tier: compartilhamento para melhoria de produto — achado em 14/08/2026
+
+O §5 autorizou **processamento**. Não discutiu **compartilhamento com terceiro que usa o dado para
+melhorar o próprio produto** — e era isso que estava acontecendo, porque a chave em uso é de free
+tier.
+
+Documentação do Google, verificada em 14/08/2026: no free tier do Gemini API / AI Studio, o conteúdo
+enviado **é usado para melhorar os produtos do Google, e revisores humanos podem vê-lo**. No tier
+pago (e no Vertex AI), os termos dizem o oposto: prompts e respostas não são usados para treino, e
+ficam retidos por período limitado apenas para abuso e obrigação legal.
+
+Na prática: as frases da Mesa e as frases de permissão — *"a Ana pode vender mas não pode dar
+desconto"* — passaram por um canal onde podiam ser lidas por pessoas e usadas para treinar modelo.
+Não é vazamento nem defeito de código; é uma condição do canal que ninguém tinha lido.
+
+| | |
+|---|---|
+| **Achado em** | 2026-08-14 |
+| **Decisão** | Eliab ativa o billing na chave (muda os termos aplicáveis; nenhuma linha de código) |
+| **Canal correto a partir de** | ⏳ *a preencher quando a mudança for confirmada* |
+
+⚠️ **Esta linha fica em branco de propósito até a confirmação.** Ela responde "a partir de quando o
+canal ficou correto", que é uma pergunta de auditoria — e uma data escrita por antecipação seria uma
+afirmação sobre algo que ainda não foi verificado.
+
 ### ⚠️ O gatilho — volta ao Eliab ANTES de ser implementado
 
 **No momento em que o input passar a incluir mensagem recebida de cliente** — texto de WhatsApp de um
@@ -173,29 +198,44 @@ default silencioso com consequência fora do código.
 
 | | |
 |---|---|
-| **Estado** | **Adiado por decisão.** Não implementar. |
-| **Data** | 2026-08-12, reafirmado em 2026-08-14 |
+| **Estado** | **Destravado com condição.** Só entra se o reconhecimento for LOCAL |
+| **Data** | adiado em 2026-08-12 · destravado em 2026-08-14 |
 | **Decisor** | Eliab |
-| **Bloqueado por** | Base legal para envio de ÁUDIO — decisão do Eliab, não questão técnica |
-| **Impacto** | A Mesa aceita texto; o operador digita. O protótipo mostrava um microfone |
+| **Bloqueado por** | Medição: `pt-BR` disponível *on-device* no Chrome desta base de usuários |
 
-O que já existe e sustenta esta fatia quando ela vier: a Mesa inteira, o `IntentParserPort`, os oito
-comandos, o rascunho com procedência e a aprovação humana. Ditar não muda nada disso — troca o
-teclado por um canal de entrada. **A fatia é pequena; o que falta não é código.**
+O que mudou em 14/08/2026: existe caminho em que **o áudio não sai da máquina**. O Chrome expõe
+reconhecimento *on-device* na Web Speech API (`processLocally: true`, com `available()` e `install()`
+para o pacote de idioma). Nesse modo, o que chega ao Gemini é **o texto transcrito** — e texto ditado
+pelo operador sobre a própria operação já está autorizado pelo §5. **A questão de LGPD se resolve por
+construção, não por termo contratual.**
 
-**O que falta é a base legal.** A Web Speech API do Chrome **envia o áudio para servidores do
-Google** — não é reconhecimento local, e a distinção é o ponto inteiro. Áudio é mais do que a
-transcrição dele: carrega voz (biometria), ruído de fundo, e o que mais estiver sendo dito na sala
-quando o botão for pressionado. O §5 autorizou **texto** ditado pelo operador sobre a própria
-operação, com base em execução de contrato; áudio amplia o que sai da empresa de uma forma que aquela
-autorização não cobre.
+### A REGRA — decidida por Eliab em 14/08/2026, vale para qualquer implementação
 
-### ⚠️ Volta quando o Eliab decidir a base legal para envio de áudio
+1. **`processLocally: true` SEMPRE.** O padrão da API é `false`, e `false` deixa o navegador escolher
+   — podendo mandar o áudio para a nuvem. O padrão da API é o oposto do nosso.
+2. **`available()` diferente de `available` → o microfone NÃO APARECE.** Não desabilitado: ausente.
+   Controle inerte é promessa de recurso que não existe (§10).
+3. **Nunca cair para a nuvem por acidente.** Falha de reconhecimento local é falha, não é motivo para
+   tentar o outro caminho. O erro `language-not-supported` é resposta legítima e final.
 
-E é ele quem decide — não é conclusão a que este repositório chegue sozinho. Enquanto não houver
-decisão, o campo de texto é o único caminho, e **não deve haver ícone de microfone desabilitado na
-tela**: controle inerte é promessa de recurso que não existe, e o §10 é explícito quanto a isso
-("casca que suporta comando inexistente é dívida, não preparo").
+Estas três não são detalhe de implementação: são a razão de o item ter saído do adiamento. Uma
+implementação que as viole reabre a decisão de LGPD que elas fecharam.
+
+### O que falta medir antes de implementar
+
+| Pergunta | Como responde | Estado |
+|---|---|---|
+| `pt-BR` existe on-device, e em qual qualidade (`command`/`dictation`/`conversation`)? | página de teste descartável, na máquina do Eliab | **pendente** |
+| Qual versão do Chrome/Edge suporta `available()`/`processLocally`? | a mesma página reporta o user agent | **pendente** |
+| Qualidade em frase real (nome próprio, sigla, código) | cinco frases ditadas na mesma página | **pendente** |
+
+A lista pública de idiomas do Live Caption — mesmo motor — **inclui português**; o que não está
+confirmado é se o pacote é `pt-BR` ou `pt-PT`, e se `dictation` está disponível para ele. Sem essa
+resposta, não se escreve código: o valor inteiro do item depende dela.
+
+**Se a medição der negativa**, o segundo caminho é Whisper em WASM (`transformers.js`) — áudio também
+não sai, ao custo de 40–150 MB de modelo baixado uma vez e alguns segundos por frase. A escolha entre
+qualidade e peso volta ao Eliab; não é decisão deste repositório.
 
 ## 7. Entrada por IMAGEM — ler documento de cliente e preparar o cadastro
 
@@ -235,6 +275,53 @@ construção**, e com um conteúdo mais sensível do que a mensagem de WhatsApp 
 exemplo. Exige base legal para o tratamento, consentimento do titular, aviso visível na interface, e
 uma decisão sobre retenção que o texto não exigiu: **a imagem é guardada? por quanto tempo? onde?**
 Nenhuma dessas quatro é decisão de implementação.
+
+### O desenho, CONFIRMADO por Eliab em 14/08/2026
+
+Não implementar nada disto antes do `contact`. Registrado para que a fatia, quando vier, não redecida
+o que já está decidido:
+
+| Decisão | Detalhe |
+|---|---|
+| **A imagem não é guardada** | Processada para extrair campos e descartada. Sem `multer`, sem arquivo temporário, sem cache. O base64 vive no corpo da requisição e morre com ela |
+| **O que persiste é o rascunho** | Nunca o arquivo. Com procedência dizendo que veio de imagem |
+| **`FieldOrigin: 'externo'`** | O valor já existe no domínio desde o §6.1, declarado e nunca produzido — foi criado exatamente para "fonte externa não confiável precisa ser visualmente distinguível" |
+| **`review: true` obrigatório** | Todo campo lido de imagem. OCR erra dígito de CPF, e campo desses aprovado sem leitura é cadastro errado com aparência de conferido |
+| **base64 em JSON** | Padrão da casa; nunca multipart com Fastify. O `bodyLimit` já é 25 MB, mas a rota com anexo merece limite próprio, menor |
+| **O base64 nunca entra em log** | Nem em erro, nem o tamanho dentro de `catch`. Mesma regra do texto, com mais peso |
+| **O adapter determinístico RECUSA o anexo, em voz alta** | Ignorar em silêncio faria a suíte passar enquanto produção lê a imagem — a divergência que a regra 1 do `CLAUDE.md` proíbe |
+
+O port muda em uma linha, aditiva: `attachment?: { mimeType, dataBase64 }` em `IntentParseRequest`.
+**Não antes do `contact`** — sem `CreateContact`, seria assinatura esperando executor.
+
+### ⚠️ A lacuna que o billing NÃO resolve — decisão de produto, antes de existir tela
+
+Ativar o billing na chave do Gemini resolve *uma* coisa: os termos passam a dizer que o conteúdo não
+é usado para melhorar produto do Google nem revisado por humano. **Isso não toca no problema
+principal**, que é anterior ao provedor:
+
+> **O titular da foto não é parte de contrato nenhum.** O contrato existe entre o Veertex e a conta.
+> O cliente fotografado não assinou nada com o Veertex e, na maior parte dos casos, não sabe que a
+> foto do documento dele foi enviada a um provedor de IA.
+
+Nenhum termo contratual com o Google altera isso, porque o problema não é o que o Google faz com o
+dado — é a **base legal para o dado ter saído**.
+
+**Encaminhamento provável (Eliab, 14/08/2026), a confirmar antes da implementação:** aviso na tela
+para quem fotografa, com o **consentimento sendo responsabilidade do usuário do Veertex** — ele é
+quem tem a relação com o titular, e é quem pode pedir. O Veertex informa; o operador obtém.
+
+Se for esse o desenho, três coisas passam a ser requisito e precisam estar escritas antes de a tela
+existir:
+
+1. **o texto do aviso** — dizer que a imagem é enviada a um provedor externo para leitura, que não
+   fica guardada aqui, e que obter o consentimento do titular é responsabilidade de quem fotografa;
+2. **quando ele aparece** — antes da câmera abrir, não depois da foto tirada. Aviso posterior é
+   informação sobre algo que já aconteceu;
+3. **se há registro de que foi exibido** — e aí volta a pergunta de auditoria do ADR-0004, que
+   continua não implementada.
+
+Nenhuma das três é decisão de implementação. **Elas voltam ao Eliab.**
 
 ### Quando isto voltar à mesa
 
