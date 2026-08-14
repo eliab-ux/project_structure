@@ -16,6 +16,8 @@ import MenuItem from '@mui/material/MenuItem';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import LogoutIcon from '@mui/icons-material/Logout';
+import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
+import Tooltip from '@mui/material/Tooltip';
 import { useAuth } from 'src/contexts/AuthContext';
 import { MESA } from 'src/constants/routes';
 
@@ -61,6 +63,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  // Âncora própria para a rota de escape: compartilhar a do menu do usuário faria os dois abrirem no
+  // mesmo lugar e um fechar o outro.
+  const [navAnchorEl, setNavAnchorEl] = useState<HTMLElement | null>(null);
 
   const onMesa = pathname === MESA;
   const visibleNav = ADMIN_NAV.filter((item) => !item.permission || can(item.permission));
@@ -130,6 +135,69 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Stack>
 
           <Box sx={{ flexGrow: 1 }} />
+
+          {/*
+            A ROTA DE ESCAPE DA MESA — a omissão que o §3 tinha (apontada por Eliab, 14/08/2026).
+
+            O §3 decidiu que a barra de telas não aparece na Mesa e que `Esc` volta PARA ela. As duas
+            coisas juntas deixavam um caminho sem volta: quem está na Mesa e não é atendido — porque o
+            canal de tradução caiu, ou porque a frase não corresponde a nenhum dos oito comandos —
+            ficava sem saída nenhuma na tela.
+
+            E o caso pior é justamente o que a Mesa não cobre: com o canal indisponível, **nem o painel
+            de recusa aparece** (o `ensureAvailable()` lança antes de traduzir, e a tela só mostra um
+            erro em snackbar). Um link dentro da resposta de recusa não resolveria esse caso; no
+            cabeçalho, o caminho existe independentemente de qualquer coisa ter funcionado.
+
+            Discreto de propósito: ícone sem rótulo, e só na Mesa. É rota de escape, não menu
+            principal — a tese do §3 é que a Mesa é onde se DIZ o que se quer, e um menu competindo
+            com o campo de intenção convidaria a voltar ao hábito de navegar por telas. Nas telas, a
+            barra completa continua aparecendo como sempre.
+          */}
+          {onMesa && visibleNav.length > 1 ? (
+            <>
+              <Tooltip title="Ir para as telas">
+                <IconButton
+                  onClick={(event) => setNavAnchorEl(event.currentTarget)}
+                  aria-label="Ir para as telas"
+                  aria-haspopup="menu"
+                  size="small"
+                  color="inherit"
+                  sx={{ mr: 0.5, display: { xs: 'none', md: 'inline-flex' } }}
+                >
+                  <GridViewOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+
+              <Menu
+                anchorEl={navAnchorEl}
+                open={!!navAnchorEl}
+                onClose={() => setNavAnchorEl(null)}
+              >
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ px: 2, py: 0.5, display: 'block' }}
+                >
+                  Se eu não souber fazer, use as telas
+                </Typography>
+                {visibleNav
+                  // A Mesa fica fora: já se está nela, e um item que não leva a lugar nenhum gasta a
+                  // atenção de quem abriu o menu procurando saída.
+                  .filter((item) => item.href !== MESA)
+                  .map((item) => (
+                    <MenuItem
+                      key={item.href}
+                      component={NextLink}
+                      href={item.href}
+                      onClick={() => setNavAnchorEl(null)}
+                    >
+                      {item.label}
+                    </MenuItem>
+                  ))}
+              </Menu>
+            </>
+          ) : null}
 
           <Typography variant="body2" sx={{ mr: 1, display: { xs: 'none', sm: 'block' } }}>
             {user?.name}

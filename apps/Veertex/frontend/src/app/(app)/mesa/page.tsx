@@ -463,8 +463,14 @@ function RejectionPanel({ rejection }: { rejection: IntentNotSupported }) {
         </Typography>
       )}
 
+      {/*
+        A recusa aponta ONDE estão as telas. Antes ela dizia "o resto é pelas telas" sem dizer como
+        chegar a elas — e na Mesa a barra de navegação não aparece (§3), então a frase mandava o
+        usuário a um lugar que ele não conseguia encontrar.
+      */}
       <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-        O resto ainda é pelas telas. <strong>Esc</strong> traz você de volta para cá.
+        O resto ainda é pelas telas — use o ícone de quadrados no topo da página para abri-las.{' '}
+        <strong>Esc</strong> traz você de volta para cá.
       </Typography>
     </Alert>
   );

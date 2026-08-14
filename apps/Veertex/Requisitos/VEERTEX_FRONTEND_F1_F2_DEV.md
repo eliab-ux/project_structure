@@ -116,6 +116,21 @@ Elementos, em ordem de peso visual:
 5. **Lateral:** "feito sozinho hoje" (ações automáticas concluídas, sem decisão
    pendente) e "módulos ativos nesta conta" com a nota do §3.
 
+> ⚠️ **A VOZ está OMITIDA, e a IMAGEM não está prevista aqui** (reafirmado por Eliab, 14/08/2026).
+> O item 2 acima diz "texto e voz lado a lado"; o implementado é **só texto**. O microfone depende de
+> base legal para envio de ÁUDIO — a Web Speech API manda o áudio para servidores do Google —, e a
+> entrada por IMAGEM (fotografar documento de cliente e preparar o cadastro) depende de três coisas:
+> o comando `CreateContact` (backend não construído), o `IntentParserPort` aceitar arquivo, e uma
+> decisão de LGPD mais pesada que a do texto, porque documento de pessoa física traz CPF e RG.
+> **Nenhuma das duas deve aparecer como controle desabilitado na tela.** Ver
+> `DEPENDENCIAS_EXTERNAS.md` §6 e §7.
+
+> ⚠️ **A ROTA DE ESCAPE da Mesa** (omissão apontada por Eliab em 14/08/2026): o §3 decidiu que a barra
+> de telas não aparece na Mesa e que `Esc` volta para ela — o que deixava sem saída quem não fosse
+> atendido pela tradução, e o caso pior é o canal indisponível, em que nem a resposta de recusa
+> aparece. Implementado um caminho **discreto** no cabeçalho (ícone sem rótulo, só na Mesa) para
+> Empresas, Usuários, Papéis e Módulos. Discreto de propósito: é rota de escape, não menu principal.
+
 > ⚠️ **"Feito sozinho hoje" está OMITIDO da implementação** (decidido por Eliab, 12/08/2026). Não
 > existe fonte de dados: nenhuma ação automática concluída é registrada em lugar algum, e nesta fase
 > **nada acontece sem aprovação humana** — então não há o que listar. Preencher a seção com exemplo
