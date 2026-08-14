@@ -104,6 +104,16 @@ export function RolePhrasePanel({
   const losesRoleAdministration =
     administersRoles(role.permissions) && !administersRoles(nextPermissions);
 
+  /**
+   * O papel tem o curinga `*`, e por isso a frase não muda nada de efetivo.
+   *
+   * Preservar o `*` em silêncio é a decisão certa — tirá-lo porque a frase não o mencionou seria a
+   * maior alteração possível feita por omissão. Mas silêncio na TELA sobre uma aplicação que não
+   * altera nada parece defeito: o usuário decide oito permissões, clica em aplicar, e nada acontece.
+   * Então a tela diz o que está acontecendo e o que fazer se for isso que ele quer de fato.
+   */
+  const hasWildcard = role.permissions.includes('*');
+
   return (
     <Paper
       variant="outlined"
@@ -117,6 +127,16 @@ export function RolePhrasePanel({
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
         Nada é gravado antes de você aplicar.
       </Typography>
+
+      {hasWildcard ? (
+        <Alert severity="info" role="status" sx={{ mt: 2 }}>
+          <strong>{role.name} tem acesso total (curinga “*”), e a frase não vai mudar isso.</strong>{' '}
+          O curinga concede tudo o que existe hoje e tudo o que for criado depois, então ele
+          continua valendo mesmo que você negue permissões abaixo — e eu não o removo por conta
+          própria, porque sua frase não falou dele. Para de fato limitar este papel, tire o acesso
+          total pela lista completa de permissões, abaixo nesta página.
+        </Alert>
+      ) : null}
 
       <Box sx={{ mt: 2.5 }}>
         <Typography variant="overline" component="h3">

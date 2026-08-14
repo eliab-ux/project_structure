@@ -105,13 +105,48 @@ com `search_path` fixo.
 Se qualquer atributo vier `true`, **o RLS local não vale nada e os testes de isolamento passam sem
 significado** — verde sem prova é pior do que vermelho.
 
-### 6. Rodar os testes — como `veertex_app`
+### 6. Rodar os testes — no BANCO DE TESTE, como `veertex_app`
+
+⚠️ **A suíte roda contra `veertex_test`, nunca contra `veertex`.** Ela APAGA CONTAS por desenho — é o
+que dá sentido aos testes de isolamento entre tenants —, e enquanto os dois ambientes compartilhavam
+o banco, rodar os testes destruía os dados de quem estivesse com a aplicação aberta. Aconteceu: o
+login passou a responder `unknown_email` no meio de uma sessão porque a conta do `seed:dev` havia
+sido apagada.
+
+Provisione o banco de teste com o **mesmo** script de produção — é o artefato cujo comportamento os
+testes de isolamento existem para verificar, então testar contra outro provisionamento anularia o
+propósito:
+
+```bash
+docker exec -i veertex-pg-dev psql -U postgres -d postgres -v ON_ERROR_STOP=1   -v db_name=veertex_test -v owner_password=SENHA_OWNER -v app_password=SENHA_APP   -f - < deploy/sql/001_create_roles.sql
+```
+
+E aponte as duas variáveis no `.env.local` (os papéis são os mesmos; só o banco muda):
+
+```env
+DATABASE_URL_TEST=postgresql://veertex_app:SENHA_APP@127.0.0.1:5433/veertex_test
+DATABASE_URL_MIGRATIONS_TEST=postgresql://veertex_owner:SENHA_OWNER@127.0.0.1:5433/veertex_test
+```
+
+O `test/setup-env.ts` troca `DATABASE_URL`/`DATABASE_URL_MIGRATIONS` por essas antes de qualquer spec
+carregar, e **aborta o processo** se elas faltarem, se forem iguais às de desenvolvimento, ou se o
+nome do banco não contiver `test`. A guarda é a parte que importa: o risco não é a troca falhar de
+forma visível, é ela não acontecer e ninguém perceber — a suíte rodaria verde limpando o banco de
+desenvolvimento exatamente como antes.
+
+O schema do banco de teste é criado sozinho: o primeiro spec que sobe a aplicação aplica as
+migrations no boot.
 
 ```bash
 npm run test:integration   # §7.2 (isolamento) e §7.4 (ciclo de vida de módulo)
-npm run verify:rls         # as mesmas asserções do §7.2, pelo CLI
+npm run verify:rls         # as mesmas asserções do §7.2, pelo CLI (usa o banco de DEV)
 npm test                   # unitários
 ```
+
+⚠️ **Rode a suíte sozinho** — sem `next build`, sem dev server, sem typecheck em paralelo. Duas
+suítes medem tempo real (`login-throttle` e tudo que usa `runCli`) e falham por concorrência de CPU
+sem que nada esteja errado no código: em 13/08/2026, a mesma árvore deu 14 falhas, depois 4, depois 0.
+Falhou nelas? Rode só elas antes de investigar. Ver ADR-0003 e a regra 3 em `CLAUDE.md`.
 
 Os testes de integração conectam com **as duas** credenciais: as fixtures são criadas pelo owner
 (a conta não existe ainda, não há escopo a estabelecer), e as **asserções** rodam como
@@ -130,6 +165,30 @@ Duas, porque quase todo furo de multi-tenancy só é observável quando existe u
 vazar. **Recusa se o banco tiver qualquer conta que não seja demo** — barreira de dado, não de
 `NODE_ENV`, porque env é derrubável por quem invoca o comando e "este banco tem conta de cliente"
 não é.
+
+### 7b. Tradução por IA — o que cada adapter alcança
+
+A Mesa (`/intent`) e a frase de permissões (`/roles/read-phrase`) traduzem texto por um port com dois
+adapters. A escolha é da variável `INTENT_PARSER_DRIVER`, e o **padrão é o Gemini**: ambiente sem
+chave FALHA visivelmente, em vez de parecer funcionar devolvendo comando enlatado por palavra-chave.
+
+```env
+GEMINI_API_KEY=...            # sem ela o canal não sobe (URL e modelo têm padrão)
+INTENT_PARSER_DRIVER=         # vazio = Gemini · "deterministic" = palavra-chave (teste/dev sem chave)
+```
+
+⚠️ **O tradutor determinístico cobre APENAS o CORE**, e isso não é defeito: o catálogo de permissões
+(`permissions.catalog.ts`) só tem `account`, `companies`, `users` e `roles` — cada módulo acrescenta o
+seu bloco quando chegar. Na prática, com `INTENT_PARSER_DRIVER=deterministic`:
+
+- *"pode ver e cadastrar empresas"* → traduz (empresas está no catálogo);
+- *"pode vender, mas não pode dar desconto"* → **não traduz nada**, tudo volta como "a decidir",
+  porque venda e desconto não são permissões que existam neste build.
+
+Inventar um mapeamento para `vender` faria o teste passar mentindo, e faria a tela propor uma
+permissão que nenhum guard verifica. Para exercitar frases de venda, use o Gemini (que também só
+consegue propor o que está no catálogo — a lista fechada vai no prompt e a saída é validada contra
+ela).
 
 ### 8. Subir a aplicação
 

@@ -101,9 +101,52 @@ Qualquer um destes três traz a meta de volta:
 | **Unitário + execução, os dois** | É o destino, não o próximo passo. Fazer os dois agora atrasaria a F2 e a F3 para cobrir uma camada que ainda não tem regra complexa |
 | **Deixar a meta como está e não cumprir** | É o que já acontecia. A diferença entre isto e a decisão acima é só uma: aqui está escrito |
 
+---
+
+## Adendo de 2026-08-13 — o custo que os testes de execução cobram: tempo real
+
+Duas suítes desta estratégia **medem tempo real**, e é por isso que falham em máquina compartilhada
+sem que nada esteja errado no código:
+
+| Suíte | O que mede | Por que estoura |
+|---|---|---|
+| `test/integration/login-throttle.spec.ts` | o atraso progressivo por credencial, comparando medições adjacentes | o sinal é da ordem de 1,6s; concorrência por CPU move o piso e o teto |
+| qualquer spec com `runCli` | um ponto de entrada real, em processo separado | o CLI sobe o Nest inteiro via `ts-node`; o teto de 30s do Jest estoura sob carga |
+
+**Números medidos em 13/08/2026, na mesma árvore de código:** 14 falhas na primeira execução, 4 na
+segunda, 0 na terceira. A variável era ambiente — dois dev servers no ar e um build de frontend
+concorrendo. Rodadas sozinhas, as duas suítes: 17/17.
+
+### Por que isto está registrado e não corrigido
+
+Registrado porque **teste que falha por motivo alheio ensina a ignorar vermelho**, e isso é a coisa
+mais cara que aconteceu neste projeto até aqui: um vermelho que às vezes não significa nada treina a
+não olhar o vermelho que significa. É um defeito do processo, não de uma linha de código.
+
+Não corrigido agora, e com as duas saídas fáceis descartadas de propósito:
+
+- **Alargar a tolerância do teste de tempo** esconderia o defeito oposto — o atraso que parou de
+  acontecer. Um teste de throttle que passa com e sem throttle não é teste.
+- **Aumentar o `testTimeout`** faria o CLI travado esperar mais antes de reportar, o que troca uma
+  falha rápida e clara por uma lenta e igualmente confusa.
+
+O caminho real, quando incomodar: medir o atraso por instrumentação (o port do throttle informando a
+espera calculada) em vez de por cronômetro, e manter o cronômetro num único teste marcado como
+sensível a carga. Isso é fatia própria.
+
+### O que fazer enquanto isso — regra prática
+
+1. Rode a suíte **sozinho**: sem `next build`, sem dev server, sem typecheck em paralelo.
+2. Falhou nessas duas? Rode **só elas**. Passaram → o vermelho era da máquina, e diga isso em voz
+   alta em vez de deixar passar como "flaky".
+3. Falhou por asserção (`expect(received)`) e não por `Exceeded timeout`? Aí é código. Investigue.
+
+Registrado também no `CLAUDE.md`, em *Regras aprendidas com defeito real*.
+
 ## Referências
 
-- `CLAUDE.md` → *Testing Strategy* (a meta adiada) e *Security by Design Checklist*
+- `CLAUDE.md` → *Testing Strategy* (a meta adiada), *Regras aprendidas com defeito real* e
+  *Security by Design Checklist*
 - `Requisitos/ADR-0001_Modulos_no_JWT.md` — origem do claim `modules`, que fez o gate do smoke não
   poder passar na F1
 - `backend/test/helpers/run-cli.ts` — o docblock explica por que processo e não função

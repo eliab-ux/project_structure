@@ -101,6 +101,23 @@ export function RolePhraseComposer({
           disse.
         </Typography>
 
+        {/*
+          AVISO DE PROVEDOR EXTERNO (decisão de Eliab, 13/08/2026).
+
+          A tradução acontece fora daqui, num provedor de IA — e quem escreve a frase tem o direito de
+          saber disso ANTES de escrever, não depois. A frase pode citar nome de funcionário, o que a
+          torna dado pessoal de terceiro; o desenho desta tela dispensa nomes de propósito (o papel é
+          escolhido no seletor ao lado, e o exemplo do campo não usa nome nenhum), mas dispensar não é
+          impedir, e o aviso é o que fecha essa diferença.
+
+          Discreto por decisão: um alerta grande transformaria uma informação de rotina em susto, e
+          susto repetido é a coisa que se aprende a fechar sem ler.
+        */}
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+          O texto que você escrever é enviado a um provedor de IA externo para ser traduzido. Não é
+          preciso citar nomes de pessoas — o papel é escolhido no seletor ao lado.
+        </Typography>
+
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mt: 2.5 }}>
           <TextField
             select

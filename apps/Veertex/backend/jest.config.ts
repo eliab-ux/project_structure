@@ -9,6 +9,11 @@ const config: Config.InitialOptions = {
   // Carrega o .env antes do framework de teste. Sem isto os testes de integração acusam variável
   // ausente quando ela existe — cada worker do Jest é um processo novo e não herda o dotenv do npm.
   setupFiles: ['<rootDir>/test/setup-env.ts'],
+  // Cria o schema do banco de TESTE uma vez, antes de qualquer spec. Num banco recém-provisionado não
+  // há tabela nenhuma, e o primeiro spec quebrava no `beforeAll` de limpeza com `relation "accounts"
+  // does not exist` — falha diferente a cada execução, porque qual spec roda primeiro depende da
+  // ordem por duração estimada do Jest. Ver test/global-setup.ts.
+  globalSetup: '<rootDir>/test/global-setup.ts',
   // 30s. O padrão de 5s é curto demais para um teste que fala com o banco: um problema de rede
   // estourava o hook antes de o driver reportar a causa, e a saída dizia "Exceeded timeout of
   // 5000 ms for a hook" em vez de "ETIMEDOUT em host:porta" — escondendo justamente o que se

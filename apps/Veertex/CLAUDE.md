@@ -1128,6 +1128,66 @@ APP_PUBLIC_URL=             # domínio público do frontend (https://) — p/ o 
 > clicável — `http://localhost` fica como texto puro. Por isso os links de convite usam
 > `APP_PUBLIC_URL` (domínio de produção); em dev use o deploy ou um túnel.
 
+## Regras aprendidas com defeito real
+
+**Estas três não vieram de requisito — vieram de coisas que quebraram.** Cada uma custou tempo, e
+cada uma volta a custar se for esquecida. Valem para todo código deste repositório.
+
+### 1. Adapter de teste nunca é fallback de produção — e nunca divirja do de produção
+
+O adapter determinístico (`DeterministicIntentParser`,
+`DeterministicPermissionPhraseTranslator`) existe para a suíte rodar sem chamada externa paga e não
+determinística. Duas obrigações:
+
+- **Nunca é fallback.** Se a chave do provedor falta, o adapter real **recusa**; ele não delega para
+  o determinístico. Cair para o determinístico em produção devolveria comando enlatado por
+  palavra-chave chamando-o de "tradução" — o operador aprovaria uma ação que o texto dele não pedia,
+  e a procedência mentiria dizendo "ditado". Falhar fechado custa uma mensagem de erro; falhar aberto
+  custa uma escrita errada aprovada por um humano que confiou na tela.
+- **Nunca é mais permissivo nem mais estrito que o de produção.** Medido em 13/08/2026: o Gemini
+  classificava as quatro frases interrogativas corretamente e o determinístico transformava todas em
+  `SetRolePermissions` — quem perguntava "quem pode dar desconto" recebia rascunho de ALTERAÇÃO de
+  papel. E é o determinístico que a suíte usa, então ele mentia sobre o comportamento de produção.
+  Correção: a decisão que os dois compartilham vira **uma função só no domínio**
+  (`looksLikeQuestion`), e a divergência deixa de ser possível por construção.
+
+### 2. Guarda segura demais rebaixa o óbvio, e recurso abandonado protege zero
+
+Também de 13/08/2026, no tradutor de frase → permissões. A guarda anti-invenção exigia que a citação
+do modelo fosse **literal** na frase. Para *"pode ver e cadastrar empresas, mas não pode excluir
+empresa"*, o modelo devolveu `companies.read → granted` citando «pode ver empresas» — correto em
+sentido, não contíguo, porque elidiu o "e cadastrar". A guarda rebaixou para "a decidir".
+
+Isso é **seguro e errado**: obrigava o operador a decidir à mão uma permissão que a frase concedia em
+letras. Um recurso que devolve "não sei" para o que foi dito com clareza é um recurso que se aprende
+a não usar — e recurso abandonado protege zero. A rigidez que parece prudência vira, na prática, a
+remoção da própria proteção, porque o usuário volta para o caminho sem guarda nenhuma.
+
+A correção não afrouxou a proteção, **mudou o eixo dela**: de "literal" para "ancorado" — as palavras
+precisam aparecer na mesma linha e na mesma ordem, e a tela exibe a linha do usuário. A ordem é o que
+impede o modelo de inverter concessão em negação.
+
+> Ao escrever uma guarda contra alucinação, pergunte as duas coisas: *o que ela impede de passar?* e
+> *o que ela derruba que devia passar?* Só a primeira pergunta produz guarda que ninguém usa.
+
+### 3. Teste que falha por motivo alheio ensina a ignorar vermelho
+
+É o que mais custou até aqui. Duas suítes medem **tempo real** e falham em máquina compartilhada,
+sem que nada esteja errado no código:
+
+- `test/integration/login-throttle.spec.ts` — mede o atraso progressivo comparando medições
+  adjacentes;
+- qualquer spec que use `runCli` — o CLI sobe o Nest inteiro via `ts-node`, e o teto de 30s do Jest
+  estoura sob carga.
+
+Em 13/08/2026 a mesma árvore deu **14 falhas, depois 4, depois 0** — a diferença era um build de
+frontend e dois dev servers concorrendo por CPU. Rodadas sozinhas: 17/17.
+
+**A regra:** antes de investigar uma falha dessas duas suítes, rode-as **sozinhas**. Se passarem, o
+vermelho era da máquina. E não normalize isso: um vermelho que às vezes não significa nada treina a
+não olhar o vermelho que significa. Alargar tolerância **não** é a correção — esconderia o defeito
+oposto (o atraso que parou de acontecer). Ver o ADR-0003.
+
 ## Testing Strategy
 
 - **Unit tests** (`test/unit/`): Domain entities, value objects, use cases (mock repositories)
