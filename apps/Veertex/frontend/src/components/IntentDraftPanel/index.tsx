@@ -140,6 +140,14 @@ function FieldRow({
   onChange: (value: string) => void;
 }) {
   const label = FIELD_LABEL[name] ?? name;
+  /*
+   * §6.1 — FONTE EXTERNA PRECISA SER DISTINGUÍVEL do que o operador digitou.
+   *
+   * Campo lido de foto de documento chega com `origin: 'externo'`, imposto pelo backend. Aqui ele
+   * ganha marca própria: um chip nomeando a origem e a borda de atenção. Sem isso, um CPF lido por
+   * OCR apareceria na tela com a mesma cara de um CPF digitado — e OCR erra dígito.
+   */
+  const externo = field.origin === 'externo';
   // Objeto (endereço) não é editável nesta fatia: um formulário aninhado dentro do rascunho é a tela
   // de Empresas de novo, e o §10 diz para não antecipar. Fica visível como texto, e a alternativa é
   // usar a tela.
@@ -153,6 +161,14 @@ function FieldRow({
         </Typography>
         {field.review ? (
           <Chip size="small" label="a decidir" sx={{ bgcolor: 'vx.warn', color: '#061a30' }} />
+        ) : null}
+        {externo ? (
+          <Chip
+            size="small"
+            label="lido da imagem"
+            variant="outlined"
+            sx={{ borderColor: 'vx.warn', color: 'vx.warn', fontWeight: 700 }}
+          />
         ) : null}
         <Typography variant="caption" color="text.secondary">
           {field.origin ? ORIGIN_LABEL[field.origin] : 'sem procedência'}
@@ -172,7 +188,7 @@ function FieldRow({
           // A borda de atenção repete o que o chip já diz. Redundância deliberada: cor sozinha não
           // serve a quem não distingue matiz, e chip sozinho passa desapercebido numa lista longa.
           sx={
-            field.review
+            field.review || externo
               ? { '& .MuiOutlinedInput-notchedOutline': { borderColor: 'vx.warn' } }
               : undefined
           }

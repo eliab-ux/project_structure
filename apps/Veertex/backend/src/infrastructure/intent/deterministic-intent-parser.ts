@@ -9,6 +9,7 @@ import {
   IntentResult,
 } from '../../contexts/intent/domain/intent-command';
 import { looksLikeQuestion, QUESTION_GUESS } from '../../contexts/intent/domain/question-detection';
+import { IntentChannelUnavailableException } from '../../contexts/intent/domain/intent-exceptions';
 
 /**
  * Tradutor DETERMINÍSTICO, por palavra-chave. É o adapter dos testes e do desenvolvimento sem chave.
@@ -125,11 +126,24 @@ export class DeterministicIntentParser implements IntentParserPort {
     },
   ];
 
+  /** Palavra-chave não lê imagem — e recusa o anexo em voz alta, em vez de ignorá-lo. */
+  readonly supportsAttachment = false;
+
   ensureAvailable(): void {
     // Sempre disponível: não depende de rede nem de credencial. É metade do valor dele.
   }
 
   async parse(request: IntentParseRequest): Promise<IntentResult> {
+    /*
+     * RECUSA EM VOZ ALTA — este tradutor não lê imagem, e ignorar o anexo em silêncio seria pior do
+     * que falhar: a suíte passaria (ela usa este adapter) enquanto produção lê a foto de verdade. É
+     * exatamente a divergência entre adapter de teste e de produção que a regra 1 do `CLAUDE.md`
+     * proíbe, e que já custou o defeito das frases interrogativas.
+     */
+    if (request.attachment) {
+      throw new IntentChannelUnavailableException();
+    }
+
     const text = (request.text ?? '').toLowerCase();
 
     /*

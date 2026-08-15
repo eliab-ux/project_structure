@@ -3,6 +3,7 @@ import { UseCase } from '@veertex/shared-kernel';
 import { INTENT_PARSER, IntentParserPort } from '../../ports/output/intent-parser.port';
 import { describeCommands, IntentApiResult } from '../../../domain/intent-command';
 import { AuthorizeIntentCommandUseCase } from '../authorize-intent-command/authorize-intent-command.use-case';
+import { ImageNoticeRequiredException } from '../../../domain/intent-exceptions';
 
 export class ParseIntentCommand {
   constructor(
@@ -11,6 +12,14 @@ export class ParseIntentCommand {
     public readonly permissions: readonly string[],
     /** Do TOKEN. */
     public readonly activeModules: readonly string[],
+    /** A imagem, quando houver. Processada e descartada — nunca persistida. */
+    public readonly attachment?: { mimeType: string; dataBase64: string },
+    /** Quando o aviso ao titular foi exibido. Obrigatório se houver imagem. */
+    public readonly noticeAcknowledgedAt?: string,
+    /** Do TOKEN — para o registro do aviso dizer QUEM viu. */
+    public readonly actingUserId?: string,
+    /** Do TOKEN. */
+    public readonly accountId?: string,
   ) {}
 }
 
@@ -41,8 +50,44 @@ export class ParseIntentUseCase implements UseCase<ParseIntentCommand, IntentApi
     private readonly authorize: AuthorizeIntentCommandUseCase,
   ) {}
 
+  /**
+   * O tradutor configurado sabe ler imagem?
+   *
+   * Perguntado ao PORT, não deduzido de variável de ambiente: quem sabe responder é a implementação
+   * que está no container. Ler o `INTENT_PARSER_DRIVER` aqui seria uma segunda fonte de verdade
+   * sobre qual adapter está ativo, e as duas divergiriam no dia em que a escolha mudasse.
+   */
+  supportsAttachment(): boolean {
+    return this.parser.supportsAttachment === true;
+  }
+
   async execute(command: ParseIntentCommand): Promise<IntentApiResult> {
     this.parser.ensureAvailable();
+
+    /*
+     * O AVISO AO TITULAR — exigido, e registrado.
+     *
+     * A imagem é de um documento de terceiro: o titular não é parte do contrato entre o Veertex e a
+     * conta, e não tem como saber que a foto dele foi enviada a um provedor externo. O aviso não
+     * resolve isso sozinho — quem obtém o consentimento é o operador, e o aviso diz isso a ele —,
+     * mas sem o aviso ninguém sequer sabe que houve envio.
+     *
+     * Recusar sem o campo é o que impede a tela de "esquecer" de exibi-lo: um cliente que pule o
+     * aviso não consegue enviar imagem. Se a checagem fosse só na tela, a primeira refatoração de
+     * UI a removeria sem ninguém notar.
+     */
+    if (command.attachment) {
+      if (!command.noticeAcknowledgedAt) {
+        throw new ImageNoticeRequiredException();
+      }
+      // Sem a imagem e sem o texto do operador no log — só o fato, quem, quando.
+      this.logger.log('Aviso ao titular exibido antes do envio de imagem', {
+        accountId: command.accountId,
+        actingUserId: command.actingUserId,
+        exibidoEm: command.noticeAcknowledgedAt,
+        mimeType: command.attachment.mimeType,
+      });
+    }
 
     const availableCommands = this.authorize.availableFor(
       command.permissions,
@@ -59,7 +104,11 @@ export class ParseIntentUseCase implements UseCase<ParseIntentCommand, IntentApi
 
     // O texto do operador NÃO vai para log — é dado de negócio do cliente, e um log de intenções é o
     // registro de tudo o que se tentou fazer na conta.
-    const result = await this.parser.parse({ text: command.text, availableCommands });
+    const result = await this.parser.parse({
+      text: command.text,
+      availableCommands,
+      attachment: command.attachment,
+    });
 
     this.logger.log('Intenção processada', {
       reconhecido: result.command !== null,

@@ -66,8 +66,18 @@ export class IntentController {
    * mudasse só de um lado.
    */
   @Get('capabilities')
-  capabilities(): { audioTranscription: boolean } {
-    return { audioTranscription: this.transcribeAudioUseCase.isEnabled() };
+  capabilities(): { audioTranscription: boolean; imageIntake: boolean } {
+    return {
+      audioTranscription: this.transcribeAudioUseCase.isEnabled(),
+      /*
+       * `imageIntake` reflete algo REAL: se o tradutor configurado sabe ler imagem. Com
+       * `INTENT_PARSER_DRIVER=deterministic` ele não sabe e recusa o anexo — então a câmera não deve
+       * aparecer, ou o operador tiraria uma foto para receber erro.
+       *
+       * Não é flag de rollout. A trava que este item tinha era o billing, e ela caiu em 15/08/2026.
+       */
+      imageIntake: this.parseIntentUseCase.supportsAttachment(),
+    };
   }
 
   /**
@@ -104,7 +114,16 @@ export class IntentController {
     @CurrentUser() actor: AuthTokenPayload,
   ): Promise<IntentApiResult> {
     return this.parseIntentUseCase.execute(
-      new ParseIntentCommand(dto.text, actor.permissions, actor.modules),
+      new ParseIntentCommand(
+        dto.text,
+        actor.permissions,
+        actor.modules,
+        dto.attachment,
+        dto.noticeAcknowledgedAt,
+        // Do TOKEN: o registro do aviso precisa dizer QUEM viu, e isso nunca vem do corpo.
+        actor.sub,
+        actor.accountId,
+      ),
     );
   }
 

@@ -1,9 +1,43 @@
-import { IsIn, IsString, IsUUID, Matches, MaxLength, MinLength } from 'class-validator';
+import {
+  IsIn,
+  IsISO8601,
+  IsObject,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Matches,
+  MaxLength,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 import { IsIntentFieldMap } from './is-intent-field-map.validator';
 import {
   INTENT_COMMAND_NAMES,
   IntentCommandName,
 } from '../../../../../contexts/intent/domain/intent-command';
+
+/**
+ * A imagem anexada ao pedido — foto de documento.
+ *
+ * **Limite PRÓPRIO da rota, menor que o global.** O Fastify aceita 25 MB no corpo, e essa folga
+ * existe para outros usos; aqui ela seria perigosa por dois motivos: cada chamada com imagem é paga
+ * por token no provedor, e um upload de 25 MB numa rota autenticada é um jeito barato de gastar a
+ * conta de alguém. 8 MB de base64 ≈ 6 MB de imagem, muito acima do que a compressão do cliente
+ * produz (ela manda ~300 KB) — é teto de abuso, não de uso.
+ */
+export class IntentAttachmentDto {
+  /** Lista fechada: o que a câmera e o seletor de arquivo do navegador produzem. */
+  @IsIn(['image/jpeg', 'image/png', 'image/webp'], {
+    message: 'Envie uma foto em JPEG, PNG ou WEBP.',
+  })
+  mimeType!: string;
+
+  @IsString()
+  @MinLength(100, { message: 'Imagem vazia.' })
+  @MaxLength(8_000_000, { message: 'Imagem grande demais.' })
+  dataBase64!: string;
+}
 
 export class ParseIntentRequestDto {
   /**
@@ -16,6 +50,30 @@ export class ParseIntentRequestDto {
   @MinLength(2, { message: 'Escreva o que você precisa.' })
   @MaxLength(2000)
   text!: string;
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => IntentAttachmentDto)
+  attachment?: IntentAttachmentDto;
+
+  /**
+   * QUANDO o aviso ao titular foi exibido — ISO 8601, obrigatório se houver imagem.
+   *
+   * **É requisito, não telemetria.** O aviso diz três coisas a quem fotografa: a imagem vai a um
+   * provedor externo para leitura, não fica armazenada, e **obter o consentimento do titular do
+   * documento é responsabilidade de quem tira a foto**. Sem esse campo, a rota recusa — de propósito:
+   * o aviso é a única coisa que separa "o operador sabia" de "o sistema mandou a foto de alguém para
+   * fora sem ninguém dizer nada".
+   *
+   * ⚠️ **Isto é registro em LOG, não trilha de auditoria.** A trilha (ADR-0004) não existe, e criar
+   * tabela é mudança de modelo de dados. Um log estruturado com conta, usuário e horário responde
+   * "foi exibido?" hoje; quando a trilha existir, este registro migra para lá — e a diferença entre
+   * os dois (retenção, consulta, exportação) está escrita no ADR-0006.
+   */
+  @IsOptional()
+  @IsISO8601({}, { message: 'Horário do aviso inválido.' })
+  noticeAcknowledgedAt?: string;
 }
 
 export class BuildDraftRequestDto {

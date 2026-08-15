@@ -16,6 +16,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { IntentDraftPanel } from 'src/components/IntentDraftPanel';
 import { DictationButton } from 'src/components/DictationButton';
+import { CapturedImage, DocumentCapture } from 'src/components/DocumentCapture';
 import { OnDeviceState, useOnDeviceDictation } from 'src/hooks/useOnDeviceDictation';
 import { useAuth } from 'src/contexts/AuthContext';
 import { apiErrorMessage } from 'src/services/api';
@@ -80,7 +81,7 @@ function orderModules(codes: readonly string[]): string[] {
  *    a endpoint nenhum é fachada. A Mesa declara em qual empresa opera, e ponto.
  */
 export default function MesaPage() {
-  const { user, account, role, modules } = useAuth();
+  const { user, account, role, modules, can } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
 
   const [text, setText] = useState('');
@@ -93,6 +94,36 @@ export default function MesaPage() {
   const [rejection, setRejection] = useState<IntentNotSupported | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const [image, setImage] = useState<CapturedImage | null>(null);
+  const [imageIntake, setImageIntake] = useState(false);
+
+  /*
+   * A CÂMERA SÓ EXISTE SE HOUVER ONDE O DADO CAIR — nada de casca.
+   *
+   * Duas condições, e as duas são necessárias:
+   *  - `contacts.create`: a leitura de documento serve para cadastrar contato. Sem a permissão, a
+   *    foto produziria um rascunho que a aprovação recusaria — depois de o operador ter fotografado
+   *    o documento de alguém;
+   *  - `imageIntake` do servidor: diz se o tradutor configurado sabe LER imagem. Com o adapter
+   *    determinístico (teste, desenvolvimento sem chave) ele não sabe e recusa o anexo.
+   */
+  const podeAnexar = can('contacts.create') && imageIntake;
+
+  useEffect(() => {
+    let vivo = true;
+    intentService
+      .capabilities()
+      .then((cap) => {
+        if (vivo) setImageIntake(cap.imageIntake);
+      })
+      .catch(() => {
+        if (vivo) setImageIntake(false);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, []);
 
   /*
    * DITADO — o texto entra no campo como RASCUNHO. Nunca vira comando sozinho.
@@ -140,7 +171,7 @@ export default function MesaPage() {
     setParsing(true);
     reset();
     try {
-      const result = await intentService.parse(trimmed);
+      const result = await intentService.parse(trimmed, image ?? undefined);
 
       if (!isSupported(result)) {
         // "Ainda não sei fazer isso" é **parte do produto, não falha** (§2) — e é o estado mais
@@ -150,6 +181,12 @@ export default function MesaPage() {
       }
 
       setPlan(result);
+      // A imagem cumpriu o papel: virou rascunho. Some da tela, e o `previewUrl` é revogado — o
+      // navegador não fica segurando o blob de um documento depois que ele foi lido.
+      if (image) {
+        URL.revokeObjectURL(image.previewUrl);
+        setImage(null);
+      }
       // O rascunho vem do backend, e é ele que decide o que precisa de revisão — o cliente não tem
       // voto nisso. Ver o docblock do BuildIntentDraftUseCase.
       setDraft(await intentService.draft(result.command, result.fields));
@@ -291,6 +328,14 @@ export default function MesaPage() {
               <InputAdornment position="end">
                 {/* Microfone à esquerda do enviar: ditar vem antes de mandar. */}
                 <DictationButton state={voz.state} onStart={voz.iniciar} onStop={voz.parar} />
+                {podeAnexar ? (
+                  <DocumentCapture
+                    image={null}
+                    onCapture={setImage}
+                    onRemove={() => setImage(null)}
+                    disabled={parsing}
+                  />
+                ) : null}
                 {parsing ? (
                   <CircularProgress size={22} role="status" aria-label="Interpretando" />
                 ) : (
@@ -317,6 +362,18 @@ export default function MesaPage() {
         />
 
         <VoiceHint state={voz.state} />
+
+        {image ? (
+          <DocumentCapture
+            image={image}
+            onCapture={setImage}
+            onRemove={() => {
+              URL.revokeObjectURL(image.previewUrl);
+              setImage(null);
+            }}
+            disabled={parsing}
+          />
+        ) : null}
 
         {rejection ? <RejectionPanel rejection={rejection} /> : null}
 

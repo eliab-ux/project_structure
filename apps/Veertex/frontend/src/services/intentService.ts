@@ -8,8 +8,24 @@ import { ApproveIntentResult, IntentDraft, IntentField, IntentResult } from 'src
  * especificação). Uma chamada direta do navegador exporia a chave e tiraria o backend da decisão —
  * que é onde toda a validação de plano ∩ conta ∩ papel acontece.
  */
-async function parse(text: string): Promise<IntentResult> {
-  const response = await api.post<IntentResult>('/intent', { text });
+async function parse(
+  text: string,
+  attachment?: { mimeType: string; dataBase64: string; noticeAcknowledgedAt: string },
+): Promise<IntentResult> {
+  /*
+   * `noticeAcknowledgedAt` viaja JUNTO com a imagem, e o backend recusa sem ele. Não é telemetria:
+   * é a prova de que o aviso ao titular foi exibido antes de a câmera abrir. Se a checagem vivesse
+   * só na tela, a primeira refatoração de UI a removeria sem ninguém notar.
+   */
+  const response = await api.post<IntentResult>('/intent', {
+    text,
+    ...(attachment
+      ? {
+          attachment: { mimeType: attachment.mimeType, dataBase64: attachment.dataBase64 },
+          noticeAcknowledgedAt: attachment.noticeAcknowledgedAt,
+        }
+      : {}),
+  });
   return response.data;
 }
 
@@ -39,8 +55,10 @@ async function approve(
 }
 
 /** O que esta instalação sabe fazer. Hoje: se o ditado por voz está ligado. */
-async function capabilities(): Promise<{ audioTranscription: boolean }> {
-  const response = await api.get<{ audioTranscription: boolean }>('/intent/capabilities');
+async function capabilities(): Promise<{ audioTranscription: boolean; imageIntake: boolean }> {
+  const response = await api.get<{ audioTranscription: boolean; imageIntake: boolean }>(
+    '/intent/capabilities',
+  );
   return response.data;
 }
 

@@ -86,3 +86,18 @@ export class AudioTranscriptionDisabledException extends DomainException {
     super('A transcrição por voz está desligada neste ambiente.');
   }
 }
+
+/**
+ * Imagem enviada sem o registro de que o aviso ao titular foi exibido.
+ *
+ * 400, não 403: não é falta de permissão — é pedido malformado. A tela que envia imagem sem exibir o
+ * aviso está errada, e a mensagem diz isso a quem estiver integrando.
+ */
+export class ImageNoticeRequiredException extends DomainException {
+  constructor() {
+    super(
+      'Imagem só pode ser enviada depois de exibir o aviso sobre envio a provedor externo e ' +
+        'responsabilidade pelo consentimento do titular.',
+    );
+  }
+}
