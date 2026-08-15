@@ -7,6 +7,13 @@ import {
 } from '../../contexts/intent/application/ports/output/audio-transcriber.port';
 import { IntentChannelUnavailableException } from '../../contexts/intent/domain/intent-exceptions';
 
+/**
+ * ⚠️ PARADO E DESLIGADO por `AUDIO_TRANSCRIPTION_ENABLED=false`.
+ *
+ * O use case recusa antes de chegar aqui. Ligar exige decisão do Eliab sobre enviar áudio a
+ * terceiro — ver `Requisitos/ADR-0005_Captura_de_Voz.md`.
+ */
+
 const DEFAULT_MODEL = 'gemini-2.5-flash';
 const DEFAULT_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 

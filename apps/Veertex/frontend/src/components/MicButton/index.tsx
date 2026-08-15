@@ -10,6 +10,13 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import { VoiceState } from 'src/hooks/useVoiceDictation';
 
 /**
+ * ⚠️ PARADO E DESLIGADO — não use. O botão vivo é `DictationButton`.
+ *
+ * Pertence ao caminho de gravação + transcrição no Gemini. Ver
+ * `Requisitos/ADR-0005_Captura_de_Voz.md`.
+ */
+
+/**
  * O botão de ditado, ao lado do enviar.
  *
  * **Ele não existe quando o ditado está desligado** (flag do servidor) ou quando o navegador não

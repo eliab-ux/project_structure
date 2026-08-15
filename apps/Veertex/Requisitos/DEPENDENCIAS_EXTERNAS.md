@@ -168,17 +168,21 @@ Não é vazamento nem defeito de código; é uma condição do canal que ningué
 |---|---|
 | **Achado em** | 2026-08-14 |
 | **Decisão** | Eliab ativa o billing na chave (muda os termos aplicáveis; nenhuma linha de código) |
-| **Canal correto a partir de** | ⏳ *a preencher quando a mudança for confirmada* |
+| **Canal correto a partir de** | **2026-08-15** |
 
-⚠️ **Esta linha fica em branco de propósito até a confirmação.** Ela responde "a partir de quando o
-canal ficou correto", que é uma pergunta de auditoria — e uma data escrita por antecipação seria uma
-afirmação sobre algo que ainda não foi verificado.
+**O que sustenta essa data, e o que não sustenta.** Eliab informou em 15/08/2026 que a chave em uso é
+a do projeto **`spread-492715`, com billing ativo** — e os termos pagos do Gemini valem por projeto,
+não por chave. Verificado por mim naquele dia: a chamada de texto responde **HTTP 200** no
+`gemini-2.5-flash`. **Não verificado por mim:** o estado do billing, que não é observável pela API —
+é declaração do Eliab, e está registrada como tal.
 
-### Chave PRÓPRIA do Veertex — decidido em 14/08/2026, aguardando a chave
+### Chave própria do Veertex — proposta em 14/08/2026, NÃO adotada em 15/08/2026
 
-Hoje o Veertex usa **a mesma chave do SpreadGuard**, copiada em 13/08/2026 do `.env` daquele projeto
-porque era o caminho mais curto para a Mesa funcionar. Eliab vai criar **projeto e chave próprios do
-Veertex** no Google Cloud.
+O Veertex usa **a mesma chave do SpreadGuard** (projeto `spread-492715`), copiada em 13/08/2026
+porque era o caminho mais curto para a Mesa funcionar. Chegou-se a propor criar projeto e chave
+próprios; em 15/08/2026 Eliab decidiu **manter a compartilhada**, já que ela tem billing ativo e é o
+billing que resolvia o problema urgente. Os motivos abaixo continuam válidos e viraram pendência com
+gatilho — ver o fim desta seção.
 
 **Os três motivos, escritos para não se perderem** — nenhum deles é sobre a Mesa funcionar melhor:
 
@@ -188,27 +192,30 @@ Veertex** no Google Cloud.
 | **A cota é dividida** | Rate limit e quota são do projeto, não do produto. Um pico no SpreadGuard degrada a Mesa do Veertex, e vice-versa — com a agravante de que o culpado não aparece em lugar nenhum: a tela só fica lenta ou recusa |
 | **Um vazamento derruba os dois** | Chave comprometida obriga a rotacionar nos dois produtos ao mesmo tempo, e a janela entre "vazou" e "todos rotacionaram" é o dobro da necessária. Raio de explosão é o que a separação reduz |
 
-⚠️ **Atenção ao criar o projeto:** projeto novo **não vem com billing ligado**, e chave sem billing é
-free tier — ou seja, criar a chave própria resolveria o isolamento e **manteria** o compartilhamento
-de conteúdo para melhoria de produto descrito acima. As duas coisas precisam acontecer juntas:
-**projeto próprio + billing ativo nele**. Se só uma acontecer, esta seção continua aberta.
+### ❌ A chave própria NÃO foi criada — decisão revista em 15/08/2026
 
-**Quando a chave chegar**, a fila é:
-
-1. trocar `GEMINI_API_KEY` no `.env.local` (a chave nunca passa pelo chat — leio e escrevo direto no
-   arquivo, e o valor não é impresso);
-2. confirmar a chamada de verdade contra a API, com o modelo em uso;
-3. preencher aqui: **data da troca**, e que a chave **deixou de ser compartilhada com o SpreadGuard**;
-4. preencher a linha "Canal correto a partir de" acima, se o billing estiver ativo no projeto novo.
+Eliab decidiu **manter a chave do `spread-492715`**, compartilhada com o SpreadGuard, porque ela já
+tem billing ativo e isso resolve o problema urgente (o compartilhamento de conteúdo para melhoria de
+produto). A separação por produto vira **pendência sem urgência**.
 
 | | |
 |---|---|
-| **Chave própria a partir de** | ⏳ *a preencher quando a chave nova estiver em uso e verificada* |
-| **Compartilhamento com o SpreadGuard** | ⏳ *em vigor até a troca* |
+| **Chave própria** | **não adotada** — decisão de 15/08/2026 |
+| **Compartilhamento com o SpreadGuard** | **em vigor**, por decisão, desde 13/08/2026 |
+| **Revisar quando** | o Veertex tiver **cliente em produção** |
 
-Nota de higiene, menor: a chave do SpreadGuard hoje existe em dois `.env.local` da mesma máquina. A
-troca a remove daqui. Não é vazamento — não saiu do ambiente do Eliab —, então não exige rotação no
-SpreadGuard; só deixa de estar em dois lugares.
+Os três motivos que continuam valendo — nenhum deles urgente hoje, todos reais no dia em que houver
+cliente pagando:
+
+| Motivo | O que quebra enquanto durar |
+|---|---|
+| **Custo não é atribuível** | os dois produtos na mesma fatura. Não dá para responder "quanto custa a Mesa por mês", e sem isso não dá para decidir se um comando caro compensa |
+| **Cota dividida** | rate limit é do projeto. Um pico no SpreadGuard degrada a Mesa, e o culpado não aparece: a tela só fica lenta ou recusa |
+| **Vazamento derruba os dois** | rotação obrigatória nos dois produtos ao mesmo tempo, dobrando a janela entre "vazou" e "todos rotacionaram" |
+
+⚠️ O gatilho é **cliente em produção**, e não uma data: hoje o custo é de desenvolvimento e o raio de
+explosão é o ambiente do Eliab. Com cliente, as três linhas acima deixam de ser teóricas — e a
+primeira delas passa a ser necessária para precificar.
 
 ### ⚠️ O gatilho — volta ao Eliab ANTES de ser implementado
 
@@ -239,19 +246,32 @@ default silencioso com consequência fora do código.
 | **Decisor** | Eliab |
 | **Bloqueado por** | `AUDIO_TRANSCRIPTION_ENABLED=false` enquanto a chave for free tier |
 
-### O caminho anterior foi REMOVIDO do código
+### ⚠️ CORREÇÃO DE PROCEDÊNCIA — 15/08/2026
 
-A Web Speech API on-device saiu — não ficou como alternativa, não ficou atrás de flag. Duas
-limitações que nenhum ajuste resolvia, ambas medidas na máquina do Eliab (Chrome 151):
+A versão anterior desta seção apresentava três coisas numa tabela chamada "Medido". **Só uma foi
+medida.** As outras duas vieram do texto de uma mensagem e eu as registrei como evidência. A
+distinção importa porque decisão apoiada em número inventado é decisão sem apoio nenhum:
 
-| Medido | Consequência |
-|---|---|
-| `pt-BR`: `command=available`, **`dictation=unavailable`** — e `dictation` indisponível também em `en-US` | é limitação da versão do motor, não falta de pacote português. Só existia o nível de comando |
-| nome próprio derretia: *"Tudodicasa"* → *"de casa"* | inutilizável para cadastrar empresa ou citar pessoa |
-| 1 a 1,5 s perdidos entre pedir o microfone e ele ouvir | comia o verbo — "ativar", "criar", "cadastrar" |
+| Afirmação | Procedência REAL | Vale como evidência? |
+|---|---|---|
+| `pt-BR`: `command=available`, `dictation=unavailable` — e `dictation` indisponível também em `en-US` | **MEDIDO** por Eliab no Chrome 151, 14/08/2026, com a página de teste. O contraste com `en-US` é o que prova ser limitação do nível de qualidade, não falta de pacote português | **sim** |
+| nome próprio derretia: *"Tudodicasa"* → *"de casa"* | **NÃO MEDIDO.** Veio no texto de uma mensagem. As transcrições da v1 saíram corrompidas por três bugs meus na própria página, e a v2/v3 nunca foram rodadas | **não** |
+| 1 a 1,5 s perdidos entre pedir o microfone e ele ouvir | **NÃO MEDIDO.** Mesma origem | **não** |
 
-**Manter os dois caminhos foi recusado**: dois caminhos de captura significam dois conjuntos de
-defeitos, duas experiências e a dúvida permanente sobre qual estava ativo quando algo deu errado.
+E, por consequência, **também não foi medido** o que mais importa: se o nível `command` dá conta das
+frases de permissão com negação (*"pode ver empresas mas não pode excluir empresa"*), se a negação
+sobrevive, e se sigla de módulo chega utilizável. Qualquer conclusão sobre isso hoje é presunção.
+
+### O que foi decidido a partir do que ESTÁ medido
+
+Com `command` disponível e `dictation` não, a decisão de Eliab (15/08/2026) é a que o próprio
+critério dele já previa duas mensagens antes:
+
+- **microfone on-device fica, e fica SÓ NA MESA** — frases curtas e imperativas (`ativar módulo VND`,
+  `criar papel de supervisor`), que é o caso para o qual o nível `command` existe;
+- **Papéis continua por texto**, sem microfone. Vale mesmo no melhor resultado da medição: ali uma
+  negação perdida inverte uma permissão, e o custo do erro não se compara ao de digitar;
+- **nada de áudio sai da máquina.** `processLocally: true` sempre; sem suporte local, sem microfone.
 
 ### O desenho atual
 

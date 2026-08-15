@@ -1202,6 +1202,44 @@ Contar de verdade, e não de memória: registre no adendo do ADR-0003 cada vez q
 com data e suíte. Contagem que vive na cabeça de alguém reinicia sozinha em cada sessão — e três
 vezes esquecidas são três vezes que não aconteceram.
 
+### 4. Número que não foi medido não entra em documento como medido
+
+Custou uma decisão inteira em 15/08/2026. O `DEPENDENCIAS_EXTERNAS.md` §6 tinha uma tabela chamada
+**"Medido"** com três linhas; só uma tinha medição. As outras duas — *"nome próprio derrete:
+Tudodicasa → de casa"* e *"1 a 1,5 s de perda inicial"* — vieram do texto de uma mensagem, e eu as
+transcrevi para o documento com o rótulo de evidência.
+
+**Se a origem é o texto de uma mensagem, a origem é essa — e isso não é evidência.** Não vira
+evidência por estar num documento, nem por estar perto de um número que foi medido de verdade, nem
+por ser provavelmente correto. A tabela ficava mais convincente exatamente onde era mais frágil.
+
+O dano não é o número errado; é a decisão seguinte. Um documento que mistura medido e presumido não
+permite mais distinguir os dois, e a próxima pessoa — inclusive eu, dois dias depois — decide
+apoiada no conjunto.
+
+> Ao escrever um número num documento, escreva junto **de onde ele veio**: medido por quem, quando,
+> com qual instrumento. Se não der para responder isso, o lugar dele é "a verificar", nunca "medido".
+
+### 5. Instrução ambígua contra regra registrada: a leitura que avança é a errada
+
+Também de 15/08/2026, e a formulação é do Eliab:
+
+> *Quando houver duas leituras e uma delas contrariar regra registrada, a leitura que avança é a
+> errada por definição. Pergunte.*
+
+O caso: uma mesma instrução apareceu duas vezes na entrada, com um *"desconsidere o último texto"*
+entre elas. Uma leitura mandava trocar o reconhecimento de voz local por envio de áudio a terceiro; a
+outra mandava não fazer nada disso. Escolhi a que avançava — e ela contrariava uma regra que **eu
+mesmo havia registrado** dias antes, incluindo a frase "implementação que viole esta regra reabre a
+decisão de LGPD que ela fecha". Violei e não reabri.
+
+A assimetria que torna a regra simples: **perguntar custa uma mensagem; avançar contra regra
+registrada custa a decisão que a regra protegia.** E o custo não é simétrico nem no tempo — desfazer
+código é fácil, desfazer dado que saiu da máquina não é.
+
+Isto vale especialmente quando a instrução ambígua **destrava** algo que estava travado. Trava
+registrada existe porque alguém pesou algo; ambiguidade não é autorização.
+
 ## Testing Strategy
 
 - **Unit tests** (`test/unit/`): Domain entities, value objects, use cases (mock repositories)

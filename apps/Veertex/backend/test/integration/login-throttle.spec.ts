@@ -244,16 +244,33 @@ describe('Proteção do login contra força bruta', () => {
       // Com a configuração do teste (BASE, teto = 2 × BASE) a escada tem exatamente três estados:
       //   1ª falha → BASE        2ª falha → 2 × BASE        3ª falha em diante → teto (2 × BASE)
       // Então as diferenças esperadas são BASE, BASE e ZERO — e é o zero que prova o teto.
+      /*
+       * ⚠️ TOLERÂNCIA FROUXA DE PROPÓSITO — corrigida em 15/08/2026; a correção anterior estava pela
+       * metade.
+       *
+       * Quando a escada passou a ser verificada por IGUALDADE (teste acima, sem relógio), o trabalho
+       * deste teste encolheu para uma pergunta binária: **existe espera, ou não existe?** Mas ficou
+       * com a tolerância antiga, calibrada para medir o TAMANHO do degrau (0,8 × BASE = 1280 ms). Ela
+       * voltou a falhar por ruído — 1170 medido — com o atraso funcionando perfeitamente.
+       *
+       * Metade do degrau separa as duas hipóteses com folga: com o `sleep` no lugar a diferença fica
+       * na casa de 1600 ms; sem ele, perto de zero. Nenhuma carga plausível fabrica 800 ms do nada,
+       * nem alivia 1600 ms para menos disso.
+       *
+       * Afrouxar aqui NÃO afrouxa a verificação: o tamanho do degrau é asseverado por igualdade
+       * exata, sem relógio, no teste anterior. Cada teste passou a medir o que sabe medir.
+       */
+      const PISO = THROTTLE_BASE_MS / 2;
       const second = await attempt(email, 'errada', from);
-      expect(second.elapsed - first.elapsed).toBeGreaterThanOrEqual(THROTTLE_BASE_MS * 0.8);
+      expect(second.elapsed - first.elapsed).toBeGreaterThanOrEqual(PISO);
 
       const third = await attempt(email, 'errada', from);
-      expect(third.elapsed - second.elapsed).toBeGreaterThanOrEqual(THROTTLE_BASE_MS * 0.8);
+      expect(third.elapsed - second.elapsed).toBeGreaterThanOrEqual(PISO);
 
       // Teto: a partir daqui NÃO cresce mais. Sem teto, o atraso viraria bloqueio de fato — e
       // bloqueio é o que este desenho recusa, por ser vetor de negação de serviço.
       const fourth = await attempt(email, 'errada', from);
-      expect(fourth.elapsed - third.elapsed).toBeLessThan(THROTTLE_BASE_MS * 0.8);
+      expect(fourth.elapsed - third.elapsed).toBeLessThan(PISO);
 
       // E o teto é o valor CONFIGURADO, não um número qualquer: sem `Math.min`, a 4ª falha pediria
       // 8 × BASE. `first` é a medição sem atraso deste mesmo teste, então a conta isola o atraso.

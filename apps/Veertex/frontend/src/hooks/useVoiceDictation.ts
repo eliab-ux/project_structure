@@ -4,6 +4,18 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import intentService from 'src/services/intentService';
 
 /**
+ * ⚠️ PARADO E DESLIGADO — não use. O caminho vivo é `useOnDeviceDictation`.
+ *
+ * Este hook grava e manda o ÁUDIO para o nosso backend, que o envia ao Gemini. Ele está completo e
+ * testado até a fronteira do envio, e **não está ligado a tela nenhuma**:
+ * `AUDIO_TRANSCRIPTION_ENABLED=false`, o backend recusa a rota, e o botão não é renderizado.
+ *
+ * Ligá-lo exige decisão do Eliab sobre enviar áudio a terceiro — voz é biometria e o microfone capta
+ * o ambiente. Ver `Requisitos/ADR-0005_Captura_de_Voz.md`, que lista as quatro perguntas que
+ * precisam de resposta antes. "Está pronto" não é argumento.
+ */
+
+/**
  * DITADO POR VOZ — grava no navegador, transcreve no nosso backend, devolve texto para o campo.
  *
  * Substitui a Web Speech API (decisão de Eliab, 15/08/2026). O caminho anterior tinha duas

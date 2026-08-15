@@ -15,8 +15,8 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { IntentDraftPanel } from 'src/components/IntentDraftPanel';
-import { MicButton } from 'src/components/MicButton';
-import { useVoiceDictation, VoiceState } from 'src/hooks/useVoiceDictation';
+import { DictationButton } from 'src/components/DictationButton';
+import { OnDeviceState, useOnDeviceDictation } from 'src/hooks/useOnDeviceDictation';
 import { useAuth } from 'src/contexts/AuthContext';
 import { apiErrorMessage } from 'src/services/api';
 import intentService from 'src/services/intentService';
@@ -103,7 +103,7 @@ export default function MesaPage() {
    *
    * Anexa ao que já está escrito: ditar duas vezes complementa a frase em vez de apagá-la.
    */
-  const voz = useVoiceDictation((texto) => {
+  const voz = useOnDeviceDictation((texto) => {
     setText((atual) => (atual ? `${atual} ${texto}`.trim() : texto));
     inputRef.current?.focus();
   });
@@ -290,13 +290,7 @@ export default function MesaPage() {
             endAdornment: (
               <InputAdornment position="end">
                 {/* Microfone à esquerda do enviar: ditar vem antes de mandar. */}
-                <MicButton
-                  state={voz.state}
-                  level={voz.level}
-                  onStart={voz.gravar}
-                  onStop={voz.parar}
-                  onRetry={voz.retentar}
-                />
+                <DictationButton state={voz.state} onStart={voz.iniciar} onStop={voz.parar} />
                 {parsing ? (
                   <CircularProgress size={22} role="status" aria-label="Interpretando" />
                 ) : (
@@ -322,7 +316,7 @@ export default function MesaPage() {
           }}
         />
 
-        <VoiceHint state={voz.state} lastRun={voz.lastRun} />
+        <VoiceHint state={voz.state} />
 
         {rejection ? <RejectionPanel rejection={rejection} /> : null}
 
@@ -448,57 +442,36 @@ export default function MesaPage() {
 }
 
 /**
- * O estado do ditado, em texto — e a medição, quando ligada.
+ * O estado do ditado, em texto.
  *
- * `vx_debug_audio` no `localStorage` mostra tamanho do áudio e latência do fim da fala até o texto.
- * É o instrumento das três métricas pedidas; fica atrás de uma chave porque é dado de engenharia, e
- * a Mesa não é lugar de número que o operador não usa.
+ * O aviso de `opening` é o que salva o começo da frase: o motor local demora a abrir, e quem fala
+ * nesse intervalo perde o verbo do comando. Um ícone parado sugeriria "pode falar".
+ *
+ * Sem números de medição aqui: eles pertenciam ao caminho de gravação + transcrição, que está parado
+ * (ver `Requisitos/ADR-0005_Captura_de_Voz.md`). A medição do on-device é feita pela página de teste
+ * descartável, fora do produto.
  */
-function VoiceHint({
-  state,
-  lastRun,
-}: {
-  state: VoiceState;
-  lastRun: { bytes: number; ms: number; text: string } | null;
-}) {
-  const debug =
-    typeof window !== 'undefined' && window.localStorage.getItem('vx_debug_audio') === '1';
-
-  if (state === 'recording') {
-    return (
-      <Typography
-        variant="caption"
-        role="status"
-        sx={{ mt: 1, display: 'block', color: 'error.main' }}
-      >
-        ● Gravando. Fale e clique no quadrado para parar — o texto vem para o campo e você confere
-        antes de enviar.
-      </Typography>
-    );
-  }
-  if (state === 'sending') {
+function VoiceHint({ state }: { state: OnDeviceState }) {
+  if (state === 'opening') {
     return (
       <Typography
         variant="caption"
         role="status"
         sx={{ mt: 1, display: 'block', color: 'vx.warn' }}
       >
-        Transcrevendo…
+        Abrindo o microfone — ainda não fale…
       </Typography>
     );
   }
-  if (state === 'error') {
+  if (state === 'listening') {
     return (
-      <Typography variant="caption" role="alert" sx={{ mt: 1, display: 'block', color: 'vx.warn' }}>
-        Não consegui transcrever. <strong>Seu áudio não foi perdido</strong> — clique no botão de
-        repetir para tentar de novo.
-      </Typography>
-    );
-  }
-  if (debug && lastRun) {
-    return (
-      <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
-        [medição] {Math.round(lastRun.bytes / 1024)} KB · {lastRun.ms} ms do fim da fala até o texto
+      <Typography
+        variant="caption"
+        role="status"
+        sx={{ mt: 1, display: 'block', color: 'error.main' }}
+      >
+        ● Ouvindo. Fale e clique no microfone para parar — o texto vem para o campo e você confere
+        antes de enviar. Nada sai do seu computador.
       </Typography>
     );
   }
