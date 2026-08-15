@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CompanyModule } from '../company/company.module';
 import { ModuleModule } from '../module/module.module';
+import { ContactModule } from '../contact/contact.module';
 import { RoleModule } from '../role/role.module';
 import { UserModule } from '../user/user.module';
 import { DeterministicIntentParser } from '../../infrastructure/intent/deterministic-intent-parser';
@@ -35,6 +36,9 @@ import { ApproveIntentUseCase } from './application/use-cases/approve-intent/app
     // toggle. A aprovação chama os MESMOS Use Cases que os controllers HTTP chamam — é isso que
     // impede a intenção de ser um caminho com validação mais frouxa.
     RoleModule,
+    // Pelo despacho de CreateContact/UpdateContact — a aprovação chama os MESMOS use cases que o
+    // controller de contatos chama.
+    ContactModule,
     UserModule,
     ModuleModule,
     CompanyModule,

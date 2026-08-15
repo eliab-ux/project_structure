@@ -163,6 +163,12 @@ e três vezes esquecidas são três vezes que não aconteceram.
 | # | Data | Suíte | Sintoma | Contexto |
 |---|---|---|---|---|
 | 1 | 2026-08-13 | `login-throttle` + specs com `runCli` | 14 falhas, depois 4, na mesma árvore | dois dev servers + `next build` concorrendo |
+| 2 | 2026-08-15 | `login-throttle` + `seed-dev.cli` | 7 falhas (6 timeout, 1 asserção); 17/17 rodando sozinhas | dev servers do Eliab + `next build` do frontend na mesma máquina |
+
+⚠️ **A `login-throttle` está com DUAS ocorrências.** Na próxima, ela deixa de ser "da máquina" e
+vira defeito a corrigir — na frente do que estiver na fila. Não é escolha de quem estiver no teclado
+naquele dia: é o limite decidido em 14/08/2026, e ele existe justamente porque a explicação é
+verdadeira e, sem teto, viraria desculpa.
 
 Na **terceira linha** de uma mesma suíte, o item sai desta tabela e entra como fatia: medir o atraso
 por instrumentação (o port do throttle informando a espera calculada) em vez de por cronômetro, e

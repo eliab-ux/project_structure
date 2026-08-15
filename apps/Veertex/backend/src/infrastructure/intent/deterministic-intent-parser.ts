@@ -91,6 +91,27 @@ export class DeterministicIntentParser implements IntentParserPort {
       unresolved: ['qual usuário', 'o que muda'],
     },
     {
+      // Antes de CreateCompany: "cadastrar cliente" e "cadastrar empresa" competem pela palavra
+      // "cadastrar", e a mais específica tem de ganhar. A ordem das regras é a desempate.
+      command: 'CreateContact',
+      triggers: [
+        'cadastrar cliente',
+        'novo cliente',
+        'cadastrar contato',
+        'novo contato',
+        'cadastrar fornecedor',
+        'novo fornecedor',
+      ],
+      fields: ['types', 'personKind', 'legalName'],
+      unresolved: ['o nome ou razão social', 'se é pessoa física ou jurídica', 'quais tipos'],
+    },
+    {
+      command: 'UpdateContact',
+      triggers: ['alterar cliente', 'editar cliente', 'alterar contato', 'editar contato'],
+      fields: ['contactId'],
+      unresolved: ['qual contato', 'o que muda'],
+    },
+    {
       command: 'CreateCompany',
       triggers: ['criar empresa', 'nova empresa', 'cadastrar empresa', 'abrir empresa'],
       fields: ['legalName', 'document', 'taxRegime', 'address'],

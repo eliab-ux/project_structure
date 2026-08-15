@@ -35,6 +35,7 @@ const ACCOUNT = {
 };
 
 const NEW_COMPANY_DOCUMENT = cnpjWithCheckDigits('900000090001');
+const CONTACT_DOCUMENT = cnpjWithCheckDigits('900000100001');
 
 describe('Contrato HTTP das telas de administração', () => {
   let owner: Client;
@@ -468,6 +469,173 @@ describe('Contrato HTTP das telas de administração', () => {
 
       expect(off.status).toBe(200);
       expect((off.body as { status: string }).status).toBe('DISABLED');
+    });
+  });
+
+  describe('contactService', () => {
+    let createdContactId: string;
+
+    it('GET /contacts/field-catalog — o catálogo com defaultVisible declarado', async () => {
+      const response = await call('/contacts/field-catalog');
+
+      expect(response.status).toBe(200);
+      const body = response.body as {
+        fields: { field: string; defaultVisible: boolean; rule: string; hint?: string }[];
+      };
+
+      // Os opcionais do §3.4 nascem OCULTOS — é a decisão (b) de Eliab (14/08/2026), e ela vale por
+      // estar DECLARADA campo a campo, não inferida de uma regra implícita.
+      const suframa = body.fields.find((f) => f.field === 'suframa');
+      expect(suframa?.rule).toBe('optional');
+      expect(suframa?.defaultVisible).toBe(false);
+
+      const legalName = body.fields.find((f) => f.field === 'legalName');
+      expect(legalName?.rule).toBe('base');
+      expect(legalName?.defaultVisible).toBe(true);
+
+      /*
+       * O AVISO DO LIMITE DE CRÉDITO viaja no CONTRATO, e este teste é o que impede alguém de
+       * removê-lo por engano ao mexer no catálogo. O §3.4 diz que o limite bloqueia venda, e os
+       * módulos que bloqueiam não existem — sem o aviso, o número preenchido é promessa que o
+       * sistema não cumpre. Ele some no dia em que o VND aplicar de verdade, e a remoção desta
+       * asserção é o lembrete de que o comportamento mudou.
+       */
+      const creditLimit = body.fields.find((f) => f.field === 'creditLimit');
+      expect(creditLimit?.hint).toContain('NÃO bloqueia venda');
+
+      // Nenhum campo de carteirização — nem aqui, nem no banco. Ver a entidade `Contact`.
+      expect(body.fields.some((f) => f.field.toLowerCase().includes('seller'))).toBe(false);
+    });
+
+    it('POST /contacts — create() com tipos múltiplos, telefone e endereço', async () => {
+      const response = await call('/contacts', {
+        method: 'POST',
+        body: {
+          types: ['customer', 'supplier'],
+          personKind: 'company',
+          legalName: 'Contato Dois Tipos Ltda',
+          tradeName: 'Dois Tipos',
+          document: CONTACT_DOCUMENT,
+          creditLimit: 1500.5,
+          emails: [{ email: 'contato@doistipos.local', label: 'financeiro' }],
+          phones: [{ phone: '62999990011', isWhatsapp: true }],
+          addresses: [
+            {
+              purpose: 'main',
+              street: 'Rua do Contato',
+              number: '10',
+              district: 'Centro',
+              city: 'Goiânia',
+              state: 'GO',
+              zipCode: '74000000',
+            },
+          ],
+        },
+      });
+
+      expect(response.status).toBe(201);
+      const contact = response.body as {
+        id: string;
+        types: string[];
+        displayName: string;
+        creditLimit: number;
+        phones: { phone: string; isWhatsapp: boolean }[];
+        addresses: { purpose: string }[];
+      };
+      createdContactId = contact.id;
+
+      // §7.6 do CORE: um contato, dois tipos, sem duplicar.
+      expect(contact.types.sort()).toEqual(['customer', 'supplier']);
+      expect(contact.displayName).toBe('Dois Tipos');
+      expect(contact.creditLimit).toBe(1500.5);
+      // O VO normalizou o telefone para E.164 — a máscara da tela não chega ao banco.
+      expect(contact.phones[0].phone).toBe('+5562999990011');
+      expect(contact.addresses[0].purpose).toBe('main');
+    });
+
+    it('POST /contacts recusa o MESMO documento na conta (default: não permitir duplicado)', async () => {
+      const response = await call('/contacts', {
+        method: 'POST',
+        body: {
+          types: ['customer'],
+          personKind: 'company',
+          legalName: 'Outro Contato Mesmo CNPJ',
+          document: CONTACT_DOCUMENT,
+        },
+      });
+
+      expect(response.status).toBe(400);
+      expect(JSON.stringify(response.body)).toContain('documento');
+    });
+
+    it('POST /contacts recusa CNPJ em pessoa física', async () => {
+      const response = await call('/contacts', {
+        method: 'POST',
+        body: {
+          types: ['customer'],
+          personKind: 'individual',
+          legalName: 'Pessoa Com CNPJ',
+          document: cnpjWithCheckDigits('900000110001'),
+        },
+      });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('POST /contacts recusa lista de tipos vazia', async () => {
+      const response = await call('/contacts', {
+        method: 'POST',
+        body: { types: [], personKind: 'company', legalName: 'Sem Tipo Ltda' },
+      });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('GET /contacts?type=supplier — filtro por tipo (índice GIN)', async () => {
+      const comFiltro = await call('/contacts?type=supplier');
+      expect(comFiltro.status).toBe(200);
+      expect((comFiltro.body as { id: string }[]).some((c) => c.id === createdContactId)).toBe(
+        true,
+      );
+
+      const outroTipo = await call('/contacts?type=carrier');
+      expect((outroTipo.body as { id: string }[]).some((c) => c.id === createdContactId)).toBe(
+        false,
+      );
+    });
+
+    it('GET /contacts?search= — busca por dígitos do telefone', async () => {
+      const response = await call('/contacts?search=999990011');
+
+      expect(response.status).toBe(200);
+      expect((response.body as { id: string }[]).some((c) => c.id === createdContactId)).toBe(true);
+    });
+
+    it('PATCH /contacts/:id — update() substitui as coleções', async () => {
+      const response = await call(`/contacts/${createdContactId}`, {
+        method: 'PATCH',
+        body: {
+          tradeName: 'Dois Tipos Atualizado',
+          phones: [{ phone: '62999990022', isWhatsapp: false }],
+        },
+      });
+
+      expect(response.status).toBe(200);
+      const contact = response.body as {
+        tradeName: string;
+        phones: { phone: string }[];
+      };
+      expect(contact.tradeName).toBe('Dois Tipos Atualizado');
+      // O telefone antigo saiu (remoção LÓGICA — o papel de runtime não tem DELETE) e só o novo
+      // aparece. Sem o filtro de linhas vivas no mapper, os dois voltariam aqui.
+      expect(contact.phones).toHaveLength(1);
+      expect(contact.phones[0].phone).toBe('+5562999990022');
+    });
+
+    it('GET /contacts/:id de id inexistente responde 404, não 500', async () => {
+      const response = await call('/contacts/00000000-0000-4000-8000-000000000000');
+
+      expect(response.status).toBe(404);
     });
   });
 

@@ -364,3 +364,65 @@ Nenhuma das três é decisão de implementação. **Elas voltam ao Eliab.**
 Na ordem: primeiro a fatia de `contact` no backend (bloqueio 1), que é trabalho comum e sem decisão
 pendente. Os bloqueios 2 e 3 só fazem sentido depois — e o 3 volta **como pergunta ao Eliab**, junto
 com a do microfone, porque as duas são da mesma família: o que a empresa autoriza a sair dela.
+
+---
+
+## 8. Contato — o que ficou fora da fatia, e por quê
+
+| | |
+|---|---|
+| **Estado** | Contato ENTREGUE (14/08/2026). Cinco partes do §3.4 ficaram fora, cada uma com motivo |
+| **Decisor** | Eliab |
+
+### ⚠️ Carteirização — fora POR INTEIRO, e nem a coluna existe
+
+Decisão de Eliab, e é a que mais merece ser lida antes de alguém "só acrescentar o campo":
+
+> *Visibilidade de dado neste sistema mora em RLS e guard. Coluna existindo sem o filtro é a pior
+> configuração, porque alguém depois supõe que ela restringe algo.*
+
+O §3.4 prevê `vendedor vinculado` e a preferência *"contato acessível somente ao vendedor vinculado"*.
+Criar a coluna sem o filtro produziria o pior dos três estados possíveis:
+
+| | O que o sistema faz | O que alguém acredita |
+|---|---|---|
+| Sem coluna (escolhido) | todo contato visível a quem tem `contacts.read` | o mesmo — não há o que supor |
+| Coluna **com** filtro | vendedor vê só a carteira dele | o mesmo |
+| Coluna **sem** filtro | todo contato visível a todos | *"tem vendedor vinculado, então está restrito"* — **falso** |
+
+A terceira linha é uma falha de segurança que **se parece com uma funcionalidade**: não é detectável
+por teste (o dado está lá) nem por leitura do schema (a coluna sugere a regra), e só aparece quando
+alguém vê o contato de outro vendedor — quando a pergunta vira "desde quando?".
+
+⚠️ **Efeito colateral hoje, e ele está escrito no papel padrão:** o `SALES_REP` recebeu
+`contacts.read`, o que significa ver **todos** os contatos da conta, não só os dele. É o
+comportamento correto na ausência de carteirização — e é exatamente o que muda quando ela chegar.
+
+A carteirização volta INTEIRA: coluna, preferência da conta, filtro no use case a partir do `sub` do
+token, e teste de isolamento por ator. Junto com o módulo que precisar dela (VND/ROT).
+
+### As outras quatro
+
+| O que | Por que fora |
+|---|---|
+| **`field_config`** | Não é pré-requisito: o §3.6 diz que o catálogo de campos é fixo em código, e ele foi construído assim — com `defaultVisible` **declarado campo a campo**, nunca inferido. Quando `field_config` existir, a mesma rota devolverá o catálogo mesclado com a config da conta, e a tela não muda |
+| **Geocodificação** | Exige BullMQ e Redis — dependências novas. As colunas `latitude`/`longitude` existem nullable (acrescentá-las depois seria migration em tabela com linhas); nenhum job está registrado e nenhuma tela oferece mapa |
+| **Tabela de preço** | `Product` não existe. FK para tabela inexistente é pior que ausência |
+| **Campos de revendedor** | O §3.4 remete ao `04_Veertex_Rot.md`, que não foi lido. Requisito não se deduz |
+
+### Duas preferências decididas por default, e escritas
+
+O §3.4 prevê três preferências de conta, e a conta não tem onde guardá-las. Duas ganharam default
+explícito (Eliab, 14/08/2026); a terceira é a carteirização acima:
+
+- **unicidade de documento**: NÃO permitir duplicado. Dois cadastros com o mesmo CNPJ é o começo de
+  duas verdades sobre o mesmo cliente, e desfazer exige mesclar histórico;
+- **numeração de código**: MANUAL. Sequencial exige contador por tenant — lock ou sequence, design
+  próprio, não um campo.
+
+### O limite de crédito guarda valor e a TELA diz que não bloqueia
+
+O §3.4 diz que o limite bloqueia venda acima, e quem aplica são VND/COB, que não existem. Correção
+de Eliab: *"campo preenchido com um valor é promessa ao usuário, e ninguém lê comentário de código"*.
+O aviso viaja no `hint` do catálogo de campos — vem do backend, aparece abaixo do campo, e **some
+sozinho** no dia em que o VND aplicar de verdade. Há teste de contrato prendendo esse texto.

@@ -50,7 +50,11 @@ export interface RlsFixtures {
  * é sobre COBERTURA das asserções de comportamento, e uma tabela esquecida aqui reduz cobertura sem
  * abrir furo.
  *
- * `account_modules` entrou com a F2.
+ * `account_modules` entrou com a F2. As quatro de contato entraram em 14/08/2026 — e as TRÊS
+ * FILHAS estão aqui de propósito, não só a tabela-pai: RLS não segue JOIN, então
+ * `select * from contact_phones` é uma query que qualquer código futuro pode escrever e que
+ * devolveria os telefones de todas as contas se a policy da filha faltasse. Asseverar só o pai
+ * deixaria justamente o furo que a separação em tabelas filhas cria.
  */
 const TENANT_TABLES = [
   'companies',
@@ -58,6 +62,10 @@ const TENANT_TABLES = [
   'users',
   'password_reset_codes',
   'account_modules',
+  'contacts',
+  'contact_emails',
+  'contact_phones',
+  'contact_addresses',
 ] as const;
 const SCOPE_SQL = `select set_config('app.account_id', $1, true)`;
 
@@ -124,6 +132,35 @@ export async function createRlsFixtures(owner: OwnerQuery): Promise<RlsFixtures>
         pair.role,
       ],
     );
+
+    /*
+     * Contato com UMA FILHA de cada tipo — e a fixture existe por um motivo específico: a asserção
+     * "sem escopo devolve zero linhas" é VAZIA numa tabela vazia. Sem linha plantada, as quatro
+     * tabelas de contato passariam no teste com o RLS desligado, e o verde não significaria nada.
+     */
+    const contactId = randomUUID();
+    await owner(
+      `insert into contacts (id, account_id, created_at, updated_at, types, person_kind, legal_name, active)
+            values ($1, $2, now(), now(), ARRAY['customer']::text[], 'company', $3, true)`,
+      [contactId, pair.account, `Contato ${pair.tag}`],
+    );
+    await owner(
+      `insert into contact_emails (id, account_id, created_at, updated_at, contact_id, email)
+            values ($1, $2, now(), now(), $3, $4)`,
+      [randomUUID(), pair.account, contactId, `contato-${pair.tag}@verify.local`],
+    );
+    await owner(
+      `insert into contact_phones (id, account_id, created_at, updated_at, contact_id, phone, is_whatsapp)
+            values ($1, $2, now(), now(), $3, '+5562999990001', false)`,
+      [randomUUID(), pair.account, contactId],
+    );
+    await owner(
+      `insert into contact_addresses (id, account_id, created_at, updated_at, contact_id, purpose,
+                                      street, number, district, city, state, zip_code)
+            values ($1, $2, now(), now(), $3, 'main', 'Rua da Verificação', '1', 'Centro',
+                    'Goiânia', 'GO', '74000000')`,
+      [randomUUID(), pair.account, contactId],
+    );
   }
 
   return fixtures;
@@ -136,6 +173,10 @@ export async function createRlsFixtures(owner: OwnerQuery): Promise<RlsFixtures>
  */
 export async function dropRlsFixtures(owner: OwnerQuery, fixtures: RlsFixtures): Promise<void> {
   for (const accountId of [fixtures.accountA, fixtures.accountB]) {
+    await owner('delete from contact_addresses where account_id = $1', [accountId]);
+    await owner('delete from contact_phones where account_id = $1', [accountId]);
+    await owner('delete from contact_emails where account_id = $1', [accountId]);
+    await owner('delete from contacts where account_id = $1', [accountId]);
     await owner('delete from password_reset_codes where account_id = $1', [accountId]);
     await owner('delete from account_modules where account_id = $1', [accountId]);
     await owner('delete from companies where account_id = $1', [accountId]);

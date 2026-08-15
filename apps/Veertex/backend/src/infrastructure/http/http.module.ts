@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AccountModule } from '../../contexts/account/account.module';
 import { AuthModule } from '../../contexts/auth/auth.module';
 import { CompanyModule } from '../../contexts/company/company.module';
+import { ContactModule } from '../../contexts/contact/contact.module';
 import { ModuleModule } from '../../contexts/module/module.module';
 import { PlanModule } from '../../contexts/plan/plan.module';
 import { RoleModule } from '../../contexts/role/role.module';
@@ -10,6 +11,7 @@ import { HealthController } from './controllers/health/health.controller';
 import { AuthController } from './controllers/auth/auth.controller';
 import { AccountController } from './controllers/account/account.controller';
 import { CompanyController } from './controllers/company/company.controller';
+import { ContactController } from './controllers/contact/contact.controller';
 import { ModuleController } from './controllers/module/module.controller';
 import { RoleController } from './controllers/role/role.controller';
 import { UserController } from './controllers/user/user.controller';
@@ -38,6 +40,7 @@ import { IntentModule } from '../../contexts/intent/intent.module';
     AuthModule,
     AccountModule,
     CompanyModule,
+    ContactModule,
     ModuleModule,
     PlanModule,
     RoleModule,
@@ -49,6 +52,7 @@ import { IntentModule } from '../../contexts/intent/intent.module';
     AuthController,
     AccountController,
     CompanyController,
+    ContactController,
     ModuleController,
     RoleController,
     UserController,

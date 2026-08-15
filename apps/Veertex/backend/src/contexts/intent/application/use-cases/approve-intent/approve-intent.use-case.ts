@@ -1,6 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UseCase } from '@veertex/shared-kernel';
 import {
+  CreateContactCommand,
+  CreateContactUseCase,
+} from '../../../../contact/application/use-cases/create-contact/create-contact.use-case';
+import {
+  UpdateContactCommand,
+  UpdateContactUseCase,
+} from '../../../../contact/application/use-cases/update-contact/update-contact.use-case';
+import {
   CreateRoleCommand,
   CreateRoleUseCase,
 } from '../../../../role/application/use-cases/create-role/create-role.use-case';
@@ -95,6 +103,8 @@ export class ApproveIntentUseCase implements UseCase<ApproveIntentCommand, Appro
     private readonly toggleModule: ToggleModuleUseCase,
     private readonly createCompany: CreateCompanyUseCase,
     private readonly updateCompany: UpdateCompanyUseCase,
+    private readonly createContact: CreateContactUseCase,
+    private readonly updateContact: UpdateContactUseCase,
   ) {}
 
   async execute(command: ApproveIntentCommand): Promise<ApproveIntentResult> {
@@ -237,6 +247,48 @@ export class ApproveIntentUseCase implements UseCase<ApproveIntentCommand, Appro
         break;
       }
 
+      case 'CreateContact': {
+        /*
+         * `types` chega como texto separado por vírgula ("cliente, fornecedor") ou já como lista —
+         * o `reader.list()` normaliza. Traduzir "cliente" para `customer` é do tradutor, não daqui:
+         * a Mesa recebe o comando já com os valores do catálogo, e um mapeamento de sinônimos aqui
+         * seria uma segunda tradução, fora do lugar onde ela é validada.
+         */
+        const contact = await this.createContact.execute(
+          new CreateContactCommand(command.accountId, {
+            types: reader.list('types'),
+            personKind: reader.text('personKind'),
+            legalName: reader.text('legalName'),
+            tradeName: reader.optionalText('tradeName'),
+            document: reader.optionalText('document'),
+            notes: reader.optionalText('notes'),
+            emails: reader.optionalText('email')
+              ? [{ email: reader.optionalText('email') as string }]
+              : undefined,
+            phones: reader.optionalText('phone')
+              ? [{ phone: reader.optionalText('phone') as string }]
+              : undefined,
+          }),
+        );
+        resourceId = contact.id;
+        summary = `Contato "${contact.displayName}" cadastrado.`;
+        break;
+      }
+
+      case 'UpdateContact': {
+        const contact = await this.updateContact.execute(
+          new UpdateContactCommand(reader.text('contactId'), {
+            types: reader.optionalList('types'),
+            legalName: reader.optionalText('legalName') ?? undefined,
+            tradeName: reader.optionalText('tradeName'),
+            notes: reader.optionalText('notes'),
+          }),
+        );
+        resourceId = contact.id;
+        summary = `Contato "${contact.displayName}" atualizado.`;
+        break;
+      }
+
       default: {
         // Sem `default` silencioso: um comando novo no catálogo sem `case` aqui quebra o `switch` em
         // tempo de compilação (`name` é união literal e o TypeScript exige exaustividade quando o
@@ -290,6 +342,15 @@ class FieldReader {
   optionalText(name: string): string | null {
     const value = this.fields[name]?.value;
     return typeof value === 'string' && value.trim() !== '' ? value : null;
+  }
+
+  /** Lista opcional: ausente vira `undefined`, e `undefined` significa "não mexa neste campo". */
+  optionalList(name: string): string[] | undefined {
+    const value = this.fields[name]?.value;
+    if (!Array.isArray(value) || value.length === 0) {
+      return undefined;
+    }
+    return (value as unknown[]).filter((item): item is string => typeof item === 'string');
   }
 
   list(name: string): string[] {

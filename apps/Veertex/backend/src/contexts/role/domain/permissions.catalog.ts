@@ -31,6 +31,15 @@ export const PERMISSIONS = {
     update: 'users.update',
     disable: 'users.disable',
   },
+  // Sem `delete`: nenhuma rota apaga contato nesta fatia, e o cabeçalho deste arquivo é explícito —
+  // "a permission is only real if some guard checks it". Declarar `contacts.delete` daria a quem
+  // monta um papel a impressão de estar concedendo (ou negando) algo que não existe. A desativação
+  // é feita por `contacts.update`, que é o que a rota de fato exige.
+  contacts: {
+    read: 'contacts.read',
+    create: 'contacts.create',
+    update: 'contacts.update',
+  },
   roles: {
     read: 'roles.read',
     create: 'roles.create',

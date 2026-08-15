@@ -38,6 +38,10 @@ export const DEFAULT_ROLES: readonly DefaultRoleDefinition[] = [
     permissions: [
       PERMISSIONS.account.read,
       PERMISSIONS.companies.read,
+      // Contato é CORE, e a descrição deste papel é literalmente "cadastros do dia a dia".
+      PERMISSIONS.contacts.read,
+      PERMISSIONS.contacts.create,
+      PERMISSIONS.contacts.update,
       PERMISSIONS.companies.update,
       PERMISSIONS.users.read,
       PERMISSIONS.roles.read,
@@ -47,19 +51,31 @@ export const DEFAULT_ROLES: readonly DefaultRoleDefinition[] = [
     code: 'SUPERVISOR',
     name: 'Gerente',
     description: 'Supervisiona loja e rota. Permissões de ROT/VND chegam com esses módulos.',
-    permissions: [PERMISSIONS.companies.read, PERMISSIONS.users.read],
+    permissions: [
+      PERMISSIONS.companies.read,
+      PERMISSIONS.users.read,
+      PERMISSIONS.contacts.read,
+      PERMISSIONS.contacts.create,
+      PERMISSIONS.contacts.update,
+    ],
   },
   {
     code: 'CASHIER',
     name: 'Operador de Caixa',
     description: 'Opera o PDV. Permissões efetivas chegam com o módulo PDV.',
-    permissions: [PERMISSIONS.companies.read],
+    // `contacts.read` porque atender no balcão começa por achar o cliente. Criar/alterar não: o
+    // cadastro correto é responsabilidade de quem administra, e um cadastro duplicado feito às
+    // pressas no caixa é o começo de duas verdades sobre o mesmo cliente.
+    permissions: [PERMISSIONS.companies.read, PERMISSIONS.contacts.read],
   },
   {
     code: 'SALES_REP',
     name: 'Representante',
     description: 'Vendedor de rota/consignação. Permissões efetivas chegam com o módulo ROT.',
-    permissions: [PERMISSIONS.companies.read],
+    // Só leitura, e ATENÇÃO: sem carteirização, isto significa ver TODOS os contatos da conta, não
+    // só os dele. A carteirização está fora desta fatia por inteiro (ver a entidade `Contact`), e
+    // quando chegar é aqui que o efeito deste papel muda.
+    permissions: [PERMISSIONS.companies.read, PERMISSIONS.contacts.read],
   },
   {
     code: 'DELIVERY',
@@ -71,6 +87,6 @@ export const DEFAULT_ROLES: readonly DefaultRoleDefinition[] = [
     code: 'ACCOUNTANT',
     name: 'Contador',
     description: 'Acesso contábil/fiscal somente leitura. Ampliado com FIS/CTB.',
-    permissions: [PERMISSIONS.account.read, PERMISSIONS.companies.read],
+    permissions: [PERMISSIONS.account.read, PERMISSIONS.companies.read, PERMISSIONS.contacts.read],
   },
 ];

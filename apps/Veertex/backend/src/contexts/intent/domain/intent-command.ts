@@ -54,6 +54,23 @@ export const INTENT_COMMANDS = {
     requiredPermission: PERMISSIONS.roles.update,
     requiredModule: null,
   },
+  /*
+   * CreateContact e UpdateContact são SEPARADOS, e não um `UpsertContact` (decisão de Eliab,
+   * 14/08/2026). O §4 do CORE nomeia o use case do domínio como upsert, e o domínio pode ser upsert
+   * — mas a Mesa precisa dizer ao humano QUAL das duas coisas vai acontecer. "Cadastrar o cliente
+   * João" resolvendo silenciosamente em atualização de um João existente é uma alteração que o
+   * operador não pediu e não viu.
+   */
+  CreateContact: {
+    label: 'Cadastrar contato',
+    requiredPermission: PERMISSIONS.contacts.create,
+    requiredModule: null,
+  },
+  UpdateContact: {
+    label: 'Alterar contato',
+    requiredPermission: PERMISSIONS.contacts.update,
+    requiredModule: null,
+  },
   ToggleModule: {
     // Ativar e desativar módulo é configuração da CONTA, não de papel.
     label: 'Ativar ou desativar módulo',

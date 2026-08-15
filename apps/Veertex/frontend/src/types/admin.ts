@@ -154,3 +154,82 @@ export interface PermissionPhraseReading {
   lines: string[];
   verdicts: PermissionVerdict[];
 }
+
+/** Espelha `GET /contacts` — §3.4 do CORE. */
+export type ContactType = 'customer' | 'supplier' | 'carrier' | 'reseller';
+export type PersonKind = 'individual' | 'company';
+
+export const CONTACT_TYPE_LABEL: Record<ContactType, string> = {
+  customer: 'Cliente',
+  supplier: 'Fornecedor',
+  carrier: 'Transportadora',
+  reseller: 'Revendedor',
+};
+
+export interface Contact {
+  id: string;
+  types: ContactType[];
+  personKind: PersonKind;
+  legalName: string;
+  tradeName: string | null;
+  displayName: string;
+  document: string | null;
+  documentFormatted: string | null;
+  documentType: string | null;
+  stateRegistration: string | null;
+  code: string | null;
+  /** Registrado; NÃO bloqueia venda nesta fase — ver o `hint` do catálogo de campos. */
+  creditLimit: number | null;
+  notes: string | null;
+  municipalRegistration: string | null;
+  suframa: string | null;
+  gln: string | null;
+  pixKey: string | null;
+  website: string | null;
+  emails: { email: string; label: string | null }[];
+  phones: { phone: string; masked: string; label: string | null; isWhatsapp: boolean }[];
+  addresses: {
+    purpose: 'main' | 'billing' | 'delivery';
+    street: string;
+    number: string;
+    complement: string | null;
+    district: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    ibgeCityCode: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  }[];
+  active: boolean;
+}
+
+/**
+ * O catálogo de campos, vindo do backend (§3.6: fixo em código, nunca no banco).
+ *
+ * A tela NÃO mantém cópia dele: uma segunda lista aqui divergiria da primeira no dia em que um campo
+ * entrasse, e a tela passaria a esconder campo que existe ou mostrar campo que não existe.
+ */
+export interface ContactFieldDefinition {
+  field: string;
+  label: string;
+  rule: 'base' | 'optional';
+  defaultVisible: boolean;
+  defaultRequired: boolean;
+  /** Texto de apoio exibido abaixo do campo. É por aqui que o aviso do limite de crédito chega. */
+  hint?: string;
+}
+
+export interface CreateContactPayload {
+  types: ContactType[];
+  personKind: PersonKind;
+  legalName: string;
+  tradeName?: string | null;
+  document?: string | null;
+  creditLimit?: number | null;
+  notes?: string | null;
+  emails?: { email: string; label?: string | null }[];
+  phones?: { phone: string; label?: string | null; isWhatsapp?: boolean }[];
+}
+
+export type UpdateContactPayload = Partial<CreateContactPayload> & { active?: boolean };
