@@ -15,6 +15,8 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { IntentDraftPanel } from 'src/components/IntentDraftPanel';
+import { MicButton } from 'src/components/MicButton';
+import { useVoiceDictation, VoiceState } from 'src/hooks/useVoiceDictation';
 import { useAuth } from 'src/contexts/AuthContext';
 import { apiErrorMessage } from 'src/services/api';
 import intentService from 'src/services/intentService';
@@ -62,9 +64,12 @@ function orderModules(codes: readonly string[]): string[] {
  *
  * O que ela NÃO tem, e por decisão registrada:
  *
- *  - **Voz.** A Web Speech API do Chrome envia o áudio para servidores do Google, e isso muda a
- *    conversa de LGPD. O parser de texto prova a arquitetura inteira sem esse peso
- *    (`DEPENDENCIAS_EXTERNAS.md` §5).
+ * A VOZ existe desde 15/08/2026, e por um caminho diferente do que esta tela descrevia antes: o
+ * navegador GRAVA (MediaRecorder) e o nosso backend transcreve pelo Gemini. A Web Speech API saiu do
+ * código — em pt-BR on-device ela só tinha o nível `command` e derretia nome próprio. O ditado
+ * aparece só quando o backend diz que está ligado (`AUDIO_TRANSCRIPTION_ENABLED`), e a transcrição
+ * entra no campo como RASCUNHO: nunca vira comando sem o operador ler.
+ *
  *  - **"Feito sozinho hoje".** Não existe fonte de ações automáticas concluídas, e nesta fase nada
  *    acontece sem aprovação humana — então não há o que listar. Ornamento numa interface que pede
  *    confiança é pior que ausência: treina o operador a não ler o que a Mesa afirma.
@@ -88,6 +93,20 @@ export default function MesaPage() {
   const [rejection, setRejection] = useState<IntentNotSupported | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  /*
+   * DITADO — o texto entra no campo como RASCUNHO. Nunca vira comando sozinho.
+   *
+   * A transcrição pode errar, e o erro que importa é específico: perder um "não" inverte uma
+   * permissão. Se ela alimentasse a tradução direto, o operador aprovaria uma regra que nunca disse.
+   * Vindo para o campo, ele lê antes de apertar — e o `⏎` continua sendo dele.
+   *
+   * Anexa ao que já está escrito: ditar duas vezes complementa a frase em vez de apagá-la.
+   */
+  const voz = useVoiceDictation((texto) => {
+    setText((atual) => (atual ? `${atual} ${texto}`.trim() : texto));
+    inputRef.current?.focus();
+  });
 
   const firstName = user?.name?.split(' ')[0] ?? '';
 
@@ -270,6 +289,14 @@ export default function MesaPage() {
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
+                {/* Microfone à esquerda do enviar: ditar vem antes de mandar. */}
+                <MicButton
+                  state={voz.state}
+                  level={voz.level}
+                  onStart={voz.gravar}
+                  onStop={voz.parar}
+                  onRetry={voz.retentar}
+                />
                 {parsing ? (
                   <CircularProgress size={22} role="status" aria-label="Interpretando" />
                 ) : (
@@ -294,6 +321,8 @@ export default function MesaPage() {
             },
           }}
         />
+
+        <VoiceHint state={voz.state} lastRun={voz.lastRun} />
 
         {rejection ? <RejectionPanel rejection={rejection} /> : null}
 
@@ -416,6 +445,64 @@ export default function MesaPage() {
       </Paper>
     </Box>
   );
+}
+
+/**
+ * O estado do ditado, em texto — e a medição, quando ligada.
+ *
+ * `vx_debug_audio` no `localStorage` mostra tamanho do áudio e latência do fim da fala até o texto.
+ * É o instrumento das três métricas pedidas; fica atrás de uma chave porque é dado de engenharia, e
+ * a Mesa não é lugar de número que o operador não usa.
+ */
+function VoiceHint({
+  state,
+  lastRun,
+}: {
+  state: VoiceState;
+  lastRun: { bytes: number; ms: number; text: string } | null;
+}) {
+  const debug =
+    typeof window !== 'undefined' && window.localStorage.getItem('vx_debug_audio') === '1';
+
+  if (state === 'recording') {
+    return (
+      <Typography
+        variant="caption"
+        role="status"
+        sx={{ mt: 1, display: 'block', color: 'error.main' }}
+      >
+        ● Gravando. Fale e clique no quadrado para parar — o texto vem para o campo e você confere
+        antes de enviar.
+      </Typography>
+    );
+  }
+  if (state === 'sending') {
+    return (
+      <Typography
+        variant="caption"
+        role="status"
+        sx={{ mt: 1, display: 'block', color: 'vx.warn' }}
+      >
+        Transcrevendo…
+      </Typography>
+    );
+  }
+  if (state === 'error') {
+    return (
+      <Typography variant="caption" role="alert" sx={{ mt: 1, display: 'block', color: 'vx.warn' }}>
+        Não consegui transcrever. <strong>Seu áudio não foi perdido</strong> — clique no botão de
+        repetir para tentar de novo.
+      </Typography>
+    );
+  }
+  if (debug && lastRun) {
+    return (
+      <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
+        [medição] {Math.round(lastRun.bytes / 1024)} KB · {lastRun.ms} ms do fim da fala até o texto
+      </Typography>
+    );
+  }
+  return null;
 }
 
 /**

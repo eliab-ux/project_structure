@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Logger, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Logger, Post, UseGuards } from '@nestjs/common';
 import { AuthTokenPayload } from '../../../../contexts/auth/application/ports/output/token-service.port';
 import {
   ApproveIntentCommand,
@@ -21,7 +21,12 @@ import {
   ApproveIntentRequestDto,
   BuildDraftRequestDto,
   ParseIntentRequestDto,
+  TranscribeAudioRequestDto,
 } from './dto/intent-request.dto';
+import {
+  TranscribeAudioCommand,
+  TranscribeAudioUseCase,
+} from '../../../../contexts/intent/application/use-cases/transcribe-audio/transcribe-audio.use-case';
 
 /**
  * Os três passos da navegação por intenção: traduzir, montar, aprovar.
@@ -49,7 +54,42 @@ export class IntentController {
     private readonly parseIntentUseCase: ParseIntentUseCase,
     private readonly buildDraftUseCase: BuildIntentDraftUseCase,
     private readonly approveIntentUseCase: ApproveIntentUseCase,
+    private readonly transcribeAudioUseCase: TranscribeAudioUseCase,
   ) {}
+
+  /**
+   * O que esta instalação sabe fazer — hoje, só se o ditado existe.
+   *
+   * A tela usa isto para decidir se o microfone **aparece**. Não é botão desabilitado: é ausência.
+   * Sem esta rota, o frontend teria de adivinhar pelo ambiente (`NEXT_PUBLIC_...`), e uma segunda
+   * fonte de verdade sobre "o ditado está ligado?" divergiria da primeira no dia em que a flag
+   * mudasse só de um lado.
+   */
+  @Get('capabilities')
+  capabilities(): { audioTranscription: boolean } {
+    return { audioTranscription: this.transcribeAudioUseCase.isEnabled() };
+  }
+
+  /**
+   * Transcreve o áudio ditado. **Não interpreta e não executa** — devolve texto.
+   *
+   * O texto volta para o CAMPO da tela como rascunho editável; a tradução para comando continua
+   * sendo o `POST /intent`, com o operador no meio. Encadear as duas aqui pareceria mais rápido e
+   * tiraria a única leitura humana que impede uma permissão invertida por erro de transcrição de
+   * chegar ao banco.
+   *
+   * Sem `@RequirePermission`: transcrever não altera nada e não revela dado da conta. O
+   * `JwtAuthGuard` do controller basta — e é necessário, senão a rota seria um transcritor grátis
+   * apontando para a chave de alguém.
+   */
+  @Post('transcribe')
+  @HttpCode(200)
+  async transcribe(@Body() dto: TranscribeAudioRequestDto): Promise<{ text: string }> {
+    const text = await this.transcribeAudioUseCase.execute(
+      new TranscribeAudioCommand(dto.dataBase64, dto.mimeType),
+    );
+    return { text };
+  }
 
   /**
    * Traduz texto em plano de comando. **Não grava nada, não decide nada.**

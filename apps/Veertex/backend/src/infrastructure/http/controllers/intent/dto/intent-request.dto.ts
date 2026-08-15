@@ -1,4 +1,4 @@
-import { IsIn, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
+import { IsIn, IsString, IsUUID, Matches, MaxLength, MinLength } from 'class-validator';
 import { IsIntentFieldMap } from './is-intent-field-map.validator';
 import {
   INTENT_COMMAND_NAMES,
@@ -46,4 +46,27 @@ export class ApproveIntentRequestDto extends BuildDraftRequestDto {
    */
   @IsUUID('4', { message: 'Rascunho inválido. Recarregue e tente novamente.' })
   draftId!: string;
+}
+
+/**
+ * O áudio ditado, em base64.
+ *
+ * `MaxLength(9_000_000)` ≈ 6,5 MB de áudio depois do base64. Sessenta segundos de Opus mono a 16 kHz
+ * dão algo como 100 KB, então o teto é uma barreira contra abuso — não um limite de uso. O corpo do
+ * Fastify aceita 25 MB, e uma rota que chama provedor pago por chamada não deve herdar esse teto.
+ *
+ * O `mimeType` é uma lista fechada: o que o MediaRecorder produz. Aceitar qualquer string faria a
+ * validação do formato acontecer só no provedor, do outro lado da rede e da cobrança.
+ */
+export class TranscribeAudioRequestDto {
+  @IsString()
+  @MinLength(100, { message: 'Áudio vazio ou curto demais.' })
+  @MaxLength(9_000_000, { message: 'Áudio grande demais. Grave até 60 segundos.' })
+  dataBase64!: string;
+
+  @IsString()
+  @Matches(/^audio\/(webm|ogg|mp4|mpeg)(;\s*codecs=[\w.]+)?$/, {
+    message: 'Formato de áudio não suportado.',
+  })
+  mimeType!: string;
 }

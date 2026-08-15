@@ -73,6 +73,28 @@ const COMMAND_AUTHORIZED_ROUTES: ReadonlySet<string> = new Set([
   'IntentController.approve',
 ]);
 
+/**
+ * QUARTA categoria: rotas autenticadas que **não tocam em dado da conta**.
+ *
+ * Não é a mesma coisa que as de cima. As de comando autorizam POR COMANDO, com prova em teste de
+ * ataque; estas não têm o que autorizar, porque não leem nem escrevem nada do tenant:
+ *
+ *  - `capabilities` devolve se o ditado está ligado neste ambiente. É a mesma resposta para todo
+ *    usuário de toda conta — exigir permissão daria a impressão de que há dado ali;
+ *  - `transcribe` recebe áudio e devolve texto. Não consulta o banco, não grava, não olha o escopo
+ *    do tenant. O que ela precisa é de AUTENTICAÇÃO — e o `JwtAuthGuard` do controller a dá —,
+ *    porque sem ela a rota seria um transcritor grátis apontando para a nossa chave paga.
+ *
+ * ⚠️ Uma entrada aqui só se justifica quando a resposta **não depende da conta**. No dia em que a
+ * transcrição passar a receber contexto do tenant (nomes de contatos para melhorar o
+ * reconhecimento, por exemplo), ela sai desta lista e ganha permissão — porque aí passa a haver
+ * dado da conta na requisição.
+ */
+const NO_TENANT_DATA_ROUTES: ReadonlySet<string> = new Set([
+  'IntentController.capabilities',
+  'IntentController.transcribe',
+]);
+
 interface RouteInfo {
   id: string;
   controller: string;
@@ -137,7 +159,8 @@ describe('Metadata das rotas HTTP', () => {
         (route) =>
           !PUBLIC_ROUTES.has(route.id) &&
           !SELF_SERVICE_ROUTES.has(route.id) &&
-          !COMMAND_AUTHORIZED_ROUTES.has(route.id),
+          !COMMAND_AUTHORIZED_ROUTES.has(route.id) &&
+          !NO_TENANT_DATA_ROUTES.has(route.id),
       )
       .filter((route) => !route.permissions || route.permissions.length === 0)
       .map((route) => route.id);

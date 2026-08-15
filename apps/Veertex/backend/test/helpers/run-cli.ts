@@ -70,6 +70,30 @@ export function runCli(
   }
 
   return new Promise((resolvePromise, rejectPromise) => {
+    /*
+     * TETO PRÓPRIO, com mensagem própria — corrigido em 15/08/2026, na TERCEIRA ocorrência de
+     * "falhou por carga da máquina" (ADR-0003).
+     *
+     * O que estourava antes era o `testTimeout` genérico de 30s do Jest, e ele nunca foi um limite
+     * pensado para isto: um `spawn` que sobe o Nest inteiro via `ts-node` leva ~12s em máquina
+     * ociosa e passa de 30s com um build concorrendo. O limite errado produzia a pior das mensagens
+     * — "Exceeded timeout of 30000 ms for a hook", apontando para o `beforeAll` e não para o CLI,
+     * sem dizer QUAL comando travou.
+     *
+     * Aqui o teto reflete o trabalho (90s) e a falha diz o que aconteceu. Não é afrouxamento: o
+     * limite antigo não media nada de útil, e um CLI de verdade travado ainda falha — com o nome do
+     * script na mensagem.
+     */
+    const teto = setTimeout(() => {
+      child.kill('SIGKILL');
+      rejectPromise(
+        new Error(
+          `O CLI "${scriptName}" não terminou em 90s. Isso costuma ser carga da máquina (rode a suíte ` +
+            `sozinho), não defeito do comando — mas se repetir com a máquina ociosa, é defeito.`,
+        ),
+      );
+    }, 90_000);
+
     const child = spawn(
       process.execPath,
       ['-r', 'ts-node/register/transpile-only', scriptPath, ...args],
@@ -85,8 +109,12 @@ export function runCli(
       stderr += String(chunk);
     });
 
-    child.on('error', rejectPromise);
+    child.on('error', (erro) => {
+      clearTimeout(teto);
+      rejectPromise(erro);
+    });
     child.on('close', (code) => {
+      clearTimeout(teto);
       resolvePromise({
         exitCode: code ?? -1,
         stdout,

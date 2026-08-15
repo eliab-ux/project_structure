@@ -178,7 +178,58 @@ describe('Proteção do login contra força bruta', () => {
   });
 
   describe('camada 2 — atraso progressivo por credencial', () => {
-    it('dobra a cada falha e para no teto', async () => {
+    /**
+     * A ESCADA, medida por INSTRUMENTAÇÃO — corrigido em 15/08/2026, na terceira ocorrência
+     * (ADR-0003). Este teste substitui o cronômetro pelo número que o próprio port calcula.
+     *
+     * O que falhava antes: a asserção comparava tempos de parede entre tentativas adjacentes, e
+     * errou por **29 ms** num limite de 1280 — com o atraso funcionando perfeitamente. A escada é
+     * uma conta (`base × 2^(falhas-1)`, com teto), e conta se verifica por igualdade, não por
+     * cronômetro. O relógio media o atraso MAIS o custo variável do trabalho em volta.
+     *
+     * O `delayForCredential()` devolve o atraso que SERÁ aplicado sem dormir — então dá para
+     * asseverar 1×, 2×, teto e teto exatamente, sem esperar um segundo sequer.
+     */
+    it('a escada é exatamente base, 2×base e teto — verificado sem relógio', () => {
+      const email = strangerEmail();
+      // IP próprio: quatro `registerFailure` consomem cota, e `ip(20)` é usado por outro teste.
+      const from = ip(77);
+
+      const throttle = harness.app.get<LoginThrottlePort>(LOGIN_THROTTLE);
+
+      expect(throttle.delayForCredential(email)).toBe(0);
+
+      throttle.registerFailure(email, from);
+      expect(throttle.delayForCredential(email)).toBe(THROTTLE_BASE_MS);
+
+      throttle.registerFailure(email, from);
+      expect(throttle.delayForCredential(email)).toBe(THROTTLE_BASE_MS * 2);
+
+      // Teto: a 3ª falha pediria 4×base, e o teto é 2×base. A partir daqui não cresce mais — sem
+      // teto, o atraso viraria bloqueio de fato, que é o que este desenho recusa.
+      throttle.registerFailure(email, from);
+      expect(throttle.delayForCredential(email)).toBe(THROTTLE_MAX_MS);
+
+      throttle.registerFailure(email, from);
+      expect(throttle.delayForCredential(email)).toBe(THROTTLE_MAX_MS);
+
+      // E o acerto zera — a mesma conta, do outro lado.
+      throttle.registerSuccess(email);
+      expect(throttle.delayForCredential(email)).toBe(0);
+    });
+
+    /**
+     * ⚠️ SENSÍVEL A CARGA — o único teste que ainda usa relógio, e de propósito.
+     *
+     * A instrumentação acima prova que a CONTA está certa; este prova que o atraso **acontece de
+     * verdade** — que alguém realmente dorme antes de responder. São coisas diferentes: um `sleep`
+     * removido por engano passaria no teste de cima e falharia aqui.
+     *
+     * A tolerância é generosa (metade do esperado) porque o número exato não é o ponto: o ponto é
+     * "há espera" contra "não há". Se ele falhar com a máquina ociosa, é defeito; sob carga, rode a
+     * suíte sozinho antes de investigar (ADR-0003).
+     */
+    it('o atraso ACONTECE — sensível a carga', async () => {
       const email = strangerEmail();
       const from = ip(10);
 

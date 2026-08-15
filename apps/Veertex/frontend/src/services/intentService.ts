@@ -38,6 +38,24 @@ async function approve(
   return response.data;
 }
 
-const intentService = { parse, draft, approve };
+/** O que esta instalação sabe fazer. Hoje: se o ditado por voz está ligado. */
+async function capabilities(): Promise<{ audioTranscription: boolean }> {
+  const response = await api.get<{ audioTranscription: boolean }>('/intent/capabilities');
+  return response.data;
+}
+
+/**
+ * Transcreve áudio. **Devolve texto — não executa nada.**
+ *
+ * O texto vai para o campo como rascunho; a tradução para comando continua sendo `parse()`, com o
+ * operador no meio. Encadear as duas chamadas aqui tiraria a única leitura humana que impede uma
+ * permissão invertida por erro de transcrição de chegar ao banco.
+ */
+async function transcribe(dataBase64: string, mimeType: string): Promise<{ text: string }> {
+  const response = await api.post<{ text: string }>('/intent/transcribe', { dataBase64, mimeType });
+  return response.data;
+}
+
+const intentService = { parse, draft, approve, capabilities, transcribe };
 
 export default intentService;

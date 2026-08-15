@@ -2,6 +2,21 @@ import { Client } from 'pg';
 import { runCli } from '../helpers/run-cli';
 import { connectAsOwner } from '../helpers/db';
 
+/*
+ * 120s para ESTE arquivo — corrigido em 15/08/2026, na terceira ocorrência de "falhou por carga da
+ * máquina" (ADR-0003).
+ *
+ * O teto global de 30s do `jest.config.ts` foi escolhido para query de banco, e nunca foi um limite
+ * pensado para `spawn` de CLI: subir o Nest inteiro via `ts-node` leva ~12s em máquina ociosa e passa
+ * de 30s com um build concorrendo. Falhava por um limite que não media nada de útil, e a mensagem
+ * apontava para o `beforeAll` em vez do comando que travou.
+ *
+ * Isto NÃO é afrouxar a detecção: o `runCli` ganhou teto PRÓPRIO de 90s, com o nome do script na
+ * mensagem. Quem falha primeiro agora é quem sabe explicar o que aconteceu. O global de 30s continua
+ * valendo para todos os outros arquivos, que é onde ele faz sentido.
+ */
+jest.setTimeout(120_000);
+
 /**
  * `verify:isolation` e `verify:rls` — os dois gates, executados de verdade.
  *

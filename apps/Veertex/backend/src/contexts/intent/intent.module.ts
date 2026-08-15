@@ -12,6 +12,9 @@ import { AuthorizeIntentCommandUseCase } from './application/use-cases/authorize
 import { ParseIntentUseCase } from './application/use-cases/parse-intent/parse-intent.use-case';
 import { BuildIntentDraftUseCase } from './application/use-cases/build-intent-draft/build-intent-draft.use-case';
 import { ApproveIntentUseCase } from './application/use-cases/approve-intent/approve-intent.use-case';
+import { TranscribeAudioUseCase } from './application/use-cases/transcribe-audio/transcribe-audio.use-case';
+import { AUDIO_TRANSCRIBER } from './application/ports/output/audio-transcriber.port';
+import { GeminiAudioTranscriber } from '../../infrastructure/intent/gemini-audio-transcriber';
 
 /**
  * A escolha do tradutor é feita AQUI, por configuração explícita — e nunca por fallback.
@@ -57,12 +60,22 @@ import { ApproveIntentUseCase } from './application/use-cases/approve-intent/app
         config.get<string>('INTENT_PARSER_DRIVER') === 'deterministic' ? deterministic : gemini,
     },
     AuthorizeIntentCommandUseCase,
+    /*
+     * A transcrição NÃO tem adapter determinístico, e a ausência é decisão: não existe "transcrever
+     * por palavra-chave". Um adapter falso aqui devolveria texto fixo, e um teste que exercitasse
+     * isso estaria verificando a si mesmo. O que a suíte verifica é o ADAPTER REAL contra um servidor
+     * de mentira — o mesmo padrão do Evolution.
+     */
+    GeminiAudioTranscriber,
+    { provide: AUDIO_TRANSCRIBER, useClass: GeminiAudioTranscriber },
+    TranscribeAudioUseCase,
     ParseIntentUseCase,
     BuildIntentDraftUseCase,
     ApproveIntentUseCase,
   ],
   exports: [
     AuthorizeIntentCommandUseCase,
+    TranscribeAudioUseCase,
     ParseIntentUseCase,
     BuildIntentDraftUseCase,
     ApproveIntentUseCase,

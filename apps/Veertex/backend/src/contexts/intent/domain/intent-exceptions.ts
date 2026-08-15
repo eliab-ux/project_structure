@@ -73,3 +73,16 @@ export class IncompleteIntentDraftException extends DomainException {
     );
   }
 }
+
+/**
+ * Ditado pedido com a transcrição desligada.
+ *
+ * Nome começando com "Forbidden" não seria correto aqui — não é falta de permissão do usuário, é
+ * recurso desligado no ambiente. 503 é o que o filtro produz para esta família, e é a resposta certa:
+ * "não agora", não "você não pode".
+ */
+export class AudioTranscriptionDisabledException extends DomainException {
+  constructor() {
+    super('A transcrição por voz está desligada neste ambiente.');
+  }
+}

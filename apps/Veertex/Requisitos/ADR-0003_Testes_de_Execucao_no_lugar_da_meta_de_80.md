@@ -164,8 +164,66 @@ e três vezes esquecidas são três vezes que não aconteceram.
 |---|---|---|---|---|
 | 1 | 2026-08-13 | `login-throttle` + specs com `runCli` | 14 falhas, depois 4, na mesma árvore | dois dev servers + `next build` concorrendo |
 | 2 | 2026-08-15 | `login-throttle` + `seed-dev.cli` | 7 falhas (6 timeout, 1 asserção); 17/17 rodando sozinhas | dev servers do Eliab + `next build` do frontend na mesma máquina |
+| **3** | 2026-08-15 | `seed-dev.cli` | 3 falhas, todas timeout de hook | suíte completa após a fatia de ditado |
 
-⚠️ **A `login-throttle` está com DUAS ocorrências.** Na próxima, ela deixa de ser "da máquina" e
+### ✅ TERCEIRA OCORRÊNCIA → CORRIGIDO em 15/08/2026, como a regra manda
+
+A `seed-dev.cli` bateu três. Pela regra de 14/08, ela deixou de ser "da máquina" e virou defeito a
+corrigir, na frente do que estivesse na fila — e a correção não foi afrouxar tolerância.
+
+**O diagnóstico:** quem estourava era o `testTimeout` global de 30s, escolhido para query de banco.
+Ele nunca foi um limite pensado para `spawn` de CLI, que sobe o Nest inteiro via `ts-node` — ~12s em
+máquina ociosa, mais de 30s com um build concorrendo. **O limite não media nada de útil**, e a
+mensagem que produzia era a pior possível: *"Exceeded timeout of 30000 ms for a hook"*, apontando
+para o `beforeAll` e sem dizer qual comando travou.
+
+**A correção, em duas partes:**
+
+1. **`runCli` ganhou teto PRÓPRIO de 90s**, com o nome do script na mensagem e uma frase dizendo o
+   que costuma ser ("carga da máquina — rode a suíte sozinho; se repetir com a máquina ociosa, é
+   defeito"). Quem falha primeiro passa a ser quem sabe explicar.
+2. **`jest.setTimeout(120_000)` nos seis arquivos que spawnam CLI.** O global de 30s continua valendo
+   para todos os outros, que é onde ele faz sentido.
+
+**Por que isto não é a "saída fácil" que este adendo havia descartado.** A saída descartada era
+*aumentar o `testTimeout` global* — que atrasaria a detecção de query travada em todo o resto da
+suíte e trocaria uma falha rápida por uma lenta. Aqui o teto passou a refletir **o trabalho de cada
+operação**, e a detecção ficou mais rápida onde importa: o `runCli` reporta em 90s com diagnóstico,
+em vez de o Jest reportar em 30s sem ele.
+
+### ✅ A `login-throttle` também bateu três, no mesmo dia — e também foi corrigida
+
+Na execução seguinte ela falhou por **29 ms** (esperado ≥1280, medido 1251) com o atraso funcionando
+perfeitamente. Terceira ocorrência, então correção — e aqui a correção é a que este adendo já
+previa: **instrumentação no lugar do cronômetro**.
+
+O `LoginThrottlePort` já devolvia o atraso calculado sem dormir (`delayForCredential`). Bastava
+perguntar a ele:
+
+| Teste | Antes | Depois |
+|---|---|---|
+| a escada dobra e para no teto | diferenças de tempo de parede entre tentativas | **igualdade exata**: `base`, `2×base`, `teto`, `teto`, e `0` após acerto — sem esperar um segundo |
+| não há oráculo de enumeração | diferença de tempo entre conta real e inexistente < meio degrau | **igualdade exata** do atraso calculado para as duas + verificação grosseira no relógio |
+| o atraso acontece de verdade | (não existia separado) | **um** teste de relógio, marcado como sensível a carga |
+
+Duas coisas que essa divisão torna possíveis e que o desenho anterior não tinha:
+
+- **a escada é conta, e conta se verifica por igualdade.** O cronômetro media o atraso MAIS o custo
+  variável do trabalho em volta, e era a segunda parcela que estourava o limite;
+- **a propriedade de segurança ficou mais forte, não mais fraca.** "Não há oráculo" passou a ser
+  provado por construção (as duas credenciais têm o MESMO atraso calculado, porque a escada é
+  chaveada pelo e-mail submetido). Se alguém trocar a chave para o id do usuário, quebra na hora —
+  deterministicamente. O relógio virou verificação grosseira, com tolerância de um degrau, e a
+  tolerância maior é honesta justamente porque a prova forte está do lado.
+
+**Resultado medido:** 198 testes, 17 suítes, zero timeout e zero falha de asserção — com os dev
+servers no ar, que é a condição em que as três ocorrências aconteceram.
+
+A tabela de ocorrências continua valendo para o que vier. O limite de três não foi revogado: foi
+exercido.
+
+⚠️ **A `login-throttle` está com DUAS ocorrências.** (A `seed-dev.cli` bateu três e foi corrigida —
+ver abaixo.) Na próxima, ela deixa de ser "da máquina" e
 vira defeito a corrigir — na frente do que estiver na fila. Não é escolha de quem estiver no teclado
 naquele dia: é o limite decidido em 14/08/2026, e ele existe justamente porque a explicação é
 verdadeira e, sem teto, viraria desculpa.

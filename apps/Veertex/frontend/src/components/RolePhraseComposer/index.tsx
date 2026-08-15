@@ -12,7 +12,9 @@ import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import { MicButton } from 'src/components/MicButton';
 import { RolePhrasePanel } from 'src/components/RolePhrasePanel';
+import { useVoiceDictation } from 'src/hooks/useVoiceDictation';
 import { apiErrorMessage } from 'src/services/api';
 import roleService from 'src/services/roleService';
 import { PermissionPhraseReading, Role } from 'src/types/admin';
@@ -48,6 +50,19 @@ export function RolePhraseComposer({
   const [saving, setSaving] = useState(false);
 
   const role = roles.find((candidate) => candidate.id === roleId) ?? null;
+
+  /*
+   * O ditado aqui é o caso mais delicado do sistema, e por isso o desenho é o mesmo da Mesa, sem
+   * atalho: a transcrição entra no CAMPO, o humano lê, e só então traduz.
+   *
+   * O motivo é uma frase específica — "pode ver empresas MAS NÃO pode excluir empresa". Se a
+   * transcrição perder o "não", a tradução recebe uma frase coerente que concede o oposto, a guarda
+   * de citação confirma o trecho (porque o trecho existe no texto transcrito), e o operador aprova
+   * uma permissão que jamais pediu. Nenhuma camada abaixo pega isso. Só a leitura dele pega.
+   */
+  const voz = useVoiceDictation((texto) => {
+    setPhrase((atual) => (atual ? `${atual} ${texto}`.trim() : texto));
+  });
 
   async function translate() {
     if (!role || phrase.trim().length < 3 || translating) {
@@ -151,13 +166,26 @@ export function RolePhraseComposer({
             inputProps={{ 'aria-label': 'O que este papel pode fazer', maxLength: 1000 }}
             disabled={!role}
             helperText={
-              role
-                ? 'Os papéis padrão são ajustáveis — o cadeado na lista impede excluir, não editar.'
-                : 'Escolha o papel primeiro: a frase não diz a quem ela se aplica.'
+              voz.state === 'recording'
+                ? '● Gravando. Fale e clique no quadrado para parar.'
+                : voz.state === 'sending'
+                  ? 'Transcrevendo…'
+                  : voz.state === 'error'
+                    ? 'Não consegui transcrever. Seu áudio foi guardado — clique em repetir.'
+                    : role
+                      ? 'Se ditar, LEIA a frase antes de traduzir: um "não" perdido inverte a permissão.'
+                      : 'Escolha o papel primeiro: a frase não diz a quem ela se aplica.'
             }
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
+                  <MicButton
+                    state={voz.state}
+                    level={voz.level}
+                    onStart={voz.gravar}
+                    onStop={voz.parar}
+                    onRetry={voz.retentar}
+                  />
                   {translating ? (
                     <CircularProgress size={22} role="status" aria-label="Traduzindo" />
                   ) : (

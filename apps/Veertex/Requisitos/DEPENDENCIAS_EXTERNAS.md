@@ -230,48 +230,85 @@ default silencioso com consequência fora do código.
 
 ---
 
-## 6. Microfone na Mesa — ditar em vez de digitar
+## 6. Ditado por voz — gravar no navegador, transcrever no Gemini
 
 | | |
 |---|---|
-| **Estado** | **Destravado com condição.** Só entra se o reconhecimento for LOCAL |
-| **Data** | adiado em 2026-08-12 · destravado em 2026-08-14 |
+| **Estado** | **Implementado, DESLIGADO por flag.** Liga junto com a chave própria com billing ativo |
+| **Data** | adiado 12/08 · destravado 14/08 · **redesenhado 15/08/2026** |
 | **Decisor** | Eliab |
-| **Bloqueado por** | Medição: `pt-BR` disponível *on-device* no Chrome desta base de usuários |
+| **Bloqueado por** | `AUDIO_TRANSCRIPTION_ENABLED=false` enquanto a chave for free tier |
 
-O que mudou em 14/08/2026: existe caminho em que **o áudio não sai da máquina**. O Chrome expõe
-reconhecimento *on-device* na Web Speech API (`processLocally: true`, com `available()` e `install()`
-para o pacote de idioma). Nesse modo, o que chega ao Gemini é **o texto transcrito** — e texto ditado
-pelo operador sobre a própria operação já está autorizado pelo §5. **A questão de LGPD se resolve por
-construção, não por termo contratual.**
+### O caminho anterior foi REMOVIDO do código
 
-### A REGRA — decidida por Eliab em 14/08/2026, vale para qualquer implementação
+A Web Speech API on-device saiu — não ficou como alternativa, não ficou atrás de flag. Duas
+limitações que nenhum ajuste resolvia, ambas medidas na máquina do Eliab (Chrome 151):
 
-1. **`processLocally: true` SEMPRE.** O padrão da API é `false`, e `false` deixa o navegador escolher
-   — podendo mandar o áudio para a nuvem. O padrão da API é o oposto do nosso.
-2. **`available()` diferente de `available` → o microfone NÃO APARECE.** Não desabilitado: ausente.
-   Controle inerte é promessa de recurso que não existe (§10).
-3. **Nunca cair para a nuvem por acidente.** Falha de reconhecimento local é falha, não é motivo para
-   tentar o outro caminho. O erro `language-not-supported` é resposta legítima e final.
+| Medido | Consequência |
+|---|---|
+| `pt-BR`: `command=available`, **`dictation=unavailable`** — e `dictation` indisponível também em `en-US` | é limitação da versão do motor, não falta de pacote português. Só existia o nível de comando |
+| nome próprio derretia: *"Tudodicasa"* → *"de casa"* | inutilizável para cadastrar empresa ou citar pessoa |
+| 1 a 1,5 s perdidos entre pedir o microfone e ele ouvir | comia o verbo — "ativar", "criar", "cadastrar" |
 
-Estas três não são detalhe de implementação: são a razão de o item ter saído do adiamento. Uma
-implementação que as viole reabre a decisão de LGPD que elas fecharam.
+**Manter os dois caminhos foi recusado**: dois caminhos de captura significam dois conjuntos de
+defeitos, duas experiências e a dúvida permanente sobre qual estava ativo quando algo deu errado.
 
-### O que falta medir antes de implementar
+### O desenho atual
 
-| Pergunta | Como responde | Estado |
-|---|---|---|
-| `pt-BR` existe on-device, e em qual qualidade (`command`/`dictation`/`conversation`)? | página de teste descartável, na máquina do Eliab | **pendente** |
-| Qual versão do Chrome/Edge suporta `available()`/`processLocally`? | a mesma página reporta o user agent | **pendente** |
-| Qualidade em frase real (nome próprio, sigla, código) | cinco frases ditadas na mesma página | **pendente** |
+```
+navegador grava (MediaRecorder, opus mono 16 kHz, teto de 60 s)
+   → POST /intent/transcribe   (nosso backend, com a nossa chave)
+   → Gemini transcreve LITERALMENTE
+   → texto volta para o CAMPO da tela, como rascunho editável
+   → o operador lê, corrige se quiser, e envia
+   → daí em diante é o fluxo de intenção de sempre: POST /intent → rascunho → aprovação
+```
 
-A lista pública de idiomas do Live Caption — mesmo motor — **inclui português**; o que não está
-confirmado é se o pacote é `pt-BR` ou `pt-PT`, e se `dictation` está disponível para ele. Sem essa
-resposta, não se escreve código: o valor inteiro do item depende dela.
+**A interpretação continua nossa.** O provedor transcreve; quem traduz texto em comando é o catálogo
+fechado, com `plano ∩ conta ∩ papel` e trecho de evidência. Pedir as duas coisas numa chamada só
+pareceria mais simples e apagaria a fronteira onde a validação mora.
 
-**Se a medição der negativa**, o segundo caminho é Whisper em WASM (`transformers.js`) — áudio também
-não sai, ao custo de 40–150 MB de modelo baixado uma vez e alguns segundos por frase. A escolha entre
-qualidade e peso volta ao Eliab; não é decisão deste repositório.
+### As regras que sustentam a decisão
+
+1. **A transcrição é RASCUNHO, nunca comando.** Vale para tudo, e vale em dobro na tela de Papéis:
+   uma permissão invertida por erro de transcrição não pode chegar ao banco sem alguém ter lido. Se
+   a transcrição perder o "não", a frase resultante é coerente, a guarda de citação confirma o trecho
+   (ele existe no texto transcrito) e o operador aprovaria o oposto do que disse. **Nenhuma camada
+   abaixo pega isso — só a leitura dele.**
+2. **A instrução ao modelo proíbe reescrever, corrigir gramática e remover negação**, com exemplo
+   concreto. Há teste prendendo essa linha: sabotá-la faz a suíte falhar.
+3. **Falhou, o áudio FICA.** Erro de rede ou timeout mantém o blob e oferece retentar. Descartar o
+   que a pessoa acabou de falar é o pior desfecho.
+4. **O microfone só aparece se o backend disser que está ligado** (`GET /intent/capabilities`). Não é
+   botão cinza: é ausência. A flag mora num lugar só, no servidor.
+5. **O áudio nunca entra em log** — nem o base64, nem o tamanho em `catch`, nem a transcrição. Áudio
+   de comando carrega nome de pessoa e de empresa.
+
+### ⚠️ Por que nasce desligado
+
+Enquanto a `GEMINI_API_KEY` for de free tier, o conteúdo enviado pode ser lido por revisor humano e
+usado para treino (§5 acima). **Áudio de comando carrega nome de pessoa e de empresa — ele não sai
+por esse canal.** A flag liga junto com a chave própria com billing ativo, nunca antes.
+
+### A medição, quando ligar
+
+Cinco frases, dez repetições cada, registrando **transcrição bruta**, **latência do fim da fala até o
+texto na tela** e **tamanho do áudio enviado**. O instrumento já está no código: `vx_debug_audio=1`
+no `localStorage` mostra os dois números abaixo do campo, a cada ditado.
+
+```
+ativar módulo VND
+cadastrar empresa Tudodicasa Comércio de Utilidades
+o supervisor pode ver empresas mas não pode excluir empresa
+a Ana pode vender e dar desconto até dez por cento mas não pode alterar preço de tabela
+a Bia pode registrar pagamento mas não pode criar reserva
+```
+
+| Critério | Limite |
+|---|---|
+| **Negação preservada** | **100%, sem exceção.** Uma falha que seja é reportada com a frase exata, nunca diluída numa média |
+| Nome próprio e sigla | corretos, ou resolvíveis por busca aproximada |
+| Latência mediana | abaixo de 2 s, do fim da fala ao texto |
 
 ## 7. Entrada por IMAGEM — ler documento de cliente e preparar o cadastro
 
