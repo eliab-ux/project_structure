@@ -262,6 +262,54 @@ E, por consequência, **também não foi medido** o que mais importa: se o níve
 frases de permissão com negação (*"pode ver empresas mas não pode excluir empresa"*), se a negação
 sobrevive, e se sigla de módulo chega utilizável. Qualquer conclusão sobre isso hoje é presunção.
 
+### 📏 MEDIÇÃO 1 — 15/08/2026, 7 frases, locutor A, disparo em `pointerdown`
+
+Primeira medição válida do ditado on-device. Ela **contradiz** a hipótese que motivou a troca por
+áudio, e encontra um defeito diferente e pior.
+
+| O que se mediu | Resultado |
+|---|---|
+| **Negação preservada** | **4/4.** Todas as frases com "mas não pode" mantiveram o "não". O nível `command` DÁ CONTA de frase corrida com negação |
+| **Início da frase** | **5 de 7 corrompidos, sistematicamente** — verbo ou sujeito inicial comidos |
+| `onstart` → primeiro resultado | 1,7 s a 3,6 s |
+
+Exemplos do corte, como vieram:
+
+| Falado | Transcrito |
+|---|---|
+| "criar papel de supervisor" | "papel de supervisor" |
+| "cadastrar empresa …" | "para empresa …" |
+| "o vendedor pode …" | "eu dou pode …" |
+| "o supervisor pode ver …" | "pode ver …" |
+
+### 🔴 ACHADO GRAVE — o corte não perdeu uma negação: INVENTOU uma
+
+> **Falado:** *"a Ana pode vender e dar desconto até dez por cento mas não pode alterar preço de
+> tabela"*
+> **Transcrito:** *"**não pode vender** …"*
+
+Uma frase que **concede** virou uma frase que **nega**. Isto é categoricamente diferente de perder o
+"não", e é pior por dois motivos:
+
+1. **A direção do erro é imprevisível.** O desenho inteiro foi pensado contra a perda da negação —
+   inclusive a instrução ao transcritor, no caminho de áudio, que proíbe removê-la. Ninguém estava
+   protegendo contra o oposto;
+2. **O resultado é uma frase plausível.** "Não pode vender" é uma permissão que existe e faz sentido.
+   Nada na cadeia acusa: a tradução aceita, a guarda de citação confirma o trecho (ele está no texto
+   transcrito), e o rascunho mostra uma restrição coerente. **Só o operador lendo pega** — e é
+   exatamente por isso que a transcrição é rascunho, nunca comando.
+
+**O que este achado NÃO decide:** se o ditado serve ou não serve. A causa aparente é a latência de
+abertura do microfone, não o nível `command` — e latência tem correção. Conclusão só depois da
+segunda medição.
+
+⚠️ **Uma ressalva de método, para a rodada 2.** O número citado acima (`onstart` → primeiro
+resultado, 1,7–3,6 s) **não prova** o corte: ele inclui o tempo em que a pessoa está falando, e
+1,7–3,6 s é o normal para uma frase inteira. Quem prova o corte é a coluna
+**`start()` → `onstart`** — o intervalo em que o microfone ainda não estava capturando. A evidência
+forte hoje é o PADRÃO das corrupções (sempre no começo, nunca no meio), que é consistente com o
+corte mas não o mede. A rodada 2 precisa trazer essa coluna.
+
 ### O que foi decidido a partir do que ESTÁ medido
 
 Com `command` disponível e `dictation` não, a decisão de Eliab (15/08/2026) é a que o próprio
