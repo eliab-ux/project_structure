@@ -1,0 +1,15 @@
+# Saída de build e dependências
+node_modules/
+dist/
+build/
+.next/
+*.tsbuildinfo
+
+# Documentos de requisito, spec e protótipo — fonte, não código.
+#
+# O `npm run format` da raiz varre `{packages,apps}/**/*.ts`, mas basta alguém rodar o Prettier
+# com um glob mais largo (`apps/<app>/**/*.md`) para ele reescrever a spec do cliente: realinha as
+# tabelas, mexe nas quebras e produz um diff enorme num arquivo que ninguém pediu para formatar.
+# Documento de requisito é entrada do trabalho — a formatação é de quem escreveu.
+apps/*/Requisitos/
+**/Requisitos/

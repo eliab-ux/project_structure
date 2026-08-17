@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kortex — protótipo do painel do Administrativo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#10233A; --ink-2:#1D3A5C; --paper:#F1F3EF; --paper-2:#FFF;
+    --line:#CFD6D0; --cut:#1E63D0; --live:#F04E23; --ok:#17876B; --slate:#6B7A8C;
+    --warn-bg:#FDEEE9; --ok-bg:#E6F2EE; --cut-bg:#E8EFFB;
+    --shadow:0 1px 0 rgba(16,35,58,.06),0 8px 24px -16px rgba(16,35,58,.35);
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .doc{max-width:1240px;margin:0 auto;padding:40px 24px 80px}
+  .doc-head{border-bottom:2px solid var(--ink);padding-bottom:20px;margin-bottom:30px}
+  .eyebrow{font-family:Archivo,sans-serif;font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--cut);margin:0 0 10px}
+  h1{font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(28px,5vw,44px);letter-spacing:-.03em;line-height:1;margin:0}
+  .doc-sub{color:var(--slate);font-size:15px;max-width:68ch;margin:14px 0 0;line-height:1.55}
+  h2.sec{font-family:Archivo,sans-serif;font-weight:700;font-size:19px;margin:40px 0 4px;padding-top:14px;border-top:1px solid var(--line)}
+  .sec-note{color:var(--slate);font-size:13.5px;margin:0 0 20px;max-width:80ch;line-height:1.55}
+
+  .browser{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--paper-2);box-shadow:var(--shadow);margin-bottom:34px}
+  .chrome{background:var(--ink);padding:10px 14px;display:flex;align-items:center;gap:8px}
+  .chrome i{width:10px;height:10px;border-radius:50%;background:#43597A;display:block}
+  .chrome .url{margin-left:10px;background:#1D3A5C;color:#9FB3CC;border-radius:6px;padding:4px 12px;font-family:'IBM Plex Mono',monospace;font-size:11px;flex:1}
+  .app{display:grid;grid-template-columns:194px 1fr}
+  .side{border-right:1px solid var(--line);background:var(--paper);padding:16px 0}
+  .brand{font-family:Archivo,sans-serif;font-weight:800;font-size:19px;letter-spacing:-.03em;padding:0 16px 4px;margin:0}
+  .acct{padding:0 16px 13px;color:var(--slate);font-size:11px;font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--line);margin-bottom:11px;line-height:1.5}
+  .nav a{display:block;padding:8px 16px;color:var(--ink);text-decoration:none;font-size:13.5px;font-weight:500}
+  .nav a.on{background:var(--paper-2);box-shadow:inset 3px 0 0 var(--live);font-weight:600}
+  .nav a .n{float:right;background:var(--live);color:#fff;border-radius:999px;font-size:10px;padding:1px 6px;font-weight:700}
+  .nav .grp{font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);padding:14px 16px 5px;font-weight:700}
+  .main{padding:20px 22px 26px;min-width:0}
+  .mh{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:18px}
+  .mh h3{font-family:Archivo,sans-serif;font-weight:700;font-size:22px;letter-spacing:-.02em;margin:0}
+  .mh p{color:var(--slate);font-size:12.5px;margin:5px 0 0}
+  .b{border:0;background:var(--ink);color:#fff;border-radius:9px;padding:9px 15px;font-family:Archivo,sans-serif;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+  .b.s{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+  .b.d{background:var(--live)}
+  .b.g{background:var(--ok)}
+  .b.m{padding:6px 10px;font-size:11.5px;border-radius:7px}
+
+  .grid{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .grow{display:grid;grid-template-columns:100px repeat(12,1fr);border-bottom:1px solid var(--line)}
+  .grow:last-child{border-bottom:0}
+  .grow.head{background:var(--paper)}
+  .gc{border-left:1px solid var(--line);padding:8px 0;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--slate);position:relative;min-height:66px}
+  .grow.head .gc{min-height:0;padding:9px 0}
+  .gd{padding:9px 11px;font-size:12px;line-height:1.35}
+  .gd b{font-family:Archivo,sans-serif;font-size:12.5px;display:block}
+  .gd span{color:var(--slate);font-family:'IBM Plex Mono',monospace;font-size:10px}
+  .grow.head .gd{color:var(--slate);font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding-top:12px}
+  .res{position:absolute;top:5px;bottom:5px;left:1px;background:var(--cut-bg);border:1px solid var(--cut);border-radius:7px;padding:4px 7px;text-align:left;overflow:hidden;z-index:2}
+  .res b{display:block;font-family:Archivo,sans-serif;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
+  .res span{display:block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink-2);margin-top:1px;white-space:nowrap}
+  .res.hold{background:repeating-linear-gradient(45deg,#fff 0 6px,#FDEEE9 6px 12px);border-color:var(--live);border-style:dashed}
+  .res.live{background:var(--warn-bg);border-color:var(--live);border-width:2px}
+  .res.cont{border-left-style:dashed}
+  .res.cons{background:#EEF0EC;border-color:var(--slate);border-style:dotted}
+  /* sobreposição: os compromissos dividem a altura da faixa, como no Teams.
+     Card fica com menos informação; o detalhe abre ao clicar. */
+  .res.sp-a{top:4px;bottom:calc(50% + 1px);padding:3px 7px}
+  .res.sp-b{top:calc(50% + 1px);bottom:4px;padding:3px 7px}
+  .res.sp-a b,.res.sp-b b{font-size:10.5px;line-height:1.15}
+  .res.sp-a span,.res.sp-b span{font-size:9px;margin-top:0}
+  .res.click{cursor:pointer}
+  .res.click:hover{filter:brightness(.97)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-top:16px}
+  .kpi{border:1px solid var(--line);border-radius:11px;padding:12px 13px}
+  .kpi span{display:block;font-family:Archivo,sans-serif;font-weight:700;font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--slate);margin-bottom:5px}
+  .kpi b{font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:600}
+  .kpi small{display:block;color:var(--slate);font-size:11px;margin-top:3px}
+
+  table.l{width:100%;border-collapse:collapse;font-size:13px}
+  table.l th{text-align:left;font-family:Archivo,sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);padding:9px 11px;border-bottom:2px solid var(--ink);font-weight:700}
+  table.l td{padding:11px;border-bottom:1px solid var(--line);vertical-align:middle}
+  table.l td.n{font-family:'IBM Plex Mono',monospace}
+  table.l tr.risk td{background:#FEF6F3}
+  table.l tr.okr td{background:#F4FAF7}
+  .pill{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;font-family:Archivo,sans-serif;text-transform:uppercase;letter-spacing:.03em}
+  .pill.p{background:var(--ok-bg);color:var(--ok)}
+  .pill.h{background:var(--warn-bg);color:var(--live)}
+  .pill.w{background:#EEF0EC;color:var(--slate)}
+  .pill.u{background:var(--live);color:#fff}
+  .pill.c{background:var(--cut-bg);color:var(--cut)}
+
+  .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .card{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .card.alert{border-color:var(--live)}
+  .card-h{padding:11px 13px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:var(--paper)}
+  .card-h b{font-family:Archivo,sans-serif;font-size:13.5px}
+  .card-h .cnt{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--slate)}
+  .card.alert .card-h{background:var(--warn-bg)}
+  .row{padding:10px 13px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px}
+  .row:last-child{border-bottom:0}
+  .row b{font-family:Archivo,sans-serif;font-size:13px;display:block}
+  .row span{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--slate);display:block;margin-top:2px}
+
+  .two{display:grid;grid-template-columns:1fr 320px;gap:22px;align-items:start}
+  .fs{border:1px solid var(--line);border-radius:12px;padding:15px 16px 6px;margin-bottom:16px}
+  .fs legend{font-family:Archivo,sans-serif;font-weight:700;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--cut);padding:0 7px}
+  .f{margin-bottom:12px}
+  .f label{display:block;font-family:Archivo,sans-serif;font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);margin-bottom:5px}
+  .f .in{border:1.5px solid var(--line);border-radius:8px;padding:10px 11px;font-size:13.5px;background:var(--paper-2)}
+  .f .in.ph{color:var(--slate)}
+  .f .in.lock{background:var(--paper);border-style:dashed;color:var(--slate)}
+  .r2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+  .r4{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:11px}
+  .money{border:1px solid var(--line);border-radius:11px;padding:13px;display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+  .money span{font-size:12.5px;color:var(--slate)}
+  .money b{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600}
+  .note{border-left:3px solid var(--cut);background:var(--cut-bg);padding:11px 13px;border-radius:0 8px 8px 0;font-size:12.5px;line-height:1.5;margin:12px 0 0}
+  .note.hard{border-left-color:var(--live);background:var(--warn-bg)}
+  .note.ok{border-left-color:var(--ok);background:var(--ok-bg)}
+  .hist{border:1px solid var(--ink);border-radius:12px;overflow:hidden}
+  .hist-h{background:var(--ink);color:#fff;padding:11px 13px}
+  .hist-h b{font-family:Archivo,sans-serif;font-size:13px;display:block}
+  .hist-h span{font-size:11px;color:#9FB3CC}
+  .hist table{width:100%;border-collapse:collapse;font-size:12.5px}
+  .hist th{text-align:left;font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);padding:8px 13px;border-bottom:1px solid var(--line);font-weight:700}
+  .hist td{padding:8px 13px;border-bottom:1px solid var(--line);font-family:'IBM Plex Mono',monospace}
+  .hist td:first-child{font-family:Inter,sans-serif}
+  .hist .ft{background:var(--cut-bg);padding:12px 13px;font-size:12px;line-height:1.5;color:var(--ink-2)}
+  .modal{border:2px solid var(--ink);border-radius:14px;background:var(--paper-2);max-width:520px;margin:0 auto;overflow:hidden}
+  .modal-h{background:var(--ink);color:#fff;padding:14px 16px}
+  .modal-h b{font-family:Archivo,sans-serif;font-size:16px;display:block;letter-spacing:-.01em}
+  .modal-h span{font-size:12px;color:#9FB3CC}
+  .modal-b{padding:16px}
+  .modal-f{padding:13px 16px;border-top:1px solid var(--line);display:flex;gap:9px;justify-content:flex-end;background:var(--paper)}
+  .seg{display:flex;border:1.5px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg div{flex:1;text-align:center;padding:9px 4px;font-size:12.5px;font-weight:600;color:var(--slate)}
+  .seg div.on{background:var(--ink);color:#fff}
+  table.dre{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.dre td{padding:8px 12px;border-bottom:1px solid var(--line)}
+  table.dre td.v{text-align:right;font-family:'IBM Plex Mono',monospace;width:150px}
+  table.dre tr.dre-grp td{background:var(--paper);font-family:Archivo,sans-serif;font-weight:700;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--slate);border-bottom:2px solid var(--ink)}
+  table.dre tr.dre-sub td{padding-left:26px}
+  table.dre tr.dre-tot td{font-family:Archivo,sans-serif;font-weight:700;font-size:14px;border-bottom:2px solid var(--ink)}
+  table.dre tr.dre-total td{font-family:Archivo,sans-serif;font-weight:800;font-size:17px;background:var(--ok-bg);color:var(--ok);border-bottom:0}
+  table.dre tr.dre-total td.v{font-family:'IBM Plex Mono',monospace;font-size:19px}
+  .bal{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:16px}
+  .bal .c{border:1px solid var(--line);border-radius:11px;padding:12px 13px}
+  .bal .c span{display:block;font-family:Archivo,sans-serif;font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);margin-bottom:5px}
+  .bal .c b{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:600}
+  .bal .c small{display:block;color:var(--slate);font-size:11px;margin-top:3px}
+  .login{max-width:380px;margin:56px auto;text-align:center;padding-bottom:56px}
+  .login .lg{font-family:Archivo,sans-serif;font-weight:800;font-size:38px;letter-spacing:-.04em;margin:0}
+  .login .ls{color:var(--slate);font-size:13px;margin:4px 0 28px}
+  @media (max-width:900px){.app{grid-template-columns:1fr}.side{display:none}.two{grid-template-columns:1fr}
+    .kpis,.cards{grid-template-columns:1fr 1fr}.r3,.r4{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="doc">
+  <header class="doc-head">
+    <p class="eyebrow">Kortex · protótipo 2 de 2</p>
+    <h1>Painel do Administrativo</h1>
+    <p class="doc-sub">Quem agenda, cobra e resolve. Tudo que envolve dinheiro e agenda vive aqui — o Modelista
+    não tem nenhuma dessas telas. A regra que sustenta o desenho: <b>não está na agenda, não corta</b>.</p>
+  </header>
+
+  <h2 class="sec">Acesso e pendências</h2>
+  <p class="sec-note">A home não é dashboard de números — é lista do que precisa de decisão hoje. Nada expira
+    sozinho no Kortex; o sistema mostra e a pessoa decide.</p>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/entrar</span></div>
+    <div class="login">
+      <p class="lg">Kortex</p>
+      <p class="ls">Hora de máquina de corte</p>
+      <div class="f" style="text-align:left"><label>E-mail</label><div class="in">bia@corteceres.com.br</div></div>
+      <div class="f" style="text-align:left"><label>Senha</label><div class="in">••••••••••</div></div>
+      <button class="b" style="width:100%;padding:12px">Entrar</button>
+      <p class="ls" style="margin-top:14px">Esqueci a senha — recebo o código no WhatsApp</p>
+    </div>
+  </div>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app</span></div>
+    <div class="app">
+      <aside class="side">
+        <p class="brand">Kortex</p>
+        <p class="acct">Corte Ceres · APL<br>3 máquinas</p>
+        <nav class="nav">
+          <a href="#" class="on">Pendências<span class="n">7</span></a>
+          <a href="#">Agenda</a>
+          <a href="#">Pré-pedidos<span class="n">1</span></a>
+          <a href="#">Fila de espera</a>
+          <div class="grp">Cadastros</div>
+          <a href="#">Clientes</a><a href="#">Tecidos</a><a href="#">Produtos</a>
+          <div class="grp">Financeiro</div><a href="#">Lançamentos</a><a href="#">DRE</a>
+          <div class="grp">Histórico</div>
+          <a href="#">Cortes feitos</a>
+          <div class="grp">Conta</div>
+          <a href="#">Configuração</a><a href="#">Equipe</a>
+        </nav>
+      </aside>
+      <div class="main">
+        <div class="mh"><div><h3>Pendências</h3><p>Bia · administrativo · quarta, 12 de agosto</p></div></div>
+        <div class="cards">
+          <div class="card alert">
+            <div class="card-h"><b>Pagamento em risco</b><span class="cnt">2 · R$ 480,00</span></div>
+            <div class="row"><div><b>Malharia São Bento</b><span>14/08 · 09→13 · 4h</span></div>
+              <div><span class="pill u">corte em 2 dias</span> <button class="b m">Resolver</button></div></div>
+            <div class="row"><div><b>Jeans do Vale</b><span>21/08 · 08→10 · 2h</span></div>
+              <div><span class="pill h">9 dias</span> <button class="b m">Resolver</button></div></div>
+          </div>
+          <div class="card alert">
+            <div class="card-h"><b>Não compareceu — decidir</b><span class="cnt">1 · R$ 80,00</span></div>
+            <div class="row"><div><b>Jeans do Vale</b><span>12/08 · 17→18 · 1h · já pago</span></div>
+              <button class="b m d">Decidir</button></div>
+            <div class="row" style="color:var(--slate);font-size:12px">Remarcar ou dar baixa depende do
+              contrato — o sistema não decide sozinho.</div>
+          </div>
+          <div class="card">
+            <div class="card-h"><b>Confirmar amanhã</b><span class="cnt">3 reservas</span></div>
+            <div class="row"><div><b>Fábrica Alto Vale</b><span>13/08 · dia inteiro · pago</span></div>
+              <button class="b m s">Ligar</button></div>
+            <div class="row"><div><b>Acqua Bronze</b><span>13/08 · 08→10 · pago</span></div>
+              <button class="b m s">Ligar</button></div>
+            <div class="row"><div><b>Winner Uniformes</b><span>13/08 · 15→18 · pago</span></div>
+              <button class="b m s">Ligar</button></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><b>Pré-pedidos liberados</b><span class="cnt">1 novo</span></div>
+            <div class="row"><div><b>Confecção Duas Marias</b><span>Tricoline · camisa · 2h definidas</span></div>
+              <button class="b m">Reservar</button></div>
+            <div class="row" style="color:var(--slate);font-size:12px">As horas vêm do Modelista e você não
+              edita — ele é quem sabe o tempo do corte.</div>
+          </div>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><span>Horas pagas na semana</span><b>29h</b><small>2 máquinas</small></div>
+          <div class="kpi"><span>Horas cortadas</span><b>21h30</b><small>tempo real medido</small></div>
+          <div class="kpi"><span>Ocupação</span><b>46%</b><small>sobre 12h úteis/dia</small></div>
+          <div class="kpi"><span>Aguardando pagamento</span><b>R$ 480</b><small>6h de máquina paradas</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sec">Agenda</h2>
+  <p class="sec-note">Colunas são horas, linhas são dias — assim reserva de dia inteiro ou de vários dias vira
+    algo que se vê. Bloco hachurado é pré-reserva sem pagamento: ocupa o horário aqui e <b>não existe</b> para o
+    Modelista. Faixa pontilhada é atendimento, que pode sobrepor hora de máquina com aviso.</p>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/agenda?maquina=01</span></div>
+    <div class="app">
+      <aside class="side">
+        <p class="brand">Kortex</p><p class="acct">Corte Ceres · APL<br>3 máquinas</p>
+        <nav class="nav"><a href="#">Pendências<span class="n">7</span></a><a href="#" class="on">Agenda</a>
+          <a href="#">Pré-pedidos<span class="n">1</span></a><a href="#">Fila de espera</a>
+          <div class="grp">Cadastros</div><a href="#">Clientes</a><a href="#">Tecidos</a><a href="#">Produtos</a>
+          <div class="grp">Financeiro</div><a href="#">Lançamentos</a><a href="#">DRE</a>
+          <div class="grp">Histórico</div><a href="#">Cortes feitos</a>
+          <div class="grp">Conta</div><a href="#">Configuração</a><a href="#">Equipe</a></nav>
+      </aside>
+      <div class="main">
+        <div class="mh"><div><h3>Máquina 01 · semana de 12/08</h3><p>Janelas 07:00–11:30 · 13:00–17:30 · 18:30–21:00 · R$ 85,00/h nesta máquina</p></div>
+          <div><button class="b s">Máquina 02</button> <button class="b s">+ Atendimento</button> <button class="b">Nova reserva</button></div></div>
+        <div class="grid">
+          <div class="grow head"><div class="gd">Dia</div>
+            <div class="gc">07</div><div class="gc">08</div><div class="gc">09</div><div class="gc">10</div>
+            <div class="gc">11</div><div class="gc">12</div><div class="gc">13</div><div class="gc">14</div>
+            <div class="gc">15</div><div class="gc">16</div><div class="gc">17</div><div class="gc">18</div></div>
+
+          <div class="grow"><div class="gd"><b>Qua 12</b><span>6h vendidas</span></div>
+            <div class="gc"></div>
+            <div class="gc"><div class="res" style="width:calc(200% - 4px)"><b>Jeans do Vale</b><span>08→10 · 2h · pago</span></div></div>
+            <div class="gc"></div>
+            <div class="gc"><div class="res cons click" style="width:calc(50% - 4px)"><b>Sonhare</b><span>10:30 · atendimento</span></div></div>
+            <div class="gc"></div><div class="gc"></div><div class="gc"></div>
+            <div class="gc"><div class="res live sp-a click" style="width:calc(300% - 4px)"><b>Malharia São Bento</b><span>14→17 · cortando</span></div></div>
+            <div class="gc"><div class="res cons sp-b click" style="width:calc(50% - 4px);z-index:4"><b>⚠ Acqua Bronze</b><span>15→15:30 · atend.</span></div></div>
+            <div class="gc"></div>
+            <div class="gc"><div class="res" style="width:calc(200% - 4px)"><b>Duas Marias</b><span>18→20 · 2h · pago</span></div></div>
+            <div class="gc"></div></div>
+
+          <div class="grow"><div class="gd"><b>Qui 13</b><span>dia inteiro</span></div>
+            <div class="gc"><div class="res" style="width:calc(1200% - 4px)"><b>Fábrica Alto Vale</b><span>dia inteiro · 12h · pago · Cetim · enfesto baixo</span></div></div>
+            <div class="gc"></div><div class="gc"></div><div class="gc"></div><div class="gc"></div><div class="gc"></div>
+            <div class="gc"></div><div class="gc"></div><div class="gc"></div><div class="gc"></div><div class="gc"></div><div class="gc"></div></div>
+
+          <div class="grow"><div class="gd"><b>Sex 14</b><span>4h em risco</span></div>
+            <div class="gc"></div><div class="gc"></div>
+            <div class="gc"><div class="res hold" style="width:calc(400% - 4px)"><b>Malharia São Bento</b><span>09→13 · 4h · aguardando pagamento</span></div></div>
+            <div class="gc"></div><div class="gc"></div><div class="gc"></div>
+            <div class="gc"></div>
+            <div class="gc"><div class="res" style="width:calc(200% - 4px)"><b>Duas Marias</b><span>14→16 · 2h · pago</span></div></div>
+            <div class="gc"></div><div class="gc"></div><div class="gc"></div><div class="gc"></div></div>
+
+          <div class="grow"><div class="gd"><b>Sáb 15</b><span>2º de 3 dias</span></div>
+            <div class="gc"><div class="res cont" style="width:calc(1200% - 4px)"><b>Fábrica Alto Vale</b><span>continua de sexta · pago</span></div></div>
+            <div class="gc"></div><div class="gc"></div><div class="gc"></div><div class="gc"></div><div class="gc"></div>
+            <div class="gc"></div><div class="gc"></div><div class="gc"></div><div class="gc"></div><div class="gc"></div><div class="gc"></div></div>
+        </div>
+        <div class="note hard"><b>Sobreposição tem duas regras.</b> Duas horas de máquina no mesmo horário e
+          máquina: bloqueado no banco. Atendimento em cima de hora de máquina — como o da Acqua Bronze às 15:00,
+          durante o corte da São Bento: permitido, marcado com ⚠, e você decide se o Modelista dá conta dos dois.
+          Quando dois compromissos disputam o mesmo horário, <b>cada um fica com metade da faixa</b>, com menos
+          informação no card — o detalhe abre ao clicar.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/agenda/R-2265</span></div>
+    <div style="padding:26px 20px;background:var(--paper)">
+      <div class="modal">
+        <div class="modal-h"><b>Malharia São Bento</b><span>Hora de máquina · 12/08 · 14:00 → 17:00 · Máquina 01</span></div>
+        <div class="modal-b">
+          <div class="note hard" style="margin-top:0"><b>⚠ Conflito de agenda.</b> Às 15:00 há um atendimento
+            da Acqua Bronze marcado durante este corte. Foi você quem autorizou ao criar o atendimento.
+            <a href="#" style="color:var(--live);font-weight:600">Ver atendimento</a></div>
+          <div class="r4" style="margin-top:14px">
+            <div class="f"><label>Tecido</label><div class="in lock">Malha</div></div>
+            <div class="f"><label>Produto</label><div class="in lock">Maiô</div></div>
+            <div class="f"><label>Peças prev.</label><div class="in lock">35</div></div>
+            <div class="f"><label>Horas</label><div class="in lock">3h</div></div>
+          </div>
+          <div class="r3">
+            <div class="f"><label>Situação</label><div class="in">Em execução · 2ª matriz</div></div>
+            <div class="f"><label>Pagamento</label><div class="in">Pix · 08/08 · Bia</div></div>
+            <div class="f"><label>Valor</label><div class="in">R$ 255,00</div></div>
+          </div>
+          <div class="f" style="margin-bottom:2px"><label>Recado do Modelista</label>
+            <div class="in lock">Enfesto baixo — malha escorrega</div></div>
+          <div class="note">Matrizes já apontadas: <b>1</b> concluída (20 cam × 8 enc = 160 pç, 1h14) e
+            <b>1</b> em andamento.</div>
+        </div>
+        <div class="modal-f"><button class="b s">Fechar</button><button class="b s">Mover reserva</button>
+          <button class="b">Abrir cortes</button></div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sec">Reserva e pagamento</h2>
+  <p class="sec-note">A reserva nasce de um pré-pedido já avaliado. As horas vêm travadas. O valor da hora é
+    gravado na reserva no momento em que ela é criada — reajuste futuro não reescreve o passado.</p>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/agenda/nova?prepedido=PP-1187</span></div>
+    <div class="app">
+      <aside class="side">
+        <p class="brand">Kortex</p><p class="acct">Corte Ceres · APL<br>3 máquinas</p>
+        <nav class="nav"><a href="#">Pendências<span class="n">7</span></a><a href="#" class="on">Agenda</a>
+          <a href="#">Pré-pedidos<span class="n">1</span></a><a href="#">Fila de espera</a>
+          <div class="grp">Cadastros</div><a href="#">Clientes</a><a href="#">Tecidos</a><a href="#">Produtos</a>
+          <div class="grp">Financeiro</div><a href="#">Lançamentos</a><a href="#">DRE</a>
+          <div class="grp">Histórico</div><a href="#">Cortes feitos</a>
+          <div class="grp">Conta</div><a href="#">Configuração</a><a href="#">Equipe</a></nav>
+      </aside>
+      <div class="main">
+        <div class="mh"><div><h3>Nova reserva</h3><p>Pré-pedido PP‑1187 · liberado pelo Modelista hoje, 09:46</p></div>
+          <div><button class="b s">Cancelar</button> <button class="b">Criar pré-reserva</button></div></div>
+        <div class="two">
+          <div>
+            <fieldset class="fs"><legend>Pedido</legend>
+              <div class="f"><label>Cliente</label><div class="in">Confecção Duas Marias · Jaraguá/GO</div></div>
+              <div class="r4">
+                <div class="f"><label>Tecido</label><div class="in lock">Tricoline</div></div>
+                <div class="f"><label>Produto</label><div class="in lock">Camisa</div></div>
+                <div class="f"><label>Peças</label><div class="in lock">40</div></div>
+                <div class="f"><label>Metros</label><div class="in lock">100</div></div>
+              </div>
+              <div class="f"><label>Horas — definidas pelo Modelista</label>
+                <div class="in lock">2 horas · você não edita este campo</div></div>
+              <div class="f" style="margin-bottom:4px"><label>Recado do Modelista</label>
+                <div class="in lock">Tecido tem que chegar na véspera</div></div>
+            </fieldset>
+            <fieldset class="fs"><legend>Horário</legend>
+              <div class="r3">
+                <div class="f"><label>Máquina</label><div class="in">Máquina 01</div></div>
+                <div class="f"><label>Dia</label><div class="in">14/08/2026</div></div>
+                <div class="f"><label>Começa às</label><div class="in">14:00</div></div>
+              </div>
+              <div class="money" style="margin-bottom:12px"><span>2h × R$ 85,00 · termina 16:00</span><b>R$ 170,00</b></div>
+            </fieldset>
+            <div class="note hard"><b>Enquanto não for pago</b>, o horário fica segurado aqui e não aparece na
+              fila do Modelista. Nada expira sozinho — se o pagamento não vier, você decide liberar.</div>
+          </div>
+          <aside class="hist">
+            <div class="hist-h"><b>Tricoline · histórico</b><span>parâmetro por tecido, não por cliente</span></div>
+            <table>
+              <thead><tr><th>Volume</th><th>Reserv.</th><th>Real</th></tr></thead>
+              <tbody>
+                <tr><td>40 pç × 100 m</td><td>2h</td><td>1h30</td></tr>
+                <tr><td>36 pç × 100 m</td><td>2h</td><td>1h25</td></tr>
+                <tr><td>60 pç × 80 m</td><td>3h</td><td>2h20</td></tr>
+                <tr><td>40 pç × 100 m</td><td>2h</td><td>1h38</td></tr>
+              </tbody>
+            </table>
+            <div class="ft">Sobrou tempo nos últimos cortes deste tecido — e o cliente pagou as 2h. Sem
+              devolução: a hora reservada é a hora cobrada.</div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/reservas/R-2291/pagamento</span></div>
+    <div style="padding:28px 20px;background:var(--paper)">
+      <div class="modal">
+        <div class="modal-h"><b>Registrar pagamento</b><span>Confecção Duas Marias · 14/08 · 14→16 · 2h</span></div>
+        <div class="modal-b">
+          <div class="money" style="margin-bottom:14px"><span>2h × R$ 85,00 (valor gravado na reserva)</span><b>R$ 170,00</b></div>
+          <div class="f"><label>Forma</label>
+            <div class="seg"><div class="on">Pix</div><div>Dinheiro</div><div>Transferência</div></div></div>
+          <div class="r2">
+            <div class="f"><label>Data do recebimento</label><div class="in">12/08/2026</div></div>
+            <div class="f"><label>Recebido por</label><div class="in lock">Bia (você)</div></div>
+          </div>
+          <div class="f" style="margin-bottom:2px"><label>Observação</label><div class="in ph">Ex.: comprovante enviado no WhatsApp</div></div>
+          <div class="note ok"><b>Ao confirmar</b>, a reserva entra na fila do Modelista imediatamente.
+            É esse clique que libera o corte.</div>
+        </div>
+        <div class="modal-f"><button class="b s">Cancelar</button><button class="b g">Confirmar pagamento</button></div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sec">Pagamento em risco, fila de espera e não comparecimento</h2>
+  <p class="sec-note">As três telas onde o dinheiro e a agenda se cruzam. Todas terminam num botão humano.</p>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/pendencias/pagamento</span></div>
+    <div class="app">
+      <aside class="side">
+        <p class="brand">Kortex</p><p class="acct">Corte Ceres · APL<br>3 máquinas</p>
+        <nav class="nav"><a href="#" class="on">Pendências<span class="n">7</span></a><a href="#">Agenda</a>
+          <a href="#">Pré-pedidos<span class="n">1</span></a><a href="#">Fila de espera</a>
+          <div class="grp">Cadastros</div><a href="#">Clientes</a><a href="#">Tecidos</a><a href="#">Produtos</a>
+          <div class="grp">Financeiro</div><a href="#">Lançamentos</a><a href="#">DRE</a>
+          <div class="grp">Histórico</div><a href="#">Cortes feitos</a>
+          <div class="grp">Conta</div><a href="#">Configuração</a><a href="#">Equipe</a></nav>
+      </aside>
+      <div class="main">
+        <div class="mh"><div><h3>Pré-reservas sem pagamento</h3><p>2 reservas · R$ 480,00 · 6h de máquina paradas</p></div></div>
+        <table class="l">
+          <thead><tr><th>Cliente</th><th>Corte</th><th>Horas</th><th>Valor</th><th>Falta</th><th>Espera</th><th></th></tr></thead>
+          <tbody>
+            <tr class="risk">
+              <td><b>Malharia São Bento</b><br><span style="color:var(--slate);font-size:11.5px">reservou 08/08 · Brenda</span></td>
+              <td class="n">14/08 · 09→13</td><td class="n">4h</td><td class="n">R$ 340,00</td>
+              <td><span class="pill u">2 dias</span></td><td><span class="pill w">2 na fila</span></td>
+              <td><button class="b m">Registrar pago</button> <button class="b m d">Liberar horário</button></td>
+            </tr>
+            <tr>
+              <td><b>Jeans do Vale</b><br><span style="color:var(--slate);font-size:11.5px">reservou 11/08 · Wesley</span></td>
+              <td class="n">21/08 · 08→10</td><td class="n">2h</td><td class="n">R$ 170,00</td>
+              <td><span class="pill h">9 dias</span></td><td><span class="pill w">2 na fila</span></td>
+              <td><button class="b m">Registrar pago</button></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="mh" style="margin:30px 0 12px"><div><h3>Fila de espera</h3>
+          <p>Fichas técnicas do Modelista · 2 querem antecipar</p></div>
+          <div><button class="b s">+ Adicionar</button></div></div>
+        <table class="l">
+          <thead><tr><th>Cliente</th><th>Material</th><th>Horas</th><th>Até</th><th>Situação</th><th></th></tr></thead>
+          <tbody>
+            <tr class="okr"><td><b>Fábrica Alto Vale</b></td><td class="n">Cetim · biquíni · enfesto baixo</td>
+              <td class="n">4h</td><td class="n">16/08</td><td><span class="pill c">Quer antecipar</span></td>
+              <td><button class="b m">Oferecer 14/08 · 09→13</button></td></tr>
+            <tr class="okr"><td><b>Acqua Bronze</b></td><td class="n">Malha · maiô</td>
+              <td class="n">2h</td><td class="n">20/08</td><td><span class="pill c">Quer antecipar</span></td>
+              <td><button class="b m">Oferecer 14/08 · 09→11</button></td></tr>
+            <tr><td><b>SB Moda Íntima</b></td><td class="n">Malha · calcinha</td><td class="n">1h</td>
+              <td class="n">—</td><td><span class="pill w">Aguardando</span></td><td></td></tr>
+            <tr><td><b>Winner Uniformes</b></td><td class="n">Rip stop · jaleco</td><td class="n">3h</td>
+              <td class="n">—</td><td><span class="pill w">Aguardando</span></td><td></td></tr>
+          </tbody>
+        </table>
+        <div class="note"><b>Oferecer não move nada sozinho.</b> Gera a pré-reserva do novo cliente; a troca
+          só vale quando o pagamento dele for registrado. Encaixe vem sempre da fila — nunca antecipando quem
+          já está agendado.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/reservas/R-2280/nao-compareceu</span></div>
+    <div style="padding:28px 20px;background:var(--paper)">
+      <div class="modal">
+        <div class="modal-h"><b>Cliente não compareceu</b><span>Jeans do Vale · 12/08 · 17→18 · 1h · pago R$ 85,00</span></div>
+        <div class="modal-b">
+          <div class="note hard" style="margin-top:0"><b>O Modelista marcou às 17:32.</b> Observação dele:
+            "ligou avisando que o tecido não chegou da tinturaria". A hora ficou vaga e o valor já está no caixa.</div>
+          <div class="f" style="margin:16px 0 12px"><label>O que fazer com o valor</label>
+            <div class="seg"><div class="on">Remarcar</div><div>Dar baixa</div></div></div>
+          <div class="r2">
+            <div class="f"><label>Nova data</label><div class="in">19/08/2026</div></div>
+            <div class="f"><label>Começa às</label><div class="in">08:00</div></div>
+          </div>
+          <div class="f" style="margin-bottom:2px"><label>Justificativa</label>
+            <div class="in ph">Fica no histórico do cliente — útil se virar recorrência</div></div>
+          <div class="note">Depende do contrato, e por isso o sistema não decide. <b>Remarcar</b> cria nova
+            reserva já paga; <b>dar baixa</b> encerra e o valor fica com a operação.</div>
+        </div>
+        <div class="modal-f"><button class="b s">Voltar</button><button class="b">Confirmar</button></div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sec">Cadastros</h2>
+  <p class="sec-note">Como a operação é conduzida por uma associação, o cadastro de cliente sustenta prestação
+    de contas: CNPJ, endereço, representante legal com CPF. O tecido guarda a altura máxima de enfesto, que é
+    o número que limita as camadas e, por consequência, o tempo.</p>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/clientes</span></div>
+    <div class="app">
+      <aside class="side">
+        <p class="brand">Kortex</p><p class="acct">Corte Ceres · APL<br>3 máquinas</p>
+        <nav class="nav"><a href="#">Pendências<span class="n">7</span></a><a href="#">Agenda</a>
+          <a href="#">Pré-pedidos<span class="n">1</span></a><a href="#">Fila de espera</a>
+          <div class="grp">Cadastros</div><a href="#" class="on">Clientes</a><a href="#">Tecidos</a><a href="#">Produtos</a>
+          <div class="grp">Financeiro</div><a href="#">Lançamentos</a><a href="#">DRE</a>
+          <div class="grp">Histórico</div><a href="#">Cortes feitos</a>
+          <div class="grp">Conta</div><a href="#">Configuração</a><a href="#">Equipe</a></nav>
+      </aside>
+      <div class="main">
+        <div class="mh"><div><h3>Clientes</h3><p>18 empresas · 10 associadas · 3 novas neste mês</p></div>
+          <div><button class="b s">Exportar</button> <button class="b">+ Novo cliente</button></div></div>
+        <table class="l">
+          <thead><tr><th>Empresa</th><th>Representante</th><th>Cidade</th><th>Documento</th><th>WhatsApp</th><th>Situação</th></tr></thead>
+          <tbody>
+            <tr><td><b>Acqua Bronze</b><br><span style="color:var(--slate);font-size:11.5px">Acqua Bronze Confecções Ltda</span></td>
+              <td>Vanessa</td><td>Ceres</td><td class="n">CNPJ ••.•••/0001‑••</td><td class="n">62 9 9871‑2200</td>
+              <td><span class="pill p">Associada</span></td></tr>
+            <tr><td><b>Fox Boy</b><br><span style="color:var(--slate);font-size:11.5px">Wesley Moda Masculina ME</span></td>
+              <td>Wesley</td><td>Jaraguá</td><td class="n">CNPJ ••.•••/0001‑••</td><td class="n">62 9 9812‑4477</td>
+              <td><span class="pill p">Associada</span></td></tr>
+            <tr><td><b>Brisa do Mar Moda Praia</b></td><td>Brenda</td><td>Cirilândia</td>
+              <td class="n">CPF •••.•••.•••‑••</td><td class="n">62 9 9955‑1032</td><td><span class="pill w">Cliente</span></td></tr>
+            <tr><td><b>Ludan (Biotêxtil)</b></td><td>Danilo</td><td>Inhumas</td>
+              <td class="n">CNPJ ••.•••/0001‑••</td><td class="n">62 9 9744‑8120</td><td><span class="pill w">Cliente</span></td></tr>
+            <tr><td><b>Winner Uniformes</b></td><td>Sheila Marques</td><td>Ceres</td>
+              <td class="n">CNPJ ••.•••/0001‑••</td><td class="n">62 9 9601‑7788</td><td><span class="pill p">Associada</span></td></tr>
+          </tbody>
+        </table>
+        <div class="note hard"><b>CPF aparece mascarado na listagem</b> e completo só no detalhe. O Modelista
+          não vê nem mascarado — o DTO dele traz só nome fantasia, cidade, WhatsApp e observações.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/clientes/novo</span></div>
+    <div class="app">
+      <aside class="side">
+        <p class="brand">Kortex</p><p class="acct">Corte Ceres · APL<br>3 máquinas</p>
+        <nav class="nav"><a href="#">Pendências<span class="n">7</span></a><a href="#">Agenda</a>
+          <a href="#">Pré-pedidos<span class="n">1</span></a><a href="#">Fila de espera</a>
+          <div class="grp">Cadastros</div><a href="#" class="on">Clientes</a><a href="#">Tecidos</a><a href="#">Produtos</a>
+          <div class="grp">Financeiro</div><a href="#">Lançamentos</a><a href="#">DRE</a>
+          <div class="grp">Histórico</div><a href="#">Cortes feitos</a>
+          <div class="grp">Conta</div><a href="#">Configuração</a><a href="#">Equipe</a></nav>
+      </aside>
+      <div class="main">
+        <div class="mh"><div><h3>Novo cliente</h3><p>Cadastro completo — o Modelista não cadastra cliente</p></div>
+          <div><button class="b s">Cancelar</button> <button class="b">Salvar</button></div></div>
+
+        <fieldset class="fs"><legend>Empresa</legend>
+          <div class="r2">
+            <div class="f"><label>Razão social</label><div class="in ph">Acqua Bronze Confecções Ltda</div></div>
+            <div class="f"><label>Nome fantasia</label><div class="in ph">Acqua Bronze</div></div>
+          </div>
+          <div class="r4">
+            <div class="f"><label>Tipo de documento</label>
+              <div class="seg"><div class="on">CNPJ</div><div>CPF</div></div></div>
+            <div class="f"><label>Documento</label><div class="in ph">00.000.000/0001‑00</div></div>
+            <div class="f"><label>Inscrição estadual</label><div class="in ph">opcional</div></div>
+            <div class="f"><label>Porte</label><div class="in ph">MEI / ME / EPP</div></div>
+          </div>
+          <div class="r3">
+            <div class="f"><label>Funcionários</label><div class="in ph">opcional</div></div>
+            <div class="f"><label>WhatsApp da empresa</label><div class="in ph">(62) 9 0000‑0000</div></div>
+            <div class="f"><label>E-mail</label><div class="in ph">opcional</div></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="fs"><legend>Endereço</legend>
+          <div class="r4">
+            <div class="f"><label>CEP</label><div class="in ph">00000‑000</div></div>
+            <div class="f" style="grid-column:span 2"><label>Rua</label><div class="in ph">Av. Brasil</div></div>
+            <div class="f"><label>Número</label><div class="in ph">1200</div></div>
+          </div>
+          <div class="r4">
+            <div class="f"><label>Complemento</label><div class="in ph">opcional</div></div>
+            <div class="f"><label>Bairro</label><div class="in ph">Centro</div></div>
+            <div class="f"><label>Cidade</label><div class="in ph">Ceres</div></div>
+            <div class="f"><label>UF</label><div class="in ph">GO</div></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="fs"><legend>Representante legal</legend>
+          <div class="r4">
+            <div class="f" style="grid-column:span 2"><label>Nome</label><div class="in ph">Vanessa Ribeiro</div></div>
+            <div class="f"><label>Cargo</label><div class="in ph">Presidente</div></div>
+            <div class="f"><label>CPF</label><div class="in ph">000.000.000‑00</div></div>
+          </div>
+          <div class="r2">
+            <div class="f"><label>WhatsApp</label><div class="in ph">(62) 9 0000‑0000</div></div>
+            <div class="f"><label>E-mail</label><div class="in ph">nome@empresa.com.br</div></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="fs"><legend>Associação</legend>
+          <div class="r3">
+            <div class="f"><label>É associada</label><div class="seg"><div class="on">Sim</div><div>Não</div></div></div>
+            <div class="f"><label>Associada desde</label><div class="in ph">00/00/0000</div></div>
+            <div class="f"><label>Situação</label><div class="in">Ativa</div></div>
+          </div>
+          <div class="f" style="margin-bottom:4px"><label>Observações</label><div class="in ph">Livre</div></div>
+        </fieldset>
+
+        <div class="note"><b>Dois dados não são campo aqui:</b> a data do primeiro corte e os produtos que a
+          empresa já cortou saem de consulta sobre os cortes. Se fossem campo, alguém teria que lembrar de
+          atualizar — e é exatamente disso que o relatório mensal precisa ("quantas das 18 eram novas").</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/tecidos</span></div>
+    <div class="app">
+      <aside class="side">
+        <p class="brand">Kortex</p><p class="acct">Corte Ceres · APL<br>3 máquinas</p>
+        <nav class="nav"><a href="#">Pendências<span class="n">7</span></a><a href="#">Agenda</a>
+          <a href="#">Pré-pedidos<span class="n">1</span></a><a href="#">Fila de espera</a>
+          <div class="grp">Cadastros</div><a href="#">Clientes</a><a href="#" class="on">Tecidos</a><a href="#">Produtos</a>
+          <div class="grp">Financeiro</div><a href="#">Lançamentos</a><a href="#">DRE</a>
+          <div class="grp">Histórico</div><a href="#">Cortes feitos</a>
+          <div class="grp">Conta</div><a href="#">Configuração</a><a href="#">Equipe</a></nav>
+      </aside>
+      <div class="main">
+        <div class="mh"><div><h3>Tecidos</h3><p>A altura máxima de enfesto limita as camadas — e as camadas
+          determinam o tempo</p></div><div><button class="b">+ Novo tecido</button></div></div>
+        <table class="l">
+          <thead><tr><th>Tecido</th><th>Altura máx. de enfesto</th><th>Particularidade</th><th>Cortes</th><th>Média por hora</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><b>Tricoline</b></td><td class="n">7,0 cm</td><td>—</td><td class="n">42</td>
+              <td class="n">66 pç/h</td><td><button class="b m s">Editar</button></td></tr>
+            <tr><td><b>Malha</b></td><td class="n">4,0 cm</td><td>Escorrega, exige alinhamento</td><td class="n">61</td>
+              <td class="n">54 pç/h</td><td><button class="b m s">Editar</button></td></tr>
+            <tr class="risk"><td><b>TNT</b></td><td class="n">2,5 cm</td><td>Cola no corte se passar da altura</td>
+              <td class="n">18</td><td class="n">31 pç/h</td><td><button class="b m s">Editar</button></td></tr>
+            <tr><td><b>Jeans / Índigo</b></td><td class="n">3,0 cm</td><td>Poucas camadas, corte devagar</td>
+              <td class="n">23</td><td class="n">28 pç/h</td><td><button class="b m s">Editar</button></td></tr>
+            <tr><td><b>Cetim</b></td><td class="n">2,0 cm</td><td>Enfesto baixo obrigatório</td><td class="n">9</td>
+              <td class="n">24 pç/h</td><td><button class="b m s">Editar</button></td></tr>
+          </tbody>
+        </table>
+        <div class="note">O Modelista também cadastra tecido e tipo de produto — é conhecimento dele. O que ele
+          não faz é cadastrar cliente.</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sec">Financeiro — caixa e DRE</h2>
+  <p class="sec-note">Regime de <b>caixa</b>: conta no mês em que o dinheiro entrou ou saiu. Entrada de reserva
+    nasce sozinha quando você registra o pagamento — nunca se lança duas vezes. Saída é manual. Transferência
+    entre contas próprias move saldo e fica fora do resultado.</p>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/financeiro/lancamentos</span></div>
+    <div class="app">
+      <aside class="side">
+        <p class="brand">Kortex</p><p class="acct">Corte Ceres · APL<br>3 máquinas</p>
+        <nav class="nav"><a href="#">Pendências<span class="n">7</span></a><a href="#">Agenda</a>
+          <a href="#">Pré-pedidos<span class="n">1</span></a><a href="#">Fila de espera</a>
+          <div class="grp">Cadastros</div><a href="#">Clientes</a><a href="#">Tecidos</a><a href="#">Produtos</a>
+          <div class="grp">Financeiro</div><a href="#" class="on">Lançamentos</a><a href="#">DRE</a>
+          <div class="grp">Histórico</div><a href="#">Cortes feitos</a>
+          <div class="grp">Conta</div><a href="#">Configuração</a><a href="#">Equipe</a></nav>
+      </aside>
+      <div class="main">
+        <div class="mh"><div><h3>Lançamentos · agosto</h3><p>Todas as contas · 24 lançamentos</p></div>
+          <div><button class="b s">Transferência</button> <button class="b s">+ Entrada</button>
+            <button class="b">+ Saída</button></div></div>
+        <table class="l">
+          <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Conta</th><th>Forma</th><th>Valor</th><th></th></tr></thead>
+          <tbody>
+            <tr class="okr"><td class="n">12/08</td>
+              <td><b>Malharia São Bento</b><br><span style="color:var(--slate);font-size:11.5px">reserva 12/08 · 3h · automático</span></td>
+              <td>Hora de máquina</td><td>Sicoob · máquina</td><td>Pix</td>
+              <td class="n" style="color:var(--ok)">+ 255,00</td><td></td></tr>
+            <tr class="okr"><td class="n">11/08</td>
+              <td><b>Fábrica Alto Vale</b><br><span style="color:var(--slate);font-size:11.5px">reserva 13/08 · 12h · automático</span></td>
+              <td>Hora de máquina</td><td>Sicoob · máquina</td><td>Transferência</td>
+              <td class="n" style="color:var(--ok)">+ 1.020,00</td><td></td></tr>
+            <tr><td class="n">08/08</td><td><b>Papel plotter — 4 bobinas</b><br><span style="color:var(--slate);font-size:11.5px">Gráfica Central</span></td>
+              <td>Insumos</td><td>Sicoob · máquina</td><td>Pix</td>
+              <td class="n" style="color:var(--live)">− 640,00</td>
+              <td><button class="b m s">Cancelar</button></td></tr>
+            <tr><td class="n">05/08</td><td><b>Salário — Cristiano</b></td><td>Salários</td>
+              <td>Sicoob · máquina</td><td>Transferência</td>
+              <td class="n" style="color:var(--live)">− 2.400,00</td>
+              <td><button class="b m s">Cancelar</button></td></tr>
+            <tr><td class="n">05/08</td><td><b>Contrato — apoio de enfesto</b><br><span style="color:var(--slate);font-size:11.5px">Marcos Vinícius</span></td>
+              <td>Contratos de prestador</td><td>Sicoob · máquina</td><td>Pix</td>
+              <td class="n" style="color:var(--live)">− 1.100,00</td>
+              <td><button class="b m s">Cancelar</button></td></tr>
+            <tr style="color:var(--slate)"><td class="n">04/08</td>
+              <td><b>Sicoob máquina → Banco do Brasil</b><br><span style="font-size:11.5px">transferência entre contas próprias</span></td>
+              <td><span class="pill w">Fora do DRE</span></td><td>Sicoob → BB</td><td>Transferência</td>
+              <td class="n">2.000,00</td><td></td></tr>
+            <tr style="color:var(--slate);text-decoration:line-through"><td class="n">02/08</td>
+              <td><b>Lâmina de corte</b></td><td>Insumos</td><td>Sicoob · máquina</td><td>Pix</td>
+              <td class="n">− 380,00</td><td><span class="pill w">Cancelado</span></td></tr>
+          </tbody>
+        </table>
+        <div class="note hard"><b>Lançamento não se apaga.</b> A lâmina de 02/08 foi cancelada com motivo
+          ("comprada em duplicidade") e autor — sai do saldo e do DRE, mas continua consultável. Valor de
+          lançamento efetivado não se edita: cancela e lança de novo.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/financeiro/saida/nova</span></div>
+    <div style="padding:26px 20px;background:var(--paper)">
+      <div class="modal">
+        <div class="modal-h"><b>Nova saída</b><span>Regime de caixa — conta no mês do pagamento</span></div>
+        <div class="modal-b">
+          <div class="r2">
+            <div class="f"><label>Categoria</label><div class="in">Insumos</div></div>
+            <div class="f"><label>Data do pagamento</label><div class="in">08/08/2026</div></div>
+          </div>
+          <div class="f"><label>Descrição</label><div class="in ph">Papel plotter — 4 bobinas</div></div>
+          <div class="r3">
+            <div class="f"><label>A quem pagou</label><div class="in ph">Gráfica Central</div></div>
+            <div class="f"><label>Conta</label><div class="in">Sicoob · máquina</div></div>
+            <div class="f"><label>Valor</label><div class="in ph">R$ 0,00</div></div>
+          </div>
+          <div class="f" style="margin-bottom:2px"><label>Forma</label>
+            <div class="seg"><div class="on">Pix</div><div>Dinheiro</div><div>Transferência</div></div></div>
+          <div class="note"><b>Salário entra por aqui</b>, com categoria Salários e o nome no campo "a quem
+            pagou". O Kortex registra a saída do dinheiro — encargos, holerite e rescisão continuam na
+            contabilidade.</div>
+        </div>
+        <div class="modal-f"><button class="b s">Cancelar</button><button class="b">Lançar saída</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/financeiro/dre?mes=2026-08</span></div>
+    <div class="app">
+      <aside class="side">
+        <p class="brand">Kortex</p><p class="acct">Corte Ceres · APL<br>3 máquinas</p>
+        <nav class="nav"><a href="#">Pendências<span class="n">7</span></a><a href="#">Agenda</a>
+          <a href="#">Pré-pedidos<span class="n">1</span></a><a href="#">Fila de espera</a>
+          <div class="grp">Cadastros</div><a href="#">Clientes</a><a href="#">Tecidos</a><a href="#">Produtos</a>
+          <div class="grp">Financeiro</div><a href="#">Lançamentos</a><a href="#" class="on">DRE</a>
+          <div class="grp">Histórico</div><a href="#">Cortes feitos</a>
+          <div class="grp">Conta</div><a href="#">Configuração</a><a href="#">Equipe</a></nav>
+      </aside>
+      <div class="main">
+        <div class="mh"><div><h3>DRE de caixa · agosto de 2026</h3><p>Entrou e saiu no mês · todas as contas</p></div>
+          <div><button class="b s">Julho</button> <button class="b s">Exportar</button></div></div>
+        <table class="dre">
+          <tbody>
+            <tr class="dre-grp"><td>Entradas</td><td class="v">Agosto</td></tr>
+            <tr class="dre-sub"><td>Hora de máquina</td><td class="v">11.560,00</td></tr>
+            <tr class="dre-sub"><td>Outras entradas</td><td class="v">0,00</td></tr>
+            <tr class="dre-tot"><td>Total de entradas</td><td class="v">11.560,00</td></tr>
+
+            <tr class="dre-grp"><td>Saídas</td><td class="v"></td></tr>
+            <tr class="dre-sub"><td>Salários</td><td class="v">2.400,00</td></tr>
+            <tr class="dre-sub"><td>Contratos de prestador</td><td class="v">1.100,00</td></tr>
+            <tr class="dre-sub"><td>Insumos</td><td class="v">1.240,00</td></tr>
+            <tr class="dre-sub"><td>Energia</td><td class="v">890,00</td></tr>
+            <tr class="dre-sub"><td>Manutenção</td><td class="v">450,00</td></tr>
+            <tr class="dre-sub"><td>Taxas e tarifas</td><td class="v">96,00</td></tr>
+            <tr class="dre-tot"><td>Total de saídas</td><td class="v">6.176,00</td></tr>
+
+            <tr class="dre-total"><td>Resultado de agosto</td><td class="v">+ 5.384,00</td></tr>
+          </tbody>
+        </table>
+        <div class="bal">
+          <div class="c"><span>Sicoob · máquina</span><b>R$ 8.412,00</b><small>conta separada da máquina</small></div>
+          <div class="c"><span>Banco do Brasil</span><b>R$ 3.150,00</b><small>conta geral</small></div>
+          <div class="c"><span>Dinheiro em caixa</span><b>R$ 420,00</b><small>recebimentos em espécie</small></div>
+        </div>
+        <div class="note"><b>Transferências entre contas próprias não aparecem aqui.</b> Os R$ 2.000 movidos
+          da conta da máquina para o BB em 04/08 mudaram os dois saldos e não tocaram no resultado — senão o
+          mês fecharia com R$ 2.000 de entrada e R$ 2.000 de saída que nunca existiram.</div>
+        <div class="note hard">Comparação que vale olhar: <b>11.560,00 de entradas</b> corresponde a 136h
+          vendidas. As horas efetivamente cortadas no mês foram 104h — a diferença é tempo reservado e não
+          usado, que o cliente pagou. <b>Faturamento segue a hora reservada; ocupação segue a hora real.</b></div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sec">Histórico e conta</h2>
+  <p class="sec-note">O histórico é o produto secundário do sistema: cada corte apontado melhora a estimativa do
+    próximo. A configuração define o que a agenda permite e quanto custa a hora.</p>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/cortes</span></div>
+    <div class="app">
+      <aside class="side">
+        <p class="brand">Kortex</p><p class="acct">Corte Ceres · APL<br>3 máquinas</p>
+        <nav class="nav"><a href="#">Pendências<span class="n">7</span></a><a href="#">Agenda</a>
+          <a href="#">Pré-pedidos<span class="n">1</span></a><a href="#">Fila de espera</a>
+          <div class="grp">Cadastros</div><a href="#">Clientes</a><a href="#">Tecidos</a><a href="#">Produtos</a>
+          <div class="grp">Financeiro</div><a href="#">Lançamentos</a><a href="#">DRE</a>
+          <div class="grp">Histórico</div><a href="#" class="on">Cortes feitos</a>
+          <div class="grp">Conta</div><a href="#">Configuração</a><a href="#">Equipe</a></nav>
+      </aside>
+      <div class="main">
+        <div class="mh"><div><h3>Cortes feitos · agosto</h3><p>Filtro: todos os tecidos · máquina 01 e 02</p></div>
+          <div><button class="b s">Filtrar por tecido</button> <button class="b s">Exportar</button></div></div>
+        <table class="l">
+          <thead><tr><th>Data</th><th>Empresa</th><th>Tecido</th><th>Camadas</th><th>Encaixadas</th><th>Peças</th><th>Início</th><th>Fim</th><th>Tempo</th><th>Reserv.</th></tr></thead>
+          <tbody>
+            <tr><td class="n">12/08</td><td><b>Malharia São Bento</b></td><td>Malha</td><td class="n">20</td>
+              <td class="n">8</td><td class="n">160</td><td class="n">14:06</td><td class="n">15:20</td><td class="n">1h14</td><td class="n">3h</td></tr>
+            <tr><td class="n">12/08</td><td><b>Malharia São Bento</b></td><td>Malha</td><td class="n">14</td>
+              <td class="n">12</td><td class="n">168</td><td class="n">15:24</td><td class="n">16:26</td><td class="n">1h02</td><td class="n">—</td></tr>
+            <tr><td class="n">12/08</td><td><b>Malharia São Bento</b></td><td>Malha</td><td class="n">20</td>
+              <td class="n">7</td><td class="n">140</td><td class="n">16:30</td><td class="n">17:26</td><td class="n">0h56</td><td class="n">—</td></tr>
+            <tr><td class="n">12/08</td><td><b>Duas Marias</b></td><td>Tricoline</td><td class="n">50</td>
+              <td class="n">2</td><td class="n">100</td><td class="n">18:00</td><td class="n">19:14</td><td class="n">1h14</td><td class="n">2h</td></tr>
+            <tr class="risk"><td class="n">12/08</td><td><b>Duas Marias</b></td><td>Tricoline</td><td class="n">40</td>
+              <td class="n">3</td><td class="n">120</td><td class="n">19:57</td><td class="n">20:39</td><td class="n">0h42</td><td class="n">— +18m</td></tr>
+          </tbody>
+        </table>
+        <div class="note"><b>Linhas sem "Reserv." são matrizes seguintes da mesma reserva.</b> A reserva é o que
+          se vende; a matriz é o que se aponta. Cinco matrizes em 2h continuam custando 2h.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/configuracao</span></div>
+    <div class="app">
+      <aside class="side">
+        <p class="brand">Kortex</p><p class="acct">Corte Ceres · APL<br>3 máquinas</p>
+        <nav class="nav"><a href="#">Pendências<span class="n">7</span></a><a href="#">Agenda</a>
+          <a href="#">Pré-pedidos<span class="n">1</span></a><a href="#">Fila de espera</a>
+          <div class="grp">Cadastros</div><a href="#">Clientes</a><a href="#">Tecidos</a><a href="#">Produtos</a>
+          <div class="grp">Financeiro</div><a href="#">Lançamentos</a><a href="#">DRE</a>
+          <div class="grp">Histórico</div><a href="#">Cortes feitos</a>
+          <div class="grp">Conta</div><a href="#" class="on">Configuração</a><a href="#">Equipe</a></nav>
+      </aside>
+      <div class="main">
+        <div class="mh"><div><h3>Configuração da conta</h3><p>Corte Ceres · APL · Ceres/GO</p></div>
+          <div><button class="b">Salvar</button></div></div>
+
+        <fieldset class="fs"><legend>Horário de funcionamento</legend>
+          <p style="color:var(--slate);font-size:12.5px;margin:0 0 12px;line-height:1.5">Cadastre as
+            <b>janelas em que a máquina pode ser reservada</b>. O intervalo é o espaço entre uma janela e a
+            seguinte — pode ter quantos precisar. Reserva não atravessa intervalo.</p>
+          <table class="l" style="margin-bottom:12px">
+            <thead><tr><th>Dia</th><th>Janelas</th><th>Horas úteis</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><b>Segunda a quinta</b></td>
+                <td class="n">07:00–11:30 · 13:00–17:30 · 18:30–21:00</td>
+                <td class="n">11h30</td>
+                <td><button class="b m s">+ Janela</button> <button class="b m s">Editar</button></td></tr>
+              <tr><td><b>Sexta</b></td><td class="n">07:00–11:30 · 13:00–17:00</td><td class="n">8h30</td>
+                <td><button class="b m s">+ Janela</button> <button class="b m s">Editar</button></td></tr>
+              <tr><td><b>Sábado</b></td><td class="n">07:00–11:00</td><td class="n">4h</td>
+                <td><button class="b m s">+ Janela</button> <button class="b m s">Editar</button></td></tr>
+              <tr style="color:var(--slate)"><td><b>Domingo</b></td><td class="n">sem janela</td>
+                <td class="n">fechado</td><td><button class="b m s">+ Janela</button></td></tr>
+            </tbody>
+          </table>
+          <div class="r4" style="align-items:end">
+            <div class="f"><label>Dia</label><div class="in">Segunda a quinta</div></div>
+            <div class="f"><label>Começa</label><div class="in">13:00</div></div>
+            <div class="f"><label>Termina</label><div class="in">17:30</div></div>
+            <div class="f"><button class="b" style="width:100%">Adicionar janela</button></div>
+          </div>
+          <div class="note hard" style="margin-bottom:12px"><b>Reserva de 11:00 às 14:00 é recusada</b> nesse
+            exemplo: atravessa o intervalo das 11:30 às 13:00. O sistema não parte reserva em duas.</div>
+        </fieldset>
+
+        <fieldset class="fs"><legend>Máquinas e preço da hora</legend>
+          <p style="color:var(--slate);font-size:12.5px;margin:0 0 12px;line-height:1.5">O
+            <b>preço é de cada máquina</b>, não do sistema. Máquina nova entra aqui com seu próprio valor.</p>
+          <table class="l" style="margin-bottom:12px">
+            <thead><tr><th>Máquina</th><th>Modelo</th><th>Preço/hora</th><th>Horas vendidas no mês</th><th>Situação</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><b>Máquina 01</b></td><td>Audaces Neocut Bravo</td><td class="n">R$ 85,00</td>
+                <td class="n">96h</td><td><span class="pill p">Ativa</span></td>
+                <td><button class="b m s">Editar</button></td></tr>
+              <tr><td><b>Máquina 02</b></td><td>Audaces Neocut Bravo</td><td class="n">R$ 85,00</td>
+                <td class="n">41h</td><td><span class="pill p">Ativa</span></td>
+                <td><button class="b m s">Editar</button></td></tr>
+              <tr style="color:var(--slate)"><td><b>Máquina 03</b></td><td>Mesa manual</td><td class="n">R$ 40,00</td>
+                <td class="n">0h</td><td><span class="pill w">Inativa</span></td>
+                <td><button class="b m s">Editar</button></td></tr>
+            </tbody>
+          </table>
+          <div class="r4" style="align-items:end">
+            <div class="f"><label>Nome</label><div class="in ph">Máquina 04</div></div>
+            <div class="f"><label>Modelo</label><div class="in ph">opcional</div></div>
+            <div class="f"><label>Preço/hora</label><div class="in ph">R$ 0,00</div></div>
+            <div class="f"><button class="b" style="width:100%">Adicionar máquina</button></div>
+          </div>
+          <div class="note" style="margin-bottom:12px">Mudar o preço <b>não altera reserva já criada</b> —
+            cada reserva grava o valor da máquina no dia. Máquina inativa não aceita reserva nova, mas o
+            histórico dela permanece.</div>
+        </fieldset>
+
+        <fieldset class="fs"><legend>Responsável pelo relatório mensal</legend>
+          <div class="r2">
+            <div class="f"><label>Nome</label><div class="in">Cristiano Moreira dos Reis</div></div>
+            <div class="f"><label>Cargo</label><div class="in">Operador de Sistema Audaces</div></div>
+          </div>
+          <div class="r2">
+            <div class="f"><label>Telefone</label><div class="in">62 99870‑8893</div></div>
+            <div class="f"><label>E-mail</label><div class="in">corteautomatizadoceres@gmail.com</div></div>
+          </div>
+        </fieldset>
+      </div>
+    </div>
+  </div>
+
+  <div class="browser">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">kortex.app/equipe</span></div>
+    <div class="app">
+      <aside class="side">
+        <p class="brand">Kortex</p><p class="acct">Corte Ceres · APL<br>3 máquinas</p>
+        <nav class="nav"><a href="#">Pendências<span class="n">7</span></a><a href="#">Agenda</a>
+          <a href="#">Pré-pedidos<span class="n">1</span></a><a href="#">Fila de espera</a>
+          <div class="grp">Cadastros</div><a href="#">Clientes</a><a href="#">Tecidos</a><a href="#">Produtos</a>
+          <div class="grp">Financeiro</div><a href="#">Lançamentos</a><a href="#">DRE</a>
+          <div class="grp">Histórico</div><a href="#">Cortes feitos</a>
+          <div class="grp">Conta</div><a href="#">Configuração</a><a href="#" class="on">Equipe</a></nav>
+      </aside>
+      <div class="main">
+        <div class="mh"><div><h3>Equipe</h3><p>Todo mundo da equipe é usuário do sistema — não existe nome
+          sem login</p></div><div><button class="b">+ Novo usuário</button></div></div>
+        <table class="l">
+          <thead><tr><th>Nome</th><th>E-mail (login)</th><th>WhatsApp</th><th>Papel</th><th>Último acesso</th><th>Situação</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><b>Cristiano Moreira dos Reis</b></td><td class="n">cristiano@corteceres.com.br</td>
+              <td class="n">62 9 9870‑8893</td><td><span class="pill c">Modelista</span></td>
+              <td class="n">hoje 07:12</td><td><span class="pill p">Ativo</span></td>
+              <td><button class="b m s">Editar</button></td></tr>
+            <tr><td><b>Bia Ferreira</b></td><td class="n">bia@corteceres.com.br</td>
+              <td class="n">62 9 9713‑2244</td><td><span class="pill c">Administrativo</span></td>
+              <td class="n">hoje 08:02</td><td><span class="pill p">Ativo</span></td>
+              <td><button class="b m s">Editar</button></td></tr>
+            <tr><td><b>Gleidson Dantas</b></td><td class="n">gleidson@corteceres.com.br</td>
+              <td class="n">62 9 9601‑0090</td><td><span class="pill c">Dono</span></td>
+              <td class="n">ontem 19:40</td><td><span class="pill p">Ativo</span></td>
+              <td><button class="b m s">Editar</button></td></tr>
+            <tr style="color:var(--slate)"><td><b>Marcos Vinícius</b></td><td class="n">marcos@corteceres.com.br</td>
+              <td class="n">62 9 9522‑7781</td><td><span class="pill w">Modelista</span></td>
+              <td class="n">12/06</td><td><span class="pill w">Inativo</span></td>
+              <td><button class="b m s">Reativar</button></td></tr>
+          </tbody>
+        </table>
+        <div class="note hard"><b>Desligamento inativa, nunca apaga.</b> Os apontamentos e pagamentos guardam
+          quem fez — apagar o usuário quebraria a autoria do histórico.</div>
+
+        <div class="mh" style="margin:30px 0 12px"><div><h3>Novo usuário</h3>
+          <p>Você cria o acesso; ele troca a senha no primeiro login</p></div></div>
+        <div class="two">
+          <div>
+            <div class="r2">
+              <div class="f"><label>Nome completo</label><div class="in ph">Nome do colaborador</div></div>
+              <div class="f"><label>Papel</label>
+                <div class="seg"><div class="on">Modelista</div><div>Administrativo</div></div></div>
+            </div>
+            <div class="r2">
+              <div class="f"><label>E-mail (será o login)</label><div class="in ph">nome@corteceres.com.br</div></div>
+              <div class="f"><label>WhatsApp</label><div class="in ph">(62) 9 0000‑0000</div></div>
+            </div>
+            <div class="r2">
+              <div class="f"><label>Senha inicial</label><div class="in ph">mínimo 8 caracteres</div></div>
+              <div class="f" style="align-self:end"><button class="b" style="width:100%">Criar usuário</button></div>
+            </div>
+          </div>
+          <aside class="hist">
+            <div class="hist-h"><b>O que cada papel faz</b><span>separação existe por controle interno</span></div>
+            <table>
+              <tbody>
+                <tr><td>Modelista</td><td>avalia, aponta</td></tr>
+                <tr><td>Administrativo</td><td>agenda, cobra</td></tr>
+                <tr><td>Dono</td><td>configura tudo</td></tr>
+              </tbody>
+            </table>
+            <div class="ft"><b>Modelista</b> não agenda, não cobra e não vê valor. <b>Administrativo</b> não
+              define horas de corte nem cria usuário Dono. <b>Dono</b> configura janelas, máquinas e preços.
+              A separação impede dinheiro entrar fora do caixa.</div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

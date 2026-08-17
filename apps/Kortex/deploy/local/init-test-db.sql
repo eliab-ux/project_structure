@@ -1,0 +1,11 @@
+-- Banco separado para os testes de integração.
+--
+-- Separado de propósito: o teste que prova o isolamento multiconta (DoD da Fase 1) precisa criar e
+-- apagar contas inteiras. Apontá-lo para o banco de desenvolvimento significaria escolher entre um
+-- teste que suja os dados de trabalho ou um teste que não limpa nada. Dois bancos resolvem isso sem
+-- nenhuma flag.
+--
+-- Roda uma única vez, na primeira criação do volume do Postgres (docker-entrypoint-initdb.d).
+-- Se o volume já existir, criar à mão:
+--   docker exec -it kortex-postgres psql -U kortex -d kortex -c 'CREATE DATABASE kortex_test OWNER kortex;'
+CREATE DATABASE kortex_test OWNER kortex;

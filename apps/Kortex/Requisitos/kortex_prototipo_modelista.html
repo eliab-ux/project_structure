@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kortex — protótipo do app do Modelista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#10233A; --ink-2:#1D3A5C; --paper:#F1F3EF; --paper-2:#FFF;
+    --line:#CFD6D0; --cut:#1E63D0; --live:#F04E23; --ok:#17876B; --slate:#6B7A8C;
+    --warn-bg:#FDEEE9; --ok-bg:#E6F2EE; --cut-bg:#E8EFFB;
+    --shadow:0 1px 0 rgba(16,35,58,.06),0 8px 24px -16px rgba(16,35,58,.35);
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .doc{max-width:1240px;margin:0 auto;padding:40px 24px 80px}
+  .doc-head{border-bottom:2px solid var(--ink);padding-bottom:20px;margin-bottom:30px}
+  .eyebrow{font-family:Archivo,sans-serif;font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--cut);margin:0 0 10px}
+  h1{font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(28px,5vw,44px);letter-spacing:-.03em;line-height:1;margin:0}
+  .doc-sub{color:var(--slate);font-size:15px;max-width:68ch;margin:14px 0 0;line-height:1.55}
+  h2.sec{font-family:Archivo,sans-serif;font-weight:700;font-size:19px;letter-spacing:-.01em;margin:44px 0 4px;padding-top:14px;border-top:1px solid var(--line)}
+  .sec-note{color:var(--slate);font-size:13.5px;margin:0 0 22px;max-width:78ch;line-height:1.55}
+  .note{border-left:3px solid var(--cut);background:var(--cut-bg);padding:12px 14px;border-radius:0 8px 8px 0;font-size:13.5px;line-height:1.55;margin:0 0 26px;max-width:84ch}
+  .note.hard{border-left-color:var(--live);background:var(--warn-bg)}
+
+  .phones{display:flex;flex-wrap:wrap;gap:28px}
+  .pw{width:326px}
+  .cap{font-family:Archivo,sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--slate);margin:0 0 9px;display:flex;gap:8px;align-items:baseline}
+  .cap b{color:var(--ink);font-size:13px;letter-spacing:0;text-transform:none}
+  .phone{background:var(--ink);border-radius:34px;padding:9px;box-shadow:var(--shadow)}
+  .screen{background:var(--paper-2);border-radius:26px;overflow:hidden;height:648px;display:flex;flex-direction:column;font-size:15px}
+  .sb{background:var(--ink);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:10px;padding:7px 16px;display:flex;justify-content:space-between}
+  .bar{padding:13px 16px 11px;border-bottom:1px solid var(--line)}
+  .bar .who{font-family:Archivo,sans-serif;font-weight:700;font-size:17px;margin:0;letter-spacing:-.01em}
+  .bar .when{color:var(--slate);font-size:12.5px;margin:3px 0 0;line-height:1.35}
+  .scr{flex:1;overflow:auto;padding:14px 16px 20px}
+  .tb{border-top:1px solid var(--line);display:flex;background:var(--paper)}
+  .tb div{flex:1;text-align:center;padding:11px 0 13px;font-size:10px;color:var(--slate);font-family:Archivo,sans-serif;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+  .tb div.on{color:var(--ink);box-shadow:inset 0 2px 0 var(--live)}
+  .n{background:var(--live);color:#fff;border-radius:999px;padding:1px 5px;font-size:9.5px;margin-left:3px}
+  .live{background:var(--live);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
+  .live .l{font-family:Archivo,sans-serif;font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+  .live .c{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:16px}
+
+  .job{background:var(--paper-2);border:1px solid var(--line);border-left:4px solid var(--cut);border-radius:12px;padding:12px 13px;margin-bottom:11px}
+  .job.now{border-left-color:var(--live);background:#FFFBF9}
+  .job.next{border-left-color:var(--slate)}
+  .job.done{border-left-color:var(--ok);opacity:.75}
+  .t{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13.5px}
+  .nm{font-family:Archivo,sans-serif;font-weight:700;font-size:16px;letter-spacing:-.01em;margin:5px 0 2px;line-height:1.2}
+  .mt{color:var(--slate);font-size:12.5px;margin:0;line-height:1.45}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  .tag{font-size:10px;font-weight:700;padding:4px 8px;border-radius:999px;font-family:Archivo,sans-serif;text-transform:uppercase;letter-spacing:.03em}
+  .tag.f{background:var(--cut-bg);color:var(--cut)}
+  .tag.g{background:#EEF0EC;color:var(--slate)}
+  .tag.a{background:var(--warn-bg);color:var(--live)}
+  .tag.o{background:var(--ok-bg);color:var(--ok)}
+  .btn{display:block;width:100%;border:0;border-radius:11px;padding:14px;margin-top:11px;font-family:Archivo,sans-serif;font-weight:700;font-size:15px;cursor:pointer;text-align:center}
+  .btn.p{background:var(--ink);color:#fff}
+  .btn.go{background:var(--live);color:#fff}
+  .btn.ok{background:var(--ok);color:#fff}
+  .btn.gh{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+  .btn.sm{padding:11px;font-size:13.5px}
+  .sum{border-top:1px dashed var(--line);margin-top:4px;padding-top:11px;color:var(--slate);font-size:12px;font-family:'IBM Plex Mono',monospace;line-height:1.6}
+  .cust{font-family:Archivo,sans-serif;font-weight:800;font-size:23px;line-height:1.1;letter-spacing:-.03em;margin:6px 0}
+  .facts{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:13px 0}
+  .fact{flex:1;padding:10px 11px;border-right:1px solid var(--line)}
+  .fact:last-child{border-right:0}
+  .fact span{display:block;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);font-family:Archivo,sans-serif;font-weight:700;margin-bottom:4px}
+  .fact b{font-family:'IBM Plex Mono',monospace;font-size:15.5px;font-weight:600}
+  .sw{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin:0 0 11px}
+  .sw p{margin:0;font-size:14.5px;font-weight:500;line-height:1.3}
+  .sw p small{display:block;font-size:11.5px;color:var(--slate);font-weight:400}
+  .kn{width:46px;height:27px;border-radius:999px;background:var(--ok);position:relative;flex:none}
+  .kn::after{content:"";position:absolute;top:3px;right:3px;width:21px;height:21px;border-radius:50%;background:#fff}
+  .kn.off{background:#D6DBD5}.kn.off::after{right:auto;left:3px}
+  .big{width:184px;height:184px;border-radius:50%;border:0;margin:12px auto 0;display:block;background:var(--live);color:#fff;cursor:pointer;box-shadow:0 9px 0 #C43B15}
+  .big.blue{background:var(--cut);box-shadow:0 9px 0 #164C9F}
+  .big .i{font-size:46px;line-height:1;display:block;margin-bottom:3px}
+  .big .x{font-family:Archivo,sans-serif;font-weight:800;font-size:16px;letter-spacing:.05em;text-transform:uppercase}
+
+  /* cronômetros: um cartão por objeto medido — reserva e matriz nunca se misturam */
+  .tc{border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:10px}
+  .tc.rv{border-color:var(--ink);border-width:1.5px}
+  .tc.ov{border-color:var(--live);border-width:1.5px;background:#FFFBF9}
+  .tc h4{margin:0 0 8px;font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);font-weight:700;display:flex;justify-content:space-between;gap:8px}
+  .tc h4 em{font-style:normal;font-family:'IBM Plex Mono',monospace;letter-spacing:0;text-transform:none;font-size:10.5px}
+  .tc .num{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:38px;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1;display:block}
+  .tc.ov .num{color:var(--live)}
+  .tc .sub{font-size:11.5px;color:var(--slate);margin:7px 0 0;line-height:1.4}
+  .clocks{display:flex;align-items:flex-end;gap:14px;margin:10px 0 2px}
+  .clocks .main{flex:1}
+  .clocks .main b{display:block;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:44px;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+  .clocks .main span,.clocks .side span{display:block;font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--slate);font-family:Archivo,sans-serif;font-weight:700;margin-top:5px}
+  .clocks .side{text-align:right}
+  .clocks .side b{display:block;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:24px;font-variant-numeric:tabular-nums;line-height:1;color:var(--slate)}
+  .clocks .side.over b{color:var(--live)}
+  .hb{margin:16px 0 8px;position:relative;height:22px}
+  .hb .cell{position:absolute;top:0;bottom:0;border:1px solid var(--line);border-radius:5px;background:var(--paper)}
+  .hb .fill{position:absolute;top:0;bottom:0;left:0;background:var(--cut-bg);border:1px solid var(--cut);border-radius:5px}
+  .hb .ex{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,#fff 0 5px,#FDEEE9 5px 10px);border:1px solid var(--live);border-radius:0 5px 5px 0}
+  .hb .mk{position:absolute;left:0;right:0;top:26px;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--slate)}
+  .al{background:var(--warn-bg);border-left:4px solid var(--live);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.45;margin:12px 0 0}
+  .al.i{background:var(--cut-bg);border-left-color:var(--cut)}
+  .al.o{background:var(--ok-bg);border-left-color:var(--ok)}
+  .al b{font-family:Archivo,sans-serif}
+  .stp{display:flex;gap:9px;margin:5px 0 12px}
+  .stp button{width:58px;border:1.5px solid var(--line);background:var(--paper);border-radius:12px;font-size:25px;font-family:Archivo,sans-serif;font-weight:700;color:var(--ink);cursor:pointer}
+  .stp .v{flex:1;border:1.5px solid var(--ink);border-radius:12px;text-align:center;padding:12px 0 8px}
+  .stp .v b{display:block;font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:600;line-height:1}
+  .stp .v span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);font-weight:700}
+  .ql{font-family:Archivo,sans-serif;font-weight:700;font-size:16.5px;margin:14px 0 2px;letter-spacing:-.01em}
+  .qh{color:var(--slate);font-size:12.5px;margin:0 0 10px;line-height:1.45}
+  .fld{margin-bottom:11px}
+  .fld label{display:block;font-family:Archivo,sans-serif;font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);margin-bottom:5px}
+  .fld .in{border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14.5px;background:var(--paper-2)}
+  .fld .in.ph{color:var(--slate)}
+  .fld .in.lock{background:var(--paper);border-style:dashed;color:var(--slate)}
+  .r2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .seg{display:flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg div{flex:1;text-align:center;padding:11px 4px;font-size:13px;font-weight:600;color:var(--slate)}
+  .seg div.on{background:var(--ink);color:#fff}
+  .mh{border:1px solid var(--ink);border-radius:11px;overflow:hidden;margin:6px 0 12px}
+  .mh-h{background:var(--ink);color:#fff;padding:9px 12px;font-family:Archivo,sans-serif;font-size:11.5px;font-weight:700}
+  .mh table{width:100%;border-collapse:collapse;font-size:12px}
+  .mh td{padding:7px 12px;border-bottom:1px solid var(--line);font-family:'IBM Plex Mono',monospace}
+  .mh tr:last-child td{border-bottom:0}
+  .mh td:first-child{font-family:Inter,sans-serif}
+  .mh .ft{background:var(--cut-bg);padding:10px 12px;font-size:12px;line-height:1.45;color:var(--ink-2)}
+  .mtx{border:1px solid var(--line);border-radius:11px;padding:11px 12px;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .mtx.on{border-color:var(--live);background:#FFFBF9}
+  .mtx b{font-family:Archivo,sans-serif;font-size:14px;display:block}
+  .mtx span{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--slate);display:block;margin-top:2px}
+  .mtx .st{font-family:Archivo,sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ok);white-space:nowrap}
+  .mtx .st.run{color:var(--live)}
+  .logo{font-family:Archivo,sans-serif;font-weight:800;font-size:34px;letter-spacing:-.04em;text-align:center;margin:60px 0 4px}
+  .logo-s{text-align:center;color:var(--slate);font-size:12.5px;margin:0 0 32px;letter-spacing:.02em}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="doc">
+  <header class="doc-head">
+    <p class="eyebrow">Kortex · protótipo 1 de 2</p>
+    <h1>App do Modelista</h1>
+    <p class="doc-sub">PWA instalável, usado em pé no galpão. Uma decisão por tela, alvo de toque grande,
+    nenhuma digitação além de números. <b>Nenhum valor em dinheiro aparece aqui</b> — não é ocultação de
+    interface, é ausência de campo no DTO. Reserva sem pagamento não existe para este app.</p>
+  </header>
+
+  <h2 class="sec">Acesso</h2>
+  <p class="sec-note">Login por e-mail e senha, com recuperação por código no WhatsApp — padrão da casa.</p>
+  <div class="phones">
+
+    <div class="pw"><p class="cap">01 <b>Entrar</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>07:12</span><span>Kortex</span><span>◍ 96%</span></div>
+        <div class="scr">
+          <p class="logo">Kortex</p>
+          <p class="logo-s">Hora de máquina de corte</p>
+          <div class="fld"><label>E-mail</label><div class="in">alex@corteceres.com.br</div></div>
+          <div class="fld"><label>Senha</label><div class="in">••••••••••</div></div>
+          <button class="btn p">Entrar</button>
+          <button class="btn gh">Esqueci a senha</button>
+          <p class="qh" style="text-align:center;margin-top:16px">O código de recuperação chega no seu WhatsApp
+            e vale por 15 minutos.</p>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="pw"><p class="cap">02 <b>Código do WhatsApp</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>07:13</span><span>Kortex</span><span>◍ 96%</span></div>
+        <div class="bar"><p class="when">← Voltar</p><p class="who">Código enviado</p>
+          <p class="when">Mandamos um código de 6 dígitos para o WhatsApp terminado em ••••‑8893</p></div>
+        <div class="scr">
+          <div class="fld"><label>Código</label>
+            <div class="in" style="font-family:'IBM Plex Mono',monospace;font-size:26px;letter-spacing:.35em;text-align:center;padding:16px">418 902</div>
+          </div>
+          <button class="btn p">Confirmar</button>
+          <p class="qh" style="text-align:center;margin-top:14px">Você tem 5 tentativas. Pedir um código novo
+            invalida o anterior.</p>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <h2 class="sec">Fila do dia e execução</h2>
+  <p class="sec-note">O coração do app. A fila mostra <b>só reservas pagas</b>. Dentro de uma reserva o Modelista
+    faz quantas matrizes couberem — cada uma com dois toques: start (começou a manejar o tecido) e
+    stop (máquina de corte desligou).</p>
+  <div class="phones">
+
+    <div class="pw"><p class="cap">03 <b>Fila de hoje</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>14:12</span><span>Kortex</span><span>◍ 78%</span></div>
+        <div class="live"><span class="l">Cortando agora</span><span class="c">01:12:40</span></div>
+        <div class="bar"><p class="who">Máquina 01 · Ceres</p><p class="when">Quarta, 12 de agosto</p></div>
+        <div class="scr">
+          <div class="job now">
+            <span class="t">14:00 → 17:00 · 3h</span>
+            <p class="nm">Malharia São Bento</p>
+            <p class="mt">Malha · maiô · 2ª matriz em andamento</p>
+            <div class="tags"><span class="tag a">Enfesto baixo</span><span class="tag f">Em execução</span></div>
+            <button class="btn p sm">Abrir reserva</button>
+          </div>
+          <div class="job next">
+            <span class="t">17:00 → 18:00 · 1h</span>
+            <p class="nm">Jeans do Vale</p>
+            <p class="mt">Índigo · calça · 12 peças previstas</p>
+            <div class="tags"><span class="tag g">Tecido não chegou</span></div>
+          </div>
+          <div class="job">
+            <span class="t">18:00 → 20:00 · 2h</span>
+            <p class="nm">Confecção Duas Marias</p>
+            <p class="mt">Tricoline · camisa · 40 peças previstas</p>
+            <div class="tags"><span class="tag f">Tecido na mesa</span></div>
+          </div>
+          <p class="sum">3 reservas · 6h de máquina<br>amanhã: dia inteiro reservado</p>
+        </div>
+        <div class="tb"><div class="on">Fila</div><div>Pré-pedidos<span class="n">3</span></div><div>Agenda</div><div>Espera</div></div>
+      </div></div>
+    </div>
+
+    <div class="pw"><p class="cap">04 <b>Reserva aberta · matrizes</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>15:44</span><span>Kortex</span><span>◍ 77%</span></div>
+        <div class="live"><span class="l">Matriz 2 em corte</span><span class="c">00:22:08</span></div>
+        <div class="bar"><p class="when">← Fila de hoje</p>
+          <p class="cust" style="font-size:20px">Malharia São Bento</p>
+          <p class="when">14:00 → 17:00 · restam 1h16</p></div>
+        <div class="scr">
+          <div class="mtx"><div><b>Matriz 1</b><span>14:06 → 14:58 · 20 cam · 8 enc · 160 pç</span></div>
+            <span class="st">Concluída</span></div>
+          <div class="mtx on"><div><b>Matriz 2</b><span>15:04 → em corte · 14 cam previstas</span></div>
+            <span class="st run">Em corte</span></div>
+          <button class="btn go">Abrir matriz 2</button>
+          <button class="btn gh">+ Nova matriz</button>
+          <div class="al i" style="margin-top:16px">
+            <b>Restam 1h16 da reserva.</b> Pela média deste tecido, cabe mais uma matriz de até 18 camadas.
+          </div>
+          <button class="btn p" style="margin-top:18px">Encerrar reserva</button>
+          <button class="btn gh sm">Cliente não compareceu</button>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="pw"><p class="cap">05 <b>Start da matriz</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>17:58</span><span>Kortex</span><span>◍ 76%</span></div>
+        <div class="bar"><p class="when">← Duas Marias · matriz 1</p>
+          <p class="cust">Confecção Duas Marias</p>
+          <p class="when">18:00 → 20:00 · 2h reservadas</p></div>
+        <div class="scr">
+          <div class="facts">
+            <div class="fact"><span>Peças</span><b>40</b></div>
+            <div class="fact"><span>Metros</span><b>100</b></div>
+            <div class="fact"><span>Tecido</span><b style="font-size:12.5px">Tricoline</b></div>
+          </div>
+          <div class="sw"><p>Cliente presente<small>acompanha o corte e retira o material</small></p><div class="kn"></div></div>
+          <div class="sw"><p>Tecido chegou</p><div class="kn"></div></div>
+          <div class="sw"><p>Mapa de corte entregue<small>ao enfestador</small></p><div class="kn"></div></div>
+          <div class="al i"><b>O tempo começa agora.</b> Start é quando você começa a manejar o tecido —
+            plotter imprimindo e enfesto começando. Para quando a máquina de corte desligar.</div>
+          <button class="big"><span class="i">▶</span><span class="x">Start</span></button>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="pw"><p class="cap">06 <b>Matriz em andamento</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>19:14</span><span>Kortex</span><span>◍ 74%</span></div>
+        <div class="live"><span class="l">Em andamento</span><span class="c">Matriz 1</span></div>
+        <div class="bar"><p class="cust" style="font-size:19px">Confecção Duas Marias</p>
+          <p class="when">Tricoline · 40 pç × 100 m</p></div>
+        <div class="scr">
+          <div class="tc rv">
+            <h4><span>Reserva · 2h</span><em>18:00 &rarr; 20:00</em></h4>
+            <b class="num">0:45:24</b>
+            <div class="hb" style="margin:14px 0 6px">
+              <div class="cell" style="left:0;width:49.5%"></div>
+              <div class="cell" style="left:50.5%;width:49.5%"></div>
+              <div class="fill" style="width:62%"></div>
+              <div class="mk"><span>1&ordf; hora</span><span>2&ordf; hora</span></div>
+            </div>
+            <p class="sub" style="margin-top:26px">Ainda d&aacute; para outra matriz curta.</p>
+          </div>
+          <div class="tc">
+            <h4><span>Matriz 1 &middot; rodando</span><em>desde 18:00</em></h4>
+            <b class="num">1:14:36</b>
+            <p class="sub">Do manejo do tecido at&eacute; a m&aacute;quina desligar &mdash; um s&oacute; tempo.</p>
+          </div>
+          <button class="btn go" style="padding:16px;margin-top:6px">&#9632; M&aacute;quina desligada &mdash; encerrar matriz</button>
+          <button class="btn gh sm">&#10073;&#10073; Pausar (parada de m&aacute;quina)</button>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="pw"><p class="cap">07 <b>Matriz · passou do tempo</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>20:18</span><span>Kortex</span><span>◍ 71%</span></div>
+        <div class="live"><span class="l">Em andamento · excedente</span><span class="c">Matriz 2</span></div>
+        <div class="bar"><p class="cust" style="font-size:19px">Confecção Duas Marias</p>
+          <p class="when">Reserva terminou 20:00</p></div>
+        <div class="scr">
+          <div class="tc ov">
+            <h4><span>Reserva · 2h · estourou</span><em>18:00 → 20:00</em></h4>
+            <b class="num">+0:18:42</b>
+            <div class="hb" style="margin:14px 0 6px">
+              <div class="cell" style="left:0;width:40%"></div>
+              <div class="cell" style="left:41%;width:40%"></div>
+              <div class="fill" style="width:81%"></div>
+              <div class="ex" style="left:81%;width:19%"></div>
+              <div class="mk"><span>1ª hora</span><span>2ª hora</span><span style="color:var(--live)">excedente</span></div>
+            </div>
+            <p class="sub" style="margin-top:26px">Passou das 2h às 20:00. Não interrompe nada — vai para o
+              histórico e corrige a estimativa da próxima vez.</p>
+          </div>
+          <div class="tc">
+            <h4><span>Matriz 2 · rodando</span><em>desde 19:57</em></h4>
+            <b class="num">0:41:53</b>
+            <p class="sub">Corrido nesta matriz. A matriz 1 levou 1h14 e já foi encerrada.</p>
+          </div>
+          <button class="btn go" style="padding:16px;margin-top:6px">■ Máquina desligada — encerrar matriz</button>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="pw"><p class="cap">08 <b>Encerrar matriz</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>19:15</span><span>Kortex</span><span>◍ 74%</span></div>
+        <div class="bar"><p class="when">Duas Marias · matriz 1</p>
+          <p class="ql" style="margin-top:6px">Confirme o que saiu</p>
+          <p class="qh">Veio preenchido com o previsto. Corrija o que mudou — é isso que vai para o relatório.</p></div>
+        <div class="scr" style="padding-top:2px">
+          <label style="display:block;font-family:Archivo;font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);margin:4px 0 5px">Camadas</label>
+          <div class="stp"><button>–</button><div class="v"><b>50</b><span>folhas</span></div><button>+</button></div>
+          <label style="display:block;font-family:Archivo;font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);margin:4px 0 5px">Peças encaixadas</label>
+          <div class="stp"><button>–</button><div class="v"><b>2</b><span>no risco</span></div><button>+</button></div>
+          <div class="al o" style="margin:2px 0 12px"><b>100 peças no total.</b> 50 camadas × 2 encaixadas —
+            calculado, não digitado.</div>
+          <div class="fld"><label>Enfesto</label>
+            <div class="seg"><div class="on">Folha a folha</div><div>Zigue-zague</div></div></div>
+          <div class="facts">
+            <div class="fact"><span>Início</span><b>18:00</b></div>
+            <div class="fact"><span>Fim</span><b>19:14</b></div>
+            <div class="fact"><span>Tempo</span><b>1h14</b></div>
+          </div>
+          <button class="btn p">Encerrar matriz</button>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="pw"><p class="cap">09 <b>Camada acima do limite</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>10:22</span><span>Kortex</span><span>◍ 88%</span></div>
+        <div class="bar"><p class="when">Ludan Biotêxtil · matriz 1</p>
+          <p class="ql" style="margin-top:6px">Confirme o que saiu</p>
+          <p class="qh">TNT · avental cirúrgico</p></div>
+        <div class="scr" style="padding-top:2px">
+          <label style="display:block;font-family:Archivo;font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);margin:4px 0 5px">Camadas</label>
+          <div class="stp"><button>–</button><div class="v" style="border-color:var(--live)"><b style="color:var(--live)">38</b><span>folhas</span></div><button>+</button></div>
+          <div class="al"><b>Passou da altura máxima do TNT.</b> O cadastro diz 2,5 cm, e 38 camadas dão
+            cerca de 3,1 cm. Você pode seguir assim — quem está na mesa sabe mais que o cadastro.</div>
+          <label style="display:block;font-family:Archivo;font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);margin:14px 0 5px">Peças encaixadas</label>
+          <div class="stp"><button>–</button><div class="v"><b>5</b><span>no risco</span></div><button>+</button></div>
+          <div class="al o" style="margin:2px 0 12px"><b>190 peças no total.</b></div>
+          <button class="btn p">Encerrar mesmo assim</button>
+          <button class="btn gh sm">Corrigir camadas</button>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="pw"><p class="cap">10 <b>Cliente não compareceu</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>17:32</span><span>Kortex</span><span>◍ 76%</span></div>
+        <div class="bar"><p class="when">← Jeans do Vale</p>
+          <p class="cust" style="font-size:20px">Não compareceu?</p>
+          <p class="when">17:00 → 18:00 · 1h · Índigo</p></div>
+        <div class="scr">
+          <div class="al"><b>Sem o cliente presente não se dá start.</b> O profissional da confecção acompanha
+            o corte e retira o material — não se desestoca tecido sem ele.</div>
+          <div class="al i" style="margin-top:10px">Ao confirmar, a reserva sai da sua agenda e vira pendência
+            do administrativo. <b>Você não decide o dinheiro</b> — remarcar ou dar baixa é decisão de lá.</div>
+          <div class="fld" style="margin-top:16px"><label>Observação (opcional)</label>
+            <div class="in ph">Ex.: ligou avisando que o tecido não chegou da tinturaria</div></div>
+          <button class="btn go">Confirmar não comparecimento</button>
+          <button class="btn gh">Cancelar</button>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="pw"><p class="cap">11 <b>Concluídos do dia</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>20:40</span><span>Kortex</span><span>◍ 68%</span></div>
+        <div class="bar"><p class="who">Concluídos · hoje</p><p class="when">Quarta, 12 de agosto</p></div>
+        <div class="scr">
+          <div class="job done"><span class="t">14:00 → 17:12</span>
+            <p class="nm">Malharia São Bento</p>
+            <p class="mt">3 matrizes · 468 peças · 3h12 de máquina</p>
+            <div class="tags"><span class="tag a">+12 min</span></div></div>
+          <div class="job done"><span class="t">18:00 → 20:18</span>
+            <p class="nm">Confecção Duas Marias</p>
+            <p class="mt">2 matrizes · 220 peças · 2h18 de máquina</p>
+            <div class="tags"><span class="tag a">+18 min</span></div></div>
+          <div class="job done"><span class="t">17:00 → 18:00</span>
+            <p class="nm">Jeans do Vale</p>
+            <p class="mt">Não compareceu</p>
+            <div class="tags"><span class="tag g">Com o administrativo</span></div></div>
+          <p class="sum">5 matrizes · 688 peças<br>5h30 de máquina</p>
+        </div>
+        <div class="tb"><div class="on">Fila</div><div>Pré-pedidos<span class="n">3</span></div><div>Agenda</div><div>Espera</div></div>
+      </div></div>
+    </div>
+  </div>
+
+  <h2 class="sec">Pré-pedido</h2>
+  <p class="sec-note">O Modelista é quem sabe quanto tempo o corte precisa. Ele avalia tecido, metragem e peças,
+    define as horas e libera para o administrativo reservar. <b>Cliente novo não entra por aqui</b> — quem
+    cadastra é o administrativo.</p>
+  <div class="phones">
+
+    <div class="pw"><p class="cap">12 <b>Pré-pedidos abertos</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>09:41</span><span>Kortex</span><span>◍ 82%</span></div>
+        <div class="bar"><p class="who">Pré-pedidos</p><p class="when">3 aguardando sua avaliação</p></div>
+        <div class="scr">
+          <div class="job next"><span class="t">Hoje, 09:12</span>
+            <p class="nm">Confecção Duas Marias</p><p class="mt">Tricoline · camisa · 40 pç × 100 m</p>
+            <div class="tags"><span class="tag g">Sem horas definidas</span></div>
+            <button class="btn p sm">Avaliar</button></div>
+          <div class="job next"><span class="t">Ontem, 16:40</span>
+            <p class="nm">Winner Uniformes</p><p class="mt">Rip stop · jaleco · 60 pç × 80 m</p>
+            <div class="tags"><span class="tag g">Sem horas definidas</span></div></div>
+          <div class="job"><span class="t">Ontem, 11:05</span>
+            <p class="nm">Ludan Biotêxtil</p><p class="mt">TNT · avental cirúrgico · 5h definidas</p>
+            <div class="tags"><span class="tag f">Com o administrativo</span></div></div>
+          <button class="btn gh">+ Novo pré-pedido</button>
+        </div>
+        <div class="tb"><div>Fila</div><div class="on">Pré-pedidos<span class="n">3</span></div><div>Agenda</div><div>Espera</div></div>
+      </div></div>
+    </div>
+
+    <div class="pw"><p class="cap">13 <b>Novo pré-pedido</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>09:44</span><span>Kortex</span><span>◍ 82%</span></div>
+        <div class="bar"><p class="when">← Pré-pedidos</p><p class="who">Novo pré-pedido</p></div>
+        <div class="scr">
+          <div class="fld"><label>Cliente</label><div class="in">Confecção Duas Marias</div>
+            <p class="qh" style="margin:6px 0 0">Não achou? O administrativo cadastra — você não cadastra cliente.</p></div>
+          <div class="r2">
+            <div class="fld"><label>Tecido</label><div class="in">Tricoline</div></div>
+            <div class="fld"><label>Produto</label><div class="in">Camisa</div></div>
+          </div>
+          <div class="r2">
+            <div class="fld"><label>Peças</label><div class="in">40</div></div>
+            <div class="fld"><label>Metros/peça</label><div class="in">100</div></div>
+          </div>
+          <div class="r2">
+            <div class="fld"><label>Rolos</label><div class="in">4</div></div>
+            <div class="fld"><label>Camadas prev.</label><div class="in">50</div></div>
+          </div>
+          <div class="fld"><label>Enfesto previsto</label>
+            <div class="seg"><div class="on">Folha a folha</div><div>Zigue-zague</div></div></div>
+          <div class="fld"><label>Recado para o administrativo</label>
+            <div class="in ph">Ex.: tecido tem que chegar na véspera</div></div>
+          <button class="btn p">Continuar</button>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="pw"><p class="cap">14 <b>Definir as horas</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>09:46</span><span>Kortex</span><span>◍ 81%</span></div>
+        <div class="bar"><p class="when">Duas Marias · Tricoline · 40 pç × 100 m</p>
+          <p class="ql" style="margin-top:6px">Quantas horas reservar?</p>
+          <p class="qh">Só hora cheia. É este número que o administrativo cobra — e só você pode defini-lo.</p></div>
+        <div class="scr" style="padding-top:2px">
+          <div class="mh">
+            <div class="mh-h">Tricoline · cortes parecidos</div>
+            <table>
+              <tr><td>40 pç × 100 m</td><td>50 cam</td><td>1h30</td></tr>
+              <tr><td>36 pç × 100 m</td><td>46 cam</td><td>1h25</td></tr>
+              <tr><td>60 pç × 80 m</td><td>54 cam</td><td>2h20</td></tr>
+              <tr><td>40 pç × 100 m</td><td>50 cam</td><td>1h38</td></tr>
+            </table>
+            <div class="ft">Média de 1h34 nos cortes de 40 peças. As três últimas reservas de 2h sobraram
+              tempo — mas na de 3h faltou 12 min.</div>
+          </div>
+          <div class="stp"><button>–</button><div class="v"><b>2</b><span>horas</span></div><button>+</button></div>
+          <div class="sw" style="margin-top:12px"><p>Enfesto baixo<small>tecido que cola, corte devagar</small></p><div class="kn off"></div></div>
+          <button class="btn p">Liberar para reserva</button>
+          <p class="qh" style="text-align:center;margin-top:10px">O administrativo recebe agora e entra em
+            contato com o cliente.</p>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <h2 class="sec">Agenda e fila de espera</h2>
+  <p class="sec-note">O Modelista <b>lê</b> a agenda e <b>lê</b> a fila de espera — não agenda, não preenche
+    ficha, não escolhe quem entra. Vaga vista vira aviso ao administrativo, que é quem oferece, cobra e agenda.</p>
+  <div class="phones">
+
+    <div class="pw"><p class="cap">15 <b>Agenda da semana</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>08:02</span><span>Kortex</span><span>◍ 92%</span></div>
+        <div class="bar"><p class="who">Agenda · Máquina 01</p><p class="when">Somente leitura</p></div>
+        <div class="scr">
+          <p class="cap" style="margin:0 0 8px">Quarta 12</p>
+          <div class="job"><span class="t">08:00 → 10:00 · 2h</span><p class="nm">Jeans do Vale</p>
+            <p class="mt">Índigo · calça</p></div>
+          <div class="job" style="border-left-color:var(--slate)"><span class="t">10:30 → 11:00</span>
+            <p class="nm">Sonhare Pijamaria</p><p class="mt">Atendimento · conhecer a operação</p>
+            <div class="tags"><span class="tag g">Não é hora de máquina</span></div></div>
+          <div class="job now"><span class="t">14:00 → 17:00 · 3h</span><p class="nm">Malharia São Bento</p>
+            <p class="mt">Malha · maiô</p>
+            <div class="tags"><span class="tag a">Atendimento em paralelo 15:00</span></div></div>
+          <div class="job" style="border-left-color:var(--slate);border-style:dashed;margin-top:-4px">
+            <span class="t">15:00 → 15:30</span><p class="nm">Acqua Bronze · atendimento</p>
+            <p class="mt">Modelagem · cliente vem conversar</p>
+            <div class="tags"><span class="tag g">Não é hora de máquina</span><span class="tag a">Durante o corte da São Bento</span></div></div>
+          <p class="cap" style="margin:16px 0 8px">Quinta 13</p>
+          <div class="job"><span class="t">Dia inteiro · 12h</span><p class="nm">Fábrica Alto Vale</p>
+            <p class="mt">Cetim · biquíni · enfesto baixo</p></div>
+          <div class="al i"><b>Sexta tem 4h livres de manhã.</b> Se algum cliente da fila de espera puder
+            antecipar, avise o administrativo — quem agenda e cobra é lá.</div>
+          <button class="btn gh sm">Avisar administrativo</button>
+        </div>
+        <div class="tb"><div>Fila</div><div>Pré-pedidos<span class="n">3</span></div><div class="on">Agenda</div><div>Espera</div></div>
+      </div></div>
+    </div>
+
+    <div class="pw"><p class="cap">16 <b>Fila de espera · só leitura</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>08:06</span><span>Kortex</span><span>◍ 92%</span></div>
+        <div class="bar"><p class="who">Fila de espera</p><p class="when">4 clientes · 2 querem antecipar</p></div>
+        <div class="scr">
+          <div class="job"><span class="t">Na lista desde 09/08</span>
+            <p class="nm">Fábrica Alto Vale</p><p class="mt">Cetim · biquíni · 4h · até 16/08</p>
+            <div class="tags"><span class="tag a">Quer antecipar</span></div></div>
+          <div class="job"><span class="t">Na lista desde 10/08</span>
+            <p class="nm">Acqua Bronze</p><p class="mt">Malha · maiô · 2h · até 20/08</p>
+            <div class="tags"><span class="tag a">Quer antecipar</span></div></div>
+          <div class="job next"><span class="t">Na lista desde 11/08</span>
+            <p class="nm">SB Moda Íntima</p><p class="mt">Malha · calcinha · 1h</p></div>
+          <div class="job next"><span class="t">Na lista desde 11/08</span>
+            <p class="nm">Winner Uniformes</p><p class="mt">Rip stop · jaleco · 3h</p></div>
+          <div class="al i"><b>Aqui você só consulta.</b> Quem coloca na lista, oferece a vaga, cobra e
+            agenda é o administrativo.</div>
+        </div>
+        <div class="tb"><div>Fila</div><div>Pré-pedidos<span class="n">3</span></div><div>Agenda</div><div class="on">Espera</div></div>
+      </div></div>
+    </div>
+
+    <div class="pw"><p class="cap">17 <b>Acionar o administrativo</b></p>
+      <div class="phone"><div class="screen">
+        <div class="sb"><span>16:20</span><span>Kortex</span><span>◍ 79%</span></div>
+        <div class="bar"><p class="when">← Fila de espera</p>
+          <p class="cust" style="font-size:20px">Vagou horário</p>
+          <p class="when">Sexta 14/08 · 09:00 → 11:00 · 2h</p></div>
+        <div class="scr">
+          <div class="al i"><b>Você viu a vaga — avise quem resolve.</b> O administrativo recebe o aviso na
+            hora, escolhe da fila, cobra e agenda.</div>
+          <div class="fld" style="margin-top:14px"><label>Recado (opcional)</label>
+            <div class="in ph">Ex.: a Acqua Bronze cabe aqui — 2h de malha, e ela quer antecipar</div></div>
+          <button class="btn go">Avisar administrativo</button>
+          <button class="btn gh">Cancelar</button>
+          <div class="al" style="margin-top:22px"><b>Você não cobra, não agenda e não escolhe.</b> Se não
+            estiver na sua agenda, não corta — é o que impede dinheiro entrar fora do caixa.</div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

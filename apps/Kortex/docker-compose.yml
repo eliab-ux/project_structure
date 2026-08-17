@@ -1,0 +1,42 @@
+# Infraestrutura local do Kortex: só Postgres.
+#
+# Isto é AMBIENTE DE DESENVOLVIMENTO, não deploy. Em produção (Dokploy/mdantas) o banco é um
+# serviço PostgreSQL gerenciado pela plataforma e os segredos vivem na aba Environment — ver o
+# playbook no CLAUDE.md. A senha aqui é deliberadamente óbvia: só vale em localhost.
+#
+#   docker compose -f apps/Kortex/docker-compose.yml up -d
+#   npm run migration:up -w apps/Kortex/backend
+#
+# Só Postgres, e a ausência do resto é intencional: a spec não tem fila (nenhuma transição
+# automática por tempo — regra 6.5) nem storage de arquivo (decisão 2.13). Subir Redis e MinIO
+# "por precaução" seria infraestrutura que ninguém usa e que todo mundo precisa manter de pé.
+#
+# A imagem é a 17 para casar com o container PostgreSQL 17 do mdantas: banco de desenvolvimento
+# numa major diferente da de produção é onde nasce o erro que só aparece no deploy.
+#
+# A porta foge do padrão (55433) para não colidir com um Postgres já rodando na máquina — e a
+# 55432 já é do Batuta.
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: kortex-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kortex
+      POSTGRES_PASSWORD: kortex_local
+      POSTGRES_DB: kortex
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C'
+    ports:
+      - '55433:5432'
+    volumes:
+      - kortex-postgres-data:/var/lib/postgresql/data
+      # O banco de teste de integração é criado pelo script, não à mão.
+      - ./deploy/local/init-test-db.sql:/docker-entrypoint-initdb.d/10-init-test-db.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U kortex -d kortex']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  kortex-postgres-data:

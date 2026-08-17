@@ -17,7 +17,9 @@
     "apps/batuta-system/frontend",
     "apps/Veertex/packages/*",
     "apps/Veertex/backend",
-    "apps/Veertex/frontend"
+    "apps/Veertex/frontend",
+    "apps/Kortex/backend",
+    "apps/Kortex/frontend"
   ],
   "scripts": {
     "build": "npm run build --workspaces",
