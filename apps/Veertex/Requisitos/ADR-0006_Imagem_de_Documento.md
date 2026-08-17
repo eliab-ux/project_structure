@@ -65,7 +65,7 @@ Duas condições, ambas necessárias — nada de casca:
 
 | | Por quê |
 |---|---|
-| **PDF** | O caminho é de câmera. Compressão e prévia no cliente não se aplicam a PDF, e o formato traria outro fluxo (múltiplas páginas, seleção de página). Vale como fatia própria se aparecer o caso de uso |
+| **PDF** | **Fora por decisão, não por adiamento** (Eliab, 17/08/2026). O caso real é **foto de cartão CNPJ ou documento no balcão** — papel na mão, celular apontado. PDF pertence a outro cenário (arquivo recebido por e-mail), traria outro fluxo (múltiplas páginas, seleção de página) e não tem prévia nem compressão no cliente. Não é "quando aparecer o caso de uso": o caso de uso é conhecido, e é foto |
 | **Persistir a imagem** | Decisão do Eliab: processa e descarta. Guardar traria retenção, exportação no cancelamento (§3.1) e uma superfície de vazamento que hoje não existe |
 | **Resolver entidade por busca aproximada** | Registrado como próximo passo: o nome lido da imagem deveria casar com contato existente antes de criar duplicado. Hoje o rascunho é conferido pelo humano, que é a rede de segurança — a busca aproximada é melhoria, não pré-requisito |
 
