@@ -1,12 +1,14 @@
 {
   "name": "@gitspread/shared-kernel",
   "version": "1.0.0",
-  "description": "Tipos, interfaces e utilit\u00e1rios compartilhados entre todos os sistemas",
+  "description": "Tipos, interfaces e utilitários compartilhados entre todos os sistemas",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts --max-warnings=0"
   },
   "keywords": [
     "shared",

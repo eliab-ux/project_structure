@@ -25,11 +25,7 @@ export class Pagination {
     };
   }
 
-  static createResult<T>(
-    data: T[],
-    total: number,
-    params: PaginationParams,
-  ): PaginatedResult<T> {
+  static createResult<T>(data: T[], total: number, params: PaginationParams): PaginatedResult<T> {
     const totalPages = Math.ceil(total / params.limit);
 
     return {

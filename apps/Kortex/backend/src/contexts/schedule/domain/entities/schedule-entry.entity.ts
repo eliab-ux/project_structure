@@ -58,9 +58,20 @@ export class ScheduleEntry extends AggregateRoot {
     endsAt: Date;
     customerId: CustomerId;
     businessHours: BusinessHour[];
+    /** Fuso da CONTA. Ausente cai no default da policy — o caminho dos testes de domínio. */
+    timeZone?: string;
   }): { entry: ScheduleEntry; hours: number } {
-    const hours = BusinessHoursPolicy.assertWholeHours(input.startsAt, input.endsAt);
-    BusinessHoursPolicy.assertWithinSingleWindow(input.startsAt, input.endsAt, input.businessHours);
+    const hours = BusinessHoursPolicy.assertWholeHours(
+      input.startsAt,
+      input.endsAt,
+      input.timeZone,
+    );
+    BusinessHoursPolicy.assertWithinSingleWindow(
+      input.startsAt,
+      input.endsAt,
+      input.businessHours,
+      input.timeZone,
+    );
 
     const now = new Date();
     const entry = new ScheduleEntry(
@@ -192,9 +203,23 @@ export class ScheduleEntry extends AggregateRoot {
   }
 
   /** Mover a hora de máquina revalida tudo: hora cheia, janela e sobreposição. */
-  moveMachineHour(input: { startsAt: Date; endsAt: Date; businessHours: BusinessHour[] }): number {
-    const hours = BusinessHoursPolicy.assertWholeHours(input.startsAt, input.endsAt);
-    BusinessHoursPolicy.assertWithinSingleWindow(input.startsAt, input.endsAt, input.businessHours);
+  moveMachineHour(input: {
+    startsAt: Date;
+    endsAt: Date;
+    businessHours: BusinessHour[];
+    timeZone?: string;
+  }): number {
+    const hours = BusinessHoursPolicy.assertWholeHours(
+      input.startsAt,
+      input.endsAt,
+      input.timeZone,
+    );
+    BusinessHoursPolicy.assertWithinSingleWindow(
+      input.startsAt,
+      input.endsAt,
+      input.businessHours,
+      input.timeZone,
+    );
 
     this._startsAt = input.startsAt;
     this._endsAt = input.endsAt;

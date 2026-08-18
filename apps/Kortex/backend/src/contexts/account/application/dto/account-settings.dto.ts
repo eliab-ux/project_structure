@@ -15,6 +15,8 @@ export class AccountSettingsDto {
   id!: string;
   name!: string;
   city!: string;
+  /** Fuso IANA. A agenda inteira é lida através dele. */
+  timezone!: string;
   reportOwner!: ReportOwnerDto | null;
 
   static fromDomain(account: Account): AccountSettingsDto {
@@ -22,6 +24,7 @@ export class AccountSettingsDto {
     dto.id = account.id.value;
     dto.name = account.name;
     dto.city = account.city;
+    dto.timezone = account.timezone;
 
     const owner = account.reportOwner;
     dto.reportOwner = owner

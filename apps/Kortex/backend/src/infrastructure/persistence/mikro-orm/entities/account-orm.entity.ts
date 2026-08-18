@@ -11,6 +11,10 @@ export class AccountOrmEntity {
   @Property({ length: 120 })
   city!: string;
 
+  /** Fuso IANA da operação. `NOT NULL` com default no banco — ver Migration20260818090000. */
+  @Property({ length: 64 })
+  timezone: string = 'America/Sao_Paulo';
+
   @Property({ fieldName: 'report_owner_name', length: 200, nullable: true })
   reportOwnerName: string | null = null;
 

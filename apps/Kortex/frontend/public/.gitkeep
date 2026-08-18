@@ -1,0 +1,5 @@
+Mantém `public/` no repositório.
+
+O Dockerfile copia esta pasta para dentro da imagem, e `COPY` de caminho inexistente falha o build
+inteiro. Como o Kortex ainda não tem asset estático, sem este arquivo a pasta não existiria no
+clone e o build quebraria no servidor — longe de quem fez o commit.

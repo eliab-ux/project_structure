@@ -77,7 +77,7 @@ npm run test:e2e  -w apps/Kortex/backend            # API real contra o banco ko
 As portas fogem do padrão para não colidir com os outros apps do monorepo (o Batuta já usa 3010,
 3003 e 55432).
 
-## Oito coisas do schema que não são óbvias
+## Nove coisas do schema que não são óbvias
 
 **A tabela de usuários chama `app_user`, não `user`.** `user` é palavra reservada no PostgreSQL e
 `select * from user` no psql **não dá erro** — devolve o usuário da conexão. A classe de domínio
@@ -98,6 +98,13 @@ semana; o almoço é a ausência de janela entre duas linhas. A não-sobreposiç
 constraint de exclusão no banco (`EXCLUDE USING gist`), não só na aplicação — por isso a extensão
 `btree_gist` é criada já na migration baseline. Uma reserva precisa caber inteira dentro de uma
 única janela: 11h→14h com intervalo das 11h30 às 13h é erro, não é partida em duas.
+
+**O fuso é da conta, não do servidor.** `account.timezone` (default `America/Sao_Paulo`) é o
+relógio pelo qual a agenda inteira é lida: as janelas de funcionamento são horários locais
+("abre 07:00") e `schedule_entry.starts_at` é `timestamptz`. Em produção o servidor roda em UTC,
+então sem esse dado uma reserva das 07:00 viraria 04:00. Ficou em variável de ambiente até a Fase 6
+e virou coluna no deploy — fuso é atributo da operação, e duas contas no mesmo container podem
+abrir em fusos diferentes.
 
 **Tecido tem DUAS medidas, e elas não são intercambiáveis.** `max_layer_height_cm` é o limite do
 enfesto inteiro (mesa, lâmina, material empilhado); `layer_thickness_cm` é a espessura de uma camada
@@ -134,7 +141,14 @@ maiores que zero. E o **DRE não é tabela** (§4.16): é uma agregação sobre 
 
 ## Deploy
 
-Bloqueado por uma decisão em aberto: o repositório remoto (`git@gitlab.com:eliab1/kortex.git`) é só
-do Kortex, mas o app depende de `packages/domain-primitives` e `packages/shared-kernel` do
-monorepo. As três saídas possíveis estão na §9 da spec e **nenhuma foi escolhida** — até lá, o
-remote não é configurado e o trabalho fica no monorepo local.
+**Playbook completo em [`deploy/README.md`](deploy/README.md).** Em resumo: domínio
+`kortex.ind.br` no Dokploy do mdantas, PostgreSQL 17 em container, um domínio para os dois
+serviços (`/api` → backend, `/` → frontend).
+
+A §9 foi resolvida como **recorte espelhado**: `git@gitlab.com:eliab1/kortex.git` recebe
+`packages/`, `apps/Kortex/` e o `package.json` de workspace, publicados por
+`./apps/Kortex/deploy/publish-mirror.sh`. O monorepo continua sendo a fonte da verdade — o espelho
+é gerado, nunca editado.
+
+Migrations **não** rodam no start do container: são um comando explícito
+(`npm run migration:deploy`) depois do deploy. O porquê está no playbook, com os três motivos.

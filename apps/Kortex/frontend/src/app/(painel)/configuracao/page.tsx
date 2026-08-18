@@ -38,6 +38,28 @@ function toCents(input: string): number {
   return digits ? Number.parseInt(digits, 10) : 0;
 }
 
+/**
+ * Fusos do Brasil.
+ *
+ * Lista curta e explícita em vez de `Intl.supportedValuesOf('timeZone')`: são ~400 nomes, e num
+ * combo desse tamanho o operador escolhe `America/Argentina/Cordoba` por engano. A conta aceita
+ * qualquer fuso IANA pela API — a lista limita a TELA, não o domínio.
+ */
+const TIMEZONES: { value: string; label: string }[] = [
+  { value: 'America/Sao_Paulo', label: 'Brasília (America/Sao_Paulo)' },
+  { value: 'America/Bahia', label: 'Bahia (America/Bahia)' },
+  { value: 'America/Fortaleza', label: 'Fortaleza (America/Fortaleza)' },
+  { value: 'America/Recife', label: 'Recife (America/Recife)' },
+  { value: 'America/Belem', label: 'Belém (America/Belem)' },
+  { value: 'America/Manaus', label: 'Manaus (America/Manaus)' },
+  { value: 'America/Cuiaba', label: 'Cuiabá (America/Cuiaba)' },
+  { value: 'America/Campo_Grande', label: 'Campo Grande (America/Campo_Grande)' },
+  { value: 'America/Porto_Velho', label: 'Porto Velho (America/Porto_Velho)' },
+  { value: 'America/Boa_Vista', label: 'Boa Vista (America/Boa_Vista)' },
+  { value: 'America/Rio_Branco', label: 'Rio Branco (America/Rio_Branco)' },
+  { value: 'America/Noronha', label: 'Fernando de Noronha (America/Noronha)' },
+];
+
 function ConfigurationPage() {
   const { enqueueSnackbar } = useSnackbar();
   const [loading, setLoading] = useState(true);
@@ -47,7 +69,7 @@ function ConfigurationPage() {
 
   const [newHour, setNewHour] = useState({ weekday: 1, startsAt: '07:00', endsAt: '11:30' });
   const [newMachine, setNewMachine] = useState({ name: '', model: '', price: '0,00' });
-  const [account, setAccount] = useState({ name: '', city: '' });
+  const [account, setAccount] = useState({ name: '', city: '', timezone: 'America/Sao_Paulo' });
   const [reportOwner, setReportOwner] = useState({ name: '', role: '', phone: '', email: '' });
 
   const load = useCallback(async () => {
@@ -60,7 +82,11 @@ function ConfigurationPage() {
       setSettings(loadedSettings);
       setHours(loadedHours);
       setMachines(loadedMachines);
-      setAccount({ name: loadedSettings.name, city: loadedSettings.city });
+      setAccount({
+        name: loadedSettings.name,
+        city: loadedSettings.city,
+        timezone: loadedSettings.timezone,
+      });
       setReportOwner({
         name: loadedSettings.reportOwner?.name ?? '',
         role: loadedSettings.reportOwner?.role ?? '',
@@ -85,6 +111,7 @@ function ConfigurationPage() {
       const saved = await accountService.updateSettings({
         name: account.name,
         city: account.city,
+        timezone: account.timezone,
         // Sem nome não há responsável: as outras três colunas sozinhas não formam ninguém.
         reportOwner: reportOwner.name.trim()
           ? {
@@ -391,6 +418,21 @@ function ConfigurationPage() {
               value={account.city}
               onChange={(event) => setAccount({ ...account, city: event.target.value })}
             />
+            <TextField
+              select
+              label="Fuso horário"
+              size="small"
+              fullWidth
+              helperText="A agenda inteira é lida por ele. Trocar reinterpreta horários já marcados."
+              value={account.timezone}
+              onChange={(event) => setAccount({ ...account, timezone: event.target.value })}
+            >
+              {TIMEZONES.map((timezone) => (
+                <MenuItem key={timezone.value} value={timezone.value}>
+                  {timezone.label}
+                </MenuItem>
+              ))}
+            </TextField>
           </Stack>
 
           <Divider />

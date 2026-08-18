@@ -177,6 +177,7 @@ describe('Configuração da conta (e2e)', () => {
         payload: {
           name: 'Corte Ceres · APL',
           city: 'Ceres',
+          timezone: 'America/Sao_Paulo',
           reportOwner: {
             name: 'Cristiano Moreira dos Reis',
             role: 'Operador de Sistema Audaces',
@@ -201,6 +202,7 @@ describe('Configuração da conta (e2e)', () => {
         payload: {
           name: 'Corte Ceres · APL',
           city: 'Ceres',
+          timezone: 'America/Sao_Paulo',
           reportOwner: { name: '', role: 'Operador' },
         },
       });
@@ -212,11 +214,79 @@ describe('Configuração da conta (e2e)', () => {
         method: 'PUT',
         url: '/api/account',
         token: ownerToken,
-        payload: { name: 'Corte Ceres · APL', city: 'Ceres', reportOwner: null },
+        payload: {
+          name: 'Corte Ceres · APL',
+          city: 'Ceres',
+          timezone: 'America/Sao_Paulo',
+          reportOwner: null,
+        },
       });
 
       expect(response.statusCode).toBe(200);
       expect(response.body.reportOwner).toBeNull();
+    });
+  });
+
+  describe('fuso horário da conta', () => {
+    const salvar = (timezone: string) =>
+      ctx.inject({
+        method: 'PUT',
+        url: '/api/account',
+        token: ownerToken,
+        payload: {
+          name: 'Corte Ceres · APL',
+          city: 'Ceres',
+          timezone,
+          reportOwner: null,
+        },
+      });
+
+    it('a conta nasce em America/Sao_Paulo', async () => {
+      const response = await ctx.inject({
+        method: 'GET',
+        url: '/api/account',
+        token: ownerToken,
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.timezone).toBe('America/Sao_Paulo');
+    });
+
+    it('aceita outro fuso IANA real', async () => {
+      const response = await salvar('America/Manaus');
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.timezone).toBe('America/Manaus');
+
+      // Devolve ao padrão para não contaminar os testes seguintes deste arquivo.
+      await salvar('America/Sao_Paulo');
+    });
+
+    it('recusa fuso que não existe, mesmo com o formato certo', async () => {
+      // Passa no regex do DTO (`Região/Cidade`) e morre no `Intl` do domínio — é essa a divisão:
+      // o DTO confere forma, quem sabe se o fuso existe é quem vai converter com ele.
+      const response = await salvar('America/Ceres');
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toMatch(/fuso horário desconhecido/i);
+    });
+
+    it('recusa string que nem parece fuso', async () => {
+      for (const invalido of ['UTC-3', 'Brasilia', '']) {
+        const response = await salvar(invalido);
+        expect([invalido, response.statusCode]).toEqual([invalido, 400]);
+      }
+    });
+
+    it('o fuso é obrigatório no PUT — não dá para apagá-lo por omissão', async () => {
+      const response = await ctx.inject({
+        method: 'PUT',
+        url: '/api/account',
+        token: ownerToken,
+        payload: { name: 'Corte Ceres · APL', city: 'Ceres', reportOwner: null },
+      });
+
+      expect(response.statusCode).toBe(400);
     });
   });
 });

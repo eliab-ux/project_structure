@@ -1,0 +1,64 @@
+# Contexto de build = RAIZ do monorepo (Docker Context Path `/` no Dokploy).
+#
+# O contexto precisa ser a raiz porque o backend e o frontend do Kortex dependem de
+# `packages/domain-primitives` e `packages/shared-kernel`. Com o contexto na pasta do app, o
+# `COPY packages/ ...` falha com `"/packages": not found` — o erro nº 1 do playbook do CLAUDE.md.
+#
+# Como o contexto é grande, o que NÃO entra importa: cada arquivo aqui é upload por build.
+
+# ==== Nunca: reinstalados/reconstruídos dentro da imagem ====
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/*.tsbuildinfo
+
+# ==== Nunca: segredo ====
+# `.env.example` e `.env.production.example` são referência sem valor e ficam de fora do build de
+# qualquer forma — a imagem lê tudo do ambiente injetado pelo Dokploy.
+**/.env
+**/.env.*
+
+# ==== Histórico e ferramenta local ====
+.git
+.gitignore
+**/.vscode
+**/.idea
+**/.claude
+
+# ==== Ruído de build ====
+**/coverage
+**/*.log
+npm-debug.log*
+**/.DS_Store
+**/Thumbs.db
+
+# ==== Outros apps do monorepo ====
+# O recorte espelhado (git@gitlab.com:eliab1/kortex.git) leva só `packages/`, `apps/Kortex/` e o
+# package.json de workspace, então em produção estas pastas nem existem. As linhas ficam para o
+# build a partir do monorepo COMPLETO produzir a mesma imagem — senão a de casa e a do servidor
+# divergiriam justamente no tamanho do contexto.
+apps/batuta-system
+apps/ecoa-system
+apps/emdrremoto
+apps/kaza-tem-system
+apps/plano-diario
+apps/system-example
+apps/tkc
+apps/TKCCapital
+docs
+
+# ==== Documentação e requisitos ====
+# Não entram na imagem: mudam com frequência e invalidariam o cache de camada a cada edição de
+# texto, refazendo `npm ci` por causa de uma vírgula num markdown.
+**/*.md
+!apps/Kortex/backend/README.md
+apps/Kortex/Requisitos
+apps/Kortex/docker-compose.yml
+apps/Kortex/deploy/local
+
+# ==== Teste ====
+# A imagem de produção não roda teste; o CI roda antes, no monorepo.
+apps/Kortex/backend/test
+**/*.spec.ts
+**/jest.config.ts

@@ -18,6 +18,7 @@ export class UpdateAccountSettingsCommand {
     public readonly accountId: string,
     public readonly name: string,
     public readonly city: string,
+    public readonly timezone: string,
     public readonly reportOwner: {
       name: string;
       role?: string | null;
@@ -52,6 +53,7 @@ export class UpdateAccountSettingsUseCase implements UseCase<
 
     account.rename(command.name);
     account.changeCity(command.city);
+    account.changeTimezone(command.timezone);
     account.changeReportOwner(command.reportOwner ? ReportOwner.create(command.reportOwner) : null);
 
     return this.unitOfWork.execute(async () => {

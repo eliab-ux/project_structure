@@ -54,3 +54,11 @@ temp/
 # MikroORM
 apps/*/src/infrastructure/persistence/mikro-orm/migrations/*.ts
 !apps/*/src/infrastructure/persistence/mikro-orm/migrations/.gitkeep
+
+# Saída de `tsc` que aterrissou ao lado do fonte antes do `outDir` apontar para `dist/`.
+# São restos: o build atual gera tudo em `packages/*/dist`. Ficam ignorados para não voltarem a
+# entrar em commit nem no contexto de build do Docker.
+packages/*/src/**/*.js
+packages/*/src/**/*.js.map
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.d.ts.map

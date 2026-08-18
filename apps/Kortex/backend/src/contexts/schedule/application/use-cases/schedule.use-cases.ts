@@ -10,6 +10,11 @@ import {
   BusinessHourRepositoryPort,
 } from '../../../account/application/ports/output/business-hour-repository.port';
 import {
+  ACCOUNT_REPOSITORY,
+  AccountRepositoryPort,
+} from '../../../account/application/ports/output/account-repository.port';
+import { AccountNotFoundException } from '../../../account/domain/exceptions/account-not-found.exception';
+import {
   MACHINE_REPOSITORY,
   MachineRepositoryPort,
 } from '../../../machine/application/ports/output/machine-repository.port';
@@ -80,6 +85,9 @@ export class ScheduleUseCases {
     private readonly reservations: ReservationRepositoryPort,
     @Inject(BUSINESS_HOUR_REPOSITORY)
     private readonly businessHours: BusinessHourRepositoryPort,
+    // A agenda precisa do fuso da conta: janela é horário local, `starts_at` é instante.
+    @Inject(ACCOUNT_REPOSITORY)
+    private readonly accounts: AccountRepositoryPort,
     @Inject(MACHINE_REPOSITORY)
     private readonly machines: MachineRepositoryPort,
     @Inject(PRE_ORDER_REPOSITORY)
@@ -138,6 +146,7 @@ export class ScheduleUseCases {
       endsAt,
       customerId: preOrder.customerId,
       businessHours: windows,
+      timeZone: await this.timeZoneOf(account),
     });
 
     // Checagem em memória para dar a mensagem que o operador entende. A garantia de verdade é a
@@ -364,6 +373,7 @@ export class ScheduleUseCases {
       endsAt,
       customerId: original.customerId,
       businessHours: windows,
+      timeZone: await this.timeZoneOf(account),
     });
 
     if (hours !== original.hours) {
@@ -409,6 +419,20 @@ export class ScheduleUseCases {
 
     const saved = await this.unitOfWork.execute(async () => this.reservations.save(reservation));
     return (await this.toReservationDtos(account, [saved]))[0];
+  }
+
+  /**
+   * O fuso da conta — o relógio pelo qual a agenda inteira é lida.
+   *
+   * Uma consulta a mais por criação de reserva, e não vale cachear: a agenda é o lugar onde um
+   * fuso desatualizado deslocaria todo horário em uma hora sem erro nenhum aparecer.
+   */
+  private async timeZoneOf(accountId: AccountId): Promise<string> {
+    const account = await this.accounts.findById(accountId);
+    if (!account) {
+      throw new AccountNotFoundException();
+    }
+    return account.timezone;
   }
 
   // ==== Montagem dos DTOs ====

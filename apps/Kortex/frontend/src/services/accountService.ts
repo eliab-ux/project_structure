@@ -9,6 +9,7 @@ async function getSettings(): Promise<AccountSettings> {
 async function updateSettings(payload: {
   name: string;
   city: string;
+  timezone: string;
   reportOwner: ReportOwner | null;
 }): Promise<AccountSettings> {
   const response = await api.put<AccountSettings>('/account', payload);

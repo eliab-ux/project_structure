@@ -11,6 +11,7 @@ export class AccountMapper {
       id: AccountId.from(orm.id),
       name: orm.name,
       city: orm.city,
+      timezone: orm.timezone,
       // O responsável é um bloco: sem nome, não há responsável — as outras três colunas sozinhas
       // não formam ninguém.
       reportOwner: orm.reportOwnerName
@@ -31,6 +32,7 @@ export class AccountMapper {
     target.id = domain.id.value;
     target.name = domain.name;
     target.city = domain.city;
+    target.timezone = domain.timezone;
 
     const owner = domain.reportOwner;
     target.reportOwnerName = owner?.name ?? null;

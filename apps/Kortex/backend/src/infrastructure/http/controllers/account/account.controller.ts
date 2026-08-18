@@ -69,7 +69,13 @@ export class AccountController {
     @Body() dto: UpdateAccountSettingsRequestDto,
   ): Promise<AccountSettingsDto> {
     return this.updateAccountSettingsUseCase.execute(
-      new UpdateAccountSettingsCommand(user.accountId, dto.name, dto.city, dto.reportOwner ?? null),
+      new UpdateAccountSettingsCommand(
+        user.accountId,
+        dto.name,
+        dto.city,
+        dto.timezone,
+        dto.reportOwner ?? null,
+      ),
     );
   }
 

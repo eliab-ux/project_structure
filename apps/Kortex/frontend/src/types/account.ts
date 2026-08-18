@@ -9,6 +9,8 @@ export interface AccountSettings {
   id: string;
   name: string;
   city: string;
+  /** Fuso IANA da operação. A agenda inteira é lida através dele. */
+  timezone: string;
   reportOwner: ReportOwner | null;
 }
 

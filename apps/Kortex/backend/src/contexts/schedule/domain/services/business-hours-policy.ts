@@ -11,11 +11,14 @@ import {
  * Para saber se um instante cai dentro de uma janela é preciso traduzi-lo para o relógio da
  * oficina — e o relógio do servidor não serve, porque em produção ele roda em UTC.
  *
- * **Limitação conhecida:** a conta não tem coluna de fuso (a spec não a define) e o valor vem do
- * ambiente. Vale enquanto todas as contas estiverem no mesmo fuso, que é o caso hoje. Uma conta
- * em outro fuso exige uma coluna `account.timezone` — decisão para quando aparecer, não antes.
+ * O fuso vem da **conta** (`account.timezone`), passado a cada chamada. Antes vinha do ambiente,
+ * o que só funcionava enquanto todas as contas operassem no mesmo relógio — a limitação estava
+ * anotada aqui desde a Fase 4 e foi resolvida na migração para produção.
+ *
+ * O default existe para os testes de domínio e para o caso de alguém chamar a policy sem o fuso
+ * em mãos; em produção quem chama sempre tem a conta carregada.
  */
-export const OPERATION_TIMEZONE = process.env.DEFAULT_TIMEZONE ?? 'America/Sao_Paulo';
+export const OPERATION_TIMEZONE = 'America/Sao_Paulo';
 
 interface LocalMoment {
   weekday: number;
@@ -29,9 +32,9 @@ interface LocalMoment {
  * Usa `Intl.DateTimeFormat`, e não aritmética de offset, porque offset fixo erra no dia em que o
  * país mexe no horário de verão — e erraria calado, deslocando a agenda inteira em uma hora.
  */
-function toLocal(instant: Date): LocalMoment {
+function toLocal(instant: Date, timeZone: string): LocalMoment {
   const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: OPERATION_TIMEZONE,
+    timeZone,
     weekday: 'short',
     hour: '2-digit',
     minute: '2-digit',
@@ -74,8 +77,12 @@ export class BusinessHoursPolicy {
    *
    * Devolve as horas — é o número que a reserva vende e que multiplica o preço.
    */
-  static assertWholeHours(startsAt: Date, endsAt: Date): number {
-    const local = toLocal(startsAt);
+  static assertWholeHours(
+    startsAt: Date,
+    endsAt: Date,
+    timeZone: string = OPERATION_TIMEZONE,
+  ): number {
+    const local = toLocal(startsAt, timeZone);
 
     if (
       local.minutesFromMidnight % 60 !== 0 ||
@@ -108,10 +115,15 @@ export class BusinessHoursPolicy {
    * "Uma" é a palavra que importa: somar janelas para acomodar uma reserva que atravessa o almoço
    * seria justamente o que a spec proíbe.
    */
-  static assertWithinSingleWindow(startsAt: Date, endsAt: Date, windows: BusinessHour[]): void {
-    const start = toLocal(startsAt);
+  static assertWithinSingleWindow(
+    startsAt: Date,
+    endsAt: Date,
+    windows: BusinessHour[],
+    timeZone: string = OPERATION_TIMEZONE,
+  ): void {
+    const start = toLocal(startsAt, timeZone);
     // O fim é exclusivo: uma reserva que termina às 11:30 cabe na janela que fecha às 11:30.
-    const end = toLocal(new Date(endsAt.getTime() - 1));
+    const end = toLocal(new Date(endsAt.getTime() - 1), timeZone);
 
     if (start.weekday !== end.weekday) {
       throw new OutsideBusinessHoursException('A reserva não pode atravessar a virada do dia.');

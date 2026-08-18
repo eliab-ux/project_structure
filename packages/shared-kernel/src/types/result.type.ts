@@ -5,8 +5,8 @@ export class Result<T, E = Error> {
     private readonly _error?: E,
   ) {}
 
-  public static ok<T>(value: T): Result<T> {
-    return new Result<T>(true, value);
+  public static ok<T, E = Error>(value: T): Result<T, E> {
+    return new Result<T, E>(true, value);
   }
 
   public static fail<E>(error: E): Result<never, E> {
@@ -37,9 +37,9 @@ export class Result<T, E = Error> {
 
   public map<U>(fn: (value: T) => U): Result<U, E> {
     if (this.isFailure) {
-      return Result.fail(this._error!);
+      return Result.fail<E>(this._error!);
     }
-    return Result.ok(fn(this._value!));
+    return Result.ok<U, E>(fn(this._value!));
   }
 
   public flatMap<U>(fn: (value: T) => Result<U, E>): Result<U, E> {

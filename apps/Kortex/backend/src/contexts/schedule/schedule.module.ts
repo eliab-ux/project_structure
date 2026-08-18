@@ -23,8 +23,8 @@ import { ScheduleUseCases } from './application/use-cases/schedule.use-cases';
 @Module({
   imports: [
     MikroOrmModule.forFeature([ScheduleEntryOrmEntity, ReservationOrmEntity]),
-    // BUSINESS_HOUR_REPOSITORY (janelas), MACHINE_REPOSITORY (preço da máquina),
-    // PRE_ORDER_REPOSITORY + ReferenceResolver (nomes na agenda).
+    // ACCOUNT_REPOSITORY (fuso da conta), BUSINESS_HOUR_REPOSITORY (janelas),
+    // MACHINE_REPOSITORY (preço da máquina), PRE_ORDER_REPOSITORY + ReferenceResolver (nomes).
     AccountModule,
     MachineModule,
     PreOrderModule,
