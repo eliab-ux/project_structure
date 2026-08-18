@@ -14,7 +14,7 @@
 # monorepo, e a primeira vez que alguém precisasse comparar os dois repositórios o resultado seria
 # inútil.
 #
-# Então isto é um espelho de CONTEÚDO, não de histórico: cada publicação é um commit único no
+# Então isto é um espelho de CONTEÚDO, não de histórico: cada publicação é UM commit no
 # repositório-espelho, com a árvore exata do recorte e uma mensagem que aponta para o commit de
 # origem. O monorepo continua sendo a fonte da verdade; o espelho existe para o Dokploy ter o que
 # clonar.
@@ -22,9 +22,23 @@
 # ---------------------------------------------------------------------------
 # Como funciona
 # ---------------------------------------------------------------------------
-# Um worktree descartável em /tmp, com um branch órfão por publicação. Nada é copiado por cima do
-# clone anterior: a árvore é montada do zero a cada vez, então arquivo apagado no monorepo
-# desaparece do espelho — que é justamente o que um `cp -r` sobre um clone existente NÃO faz.
+# Um diretório descartável em /tmp onde a árvore é montada do zero, por `git archive`. Nunca é uma
+# cópia por cima do clone anterior: arquivo apagado no monorepo precisa DESAPARECER do espelho, e
+# um `cp -r` sobre um clone existente deixaria o arquivo velho lá.
+#
+# O commit é encadeado no histórico remoto (`git fetch` + `reset --mixed`), não órfão. Isso importa
+# por dois motivos:
+#
+#   1. **`git push` normal, sem `--force`.** A `main` do espelho é branch protegida no GitLab, e
+#      protegida ela recusa force push — como deve. Um script que exige desproteger a branch para
+#      funcionar está pedindo para enfraquecer o repositório por conveniência dele.
+#   2. **Dá para ver o que mudou entre duas publicações.** Com commits órfãos todo diff é "o
+#      repositório inteiro", e a primeira vez que alguém precisar descobrir o que foi para
+#      produção na terça o histórico não responde.
+#
+# A árvore continua sendo substituída por inteiro: depois do `reset --mixed`, o `git add --all`
+# enxerga como deleção todo arquivo que existe no remoto e não existe no recorte. Se o GitLab tiver
+# criado um README na inicialização, ele sai — o espelho reflete o recorte, e nada além dele.
 set -euo pipefail
 
 REMOTE_URL="git@gitlab.com:eliab1/kortex.git"
@@ -92,7 +106,24 @@ fi
 echo "→ Publicando em ${REMOTE_URL} (${BRANCH})"
 cd "$STAGE"
 git init --quiet --initial-branch="$BRANCH"
+git remote add "$REMOTE_NAME" "$REMOTE_URL"
+
+# Encadeia no histórico remoto quando ele existe. `--mixed` move HEAD e índice para o commit
+# remoto e NÃO toca no diretório de trabalho — que já contém o recorte montado. O `git add --all`
+# seguinte enxerga a diferença completa, inclusive as deleções.
+if git fetch --quiet --depth=1 "$REMOTE_NAME" "$BRANCH" 2>/dev/null; then
+  echo "  (encadeando sobre o histórico existente do espelho)"
+  git reset --quiet --mixed FETCH_HEAD
+else
+  echo "  (espelho vazio — primeira publicação)"
+fi
+
 git add --all
+
+if git diff --cached --quiet 2>/dev/null; then
+  echo "✓ O espelho já está idêntico a ${SOURCE_SHORT}. Nada a publicar."
+  exit 0
+fi
 git -c user.name="$(git -C - config user.name 2>/dev/null || echo Kortex)" \
     -c user.email="$(git -C - config user.email 2>/dev/null || echo deploy@kortex.ind.br)" \
     commit --quiet -m "chore(kortex): espelho do monorepo em ${SOURCE_SHORT}
@@ -103,9 +134,9 @@ Origem: monorepo Veertex, commit ${SOURCE_SHA}.
 Este repositório é um ESPELHO DE CONTEÚDO — não edite aqui. Toda alteração
 nasce no monorepo e chega por uma nova publicação."
 
-git remote add "$REMOTE_NAME" "$REMOTE_URL"
-# `--force`: cada publicação substitui a anterior. O histórico do espelho é uma sequência de
-# fotos, e reescrevê-la é o comportamento pretendido, não um acidente.
-git push --force "$REMOTE_NAME" "$BRANCH"
+# Sem `--force`: o commit está encadeado no histórico remoto, então o push é fast-forward. Se ele
+# for recusado por não-fast-forward, alguém editou o espelho à mão — e isso é para ser
+# investigado, não atropelado.
+git push --quiet "$REMOTE_NAME" HEAD:"$BRANCH"
 
 echo "✓ Publicado. O Dokploy pode fazer Deploy a partir de ${REMOTE_URL} (${BRANCH})."
