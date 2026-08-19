@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kortex — entrar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0C1E33;        /* azul-tinta profundo: a mesa vista de cima */
+    --ink-2:#15304D;
+    --paper:#F1F3EF;      /* papel de risco */
+    --white:#FFFFFF;
+    --cut:#2F7BE8;        /* azul do plotter */
+    --cut-dim:#1B4F9E;
+    --live:#F04E23;       /* laranja-máquina: a lâmina */
+    --slate:#6B7A8C;
+    --line:#CFD6D0;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--paper);color:var(--ink);
+    font-family:Inter,system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{min-height:100dvh;display:grid;grid-template-columns:1.25fr 1fr}
+
+  /* ---------- painel da mesa ---------- */
+  .table{
+    background:var(--ink);position:relative;overflow:hidden;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:38px 44px 34px;
+  }
+  /* régua métrica da borda da mesa */
+  .ruler{position:absolute;top:0;left:0;right:0;height:26px;border-bottom:1px solid rgba(255,255,255,.09)}
+  .ruler i{position:absolute;top:0;width:1px;background:rgba(255,255,255,.16)}
+  .ruler i.maj{height:13px}
+  .ruler i.min{height:7px}
+  .ruler b{
+    position:absolute;top:13px;font-family:'IBM Plex Mono',monospace;font-size:9px;
+    color:rgba(255,255,255,.34);font-weight:400;transform:translateX(-50%);letter-spacing:.04em
+  }
+
+  .brand{position:relative;z-index:3;margin-top:26px}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--cut);margin:0 0 16px
+  }
+  .logo{
+    font-family:Archivo,sans-serif;font-weight:800;font-size:clamp(48px,6.4vw,84px);
+    letter-spacing:-.045em;line-height:.86;color:#fff;margin:0
+  }
+  .logo em{font-style:normal;color:var(--live)}
+  .tag{
+    color:rgba(255,255,255,.62);font-size:16px;margin:16px 0 0;max-width:34ch;line-height:1.5
+  }
+
+  /* encaixe: o risco com as peças aninhadas */
+  .marker{position:absolute;right:-40px;top:50%;transform:translateY(-46%);width:74%;max-width:640px;z-index:1;opacity:.92}
+  .piece{fill:rgba(47,123,232,.07);stroke:var(--cut);stroke-width:1.4;stroke-dasharray:7 5}
+  .spread{fill:none;stroke:rgba(255,255,255,.16);stroke-width:1}
+  .grain{stroke:rgba(47,123,232,.4);stroke-width:1;stroke-dasharray:2 4}
+  .trace{fill:none;stroke:var(--live);stroke-width:2;stroke-linecap:round;
+    stroke-dasharray:1900;stroke-dashoffset:1900;animation:cut 16s linear infinite}
+  .head{fill:var(--live)}
+  .reg{stroke:rgba(255,255,255,.3);stroke-width:1}
+  .lbl{font-family:'IBM Plex Mono',monospace;font-size:9.5px;fill:rgba(255,255,255,.38);letter-spacing:.06em}
+  @keyframes cut{to{stroke-dashoffset:0}}
+
+  .meta{position:relative;z-index:3;display:flex;gap:26px;flex-wrap:wrap;align-items:baseline}
+  .meta div{font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.04em}
+  .meta div b{display:block;color:#fff;font-size:15px;font-weight:600;margin-bottom:3px;letter-spacing:-.01em}
+
+  /* ---------- painel do formulário ---------- */
+  .form{
+    display:flex;flex-direction:column;justify-content:center;
+    padding:44px clamp(30px,5vw,66px);background:var(--paper)
+  }
+  .form-in{width:100%;max-width:376px;margin:0 auto}
+  h1{
+    font-family:Archivo,sans-serif;font-weight:700;font-size:27px;letter-spacing:-.025em;margin:0
+  }
+  .sub{color:var(--slate);font-size:14.5px;margin:8px 0 30px;line-height:1.5}
+  label{
+    display:block;font-family:Archivo,sans-serif;font-weight:700;font-size:10.5px;
+    letter-spacing:.13em;text-transform:uppercase;color:var(--slate);margin-bottom:7px
+  }
+  .field{margin-bottom:17px}
+  input{
+    width:100%;border:1.5px solid var(--line);border-radius:11px;padding:14px 15px;
+    font-family:Inter,sans-serif;font-size:15.5px;color:var(--ink);background:var(--white);
+    transition:border-color .14s ease, box-shadow .14s ease
+  }
+  input::placeholder{color:#A9B3AE}
+  input:hover{border-color:#B4BDB6}
+  input:focus{outline:none;border-color:var(--cut);box-shadow:0 0 0 3px rgba(47,123,232,.16)}
+  .pw-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .pw-head a{
+    font-family:Inter,sans-serif;font-size:12.5px;color:var(--cut-dim);text-decoration:none;
+    text-transform:none;letter-spacing:0;font-weight:500
+  }
+  .pw-head a:hover{text-decoration:underline}
+  .pw-head a:focus-visible{outline:2px solid var(--cut);outline-offset:3px;border-radius:3px}
+  button{
+    width:100%;border:0;border-radius:11px;padding:15px;margin-top:9px;background:var(--ink);
+    color:#fff;font-family:Archivo,sans-serif;font-weight:700;font-size:15.5px;letter-spacing:.01em;
+    cursor:pointer;transition:background .14s ease, transform .06s ease
+  }
+  button:hover{background:var(--ink-2)}
+  button:active{transform:translateY(1px)}
+  button:focus-visible{outline:3px solid var(--cut);outline-offset:2px}
+  .help{
+    display:flex;gap:9px;align-items:flex-start;margin:20px 0 0;padding:12px 13px;
+    border-left:3px solid var(--cut);background:rgba(47,123,232,.07);border-radius:0 9px 9px 0;
+    font-size:13px;line-height:1.5;color:var(--ink-2)
+  }
+  .foot{
+    margin-top:38px;padding-top:18px;border-top:1px solid var(--line);
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--slate);
+    display:flex;justify-content:space-between;gap:12px;letter-spacing:.04em
+  }
+
+  @media (max-width:940px){
+    .wrap{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+    .table{padding:26px 26px 22px;min-height:250px}
+    .brand{margin-top:18px}
+    .marker{position:absolute;right:-90px;top:auto;bottom:-70px;width:82%;transform:none;opacity:.5}
+    .tag{display:none}
+    .meta{margin-top:20px}
+    .form{padding:34px 24px 44px}
+  }
+  @media (max-width:420px){
+    .meta{gap:20px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .trace{animation:none;stroke-dashoffset:0;opacity:.55}
+    *{transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= mesa de corte ================= -->
+  <section class="table" aria-hidden="true">
+    <div class="ruler" id="ruler"></div>
+
+    <svg class="marker" viewBox="0 0 700 470" xmlns="http://www.w3.org/2000/svg">
+      <!-- limite do enfesto: a largura do tecido na mesa -->
+      <rect class="spread" x="16" y="34" width="668" height="404" rx="3"/>
+      <text class="lbl" x="16" y="24">enc_camisa_40pc · 1,60 m · 50 camadas</text>
+
+      <!-- marcas de registro do plotter -->
+      <g class="reg">
+        <path d="M16 34 h14 M16 34 v14"/><path d="M684 34 h-14 M684 34 v14"/>
+        <path d="M16 438 h14 M16 438 v-14"/><path d="M684 438 h-14 M684 438 v-14"/>
+      </g>
+
+      <!-- peças aninhadas: frentes, costas, mangas, gola, punhos, bolso -->
+      <path class="piece" d="M40 92 h108 q10 0 10 10 v206 q0 10 -10 10 h-108 q-10 0 -10 -10 v-142
+        q0 -22 18 -34 l14 -10 q6 -4 6 -12 v-8 q0 -10 10 -10 z"/>
+      <path class="piece" d="M300 92 h-108 q-10 0 -10 10 v206 q0 10 10 10 h108 q10 0 10 -10 v-142
+        q0 -22 -18 -34 l-14 -10 q-6 -4 -6 -12 v-8 q0 -10 -10 -10 z"/>
+      <path class="piece" d="M334 92 h132 q10 0 10 10 v206 q0 10 -10 10 h-132 q-10 0 -10 -10 v-176
+        q0 -14 12 -20 l10 -6 q6 -4 6 -14 z"/>
+      <path class="piece" d="M506 92 h158 q10 0 10 10 v96 q0 10 -10 10 h-158 q-10 0 -10 -10 v-40
+        q0 -16 14 -24 l16 -10 q4 -3 4 -10 v-12 q0 -10 -12 -10 z"/>
+      <path class="piece" d="M506 224 h158 q10 0 10 10 v96 q0 10 -10 10 h-158 q-10 0 -10 -10 v-40
+        q0 -16 14 -24 l16 -10 q4 -3 4 -10 v-12 q0 -10 -12 -10 z"/>
+      <path class="piece" d="M40 348 h280 q10 0 10 10 v44 q0 10 -10 10 h-280 q-10 0 -10 -10 v-44
+        q0 -10 10 -10 z"/>
+      <path class="piece" d="M348 348 h92 q8 0 8 8 v48 q0 8 -8 8 h-92 q-8 0 -8 -8 v-48 q0 -8 8 -8 z"/>
+      <path class="piece" d="M462 348 h92 q8 0 8 8 v48 q0 8 -8 8 h-92 q-8 0 -8 -8 v-48 q0 -8 8 -8 z"/>
+      <path class="piece" d="M576 356 h88 q8 0 8 8 v40 q0 8 -8 8 h-88 q-8 0 -8 -8 v-40 q0 -8 8 -8 z"/>
+
+      <!-- sentido do fio -->
+      <g class="grain">
+        <path d="M94 120 v170"/><path d="M246 120 v170"/><path d="M400 120 v170"/>
+        <path d="M585 116 v78"/><path d="M585 248 v78"/>
+      </g>
+
+      <!-- caminho de corte + cabeçote -->
+      <path id="cutpath" class="trace"
+        d="M40 92 H310 M334 92 H674 M674 198 H506 M506 224 H674 M674 340 H506
+           M476 318 H334 M310 318 H30 M30 348 H330 M330 412 H40 M348 348 H562 M576 404 H672"/>
+      <g class="head">
+        <rect x="-7" y="-7" width="14" height="14" rx="2.5">
+          <animateMotion dur="16s" repeatCount="indefinite" rotate="auto">
+            <mpath href="#cutpath"/>
+          </animateMotion>
+        </rect>
+      </g>
+    </svg>
+
+    <div class="brand">
+      <p class="eyebrow">Polo de corte · Ceres, GO</p>
+      <p class="logo">Kor<em>t</em>ex</p>
+      <p class="tag">Hora de máquina de corte, do pré-pedido ao apontamento na mesa.</p>
+    </div>
+
+    <div class="meta">
+      <div><b>2</b>máquinas</div>
+      <div><b>07:00 → 21:00</b>funcionamento</div>
+    </div>
+  </section>
+
+  <!-- ================= formulário ================= -->
+  <main class="form">
+    <div class="form-in">
+      <h1>Entrar no Kortex</h1>
+      <p class="sub">Modelista, veja a fila do dia. Administrativo, abra a agenda.</p>
+
+      <div class="field">
+        <label for="email">E-mail</label>
+        <input id="email" type="email" inputmode="email" autocomplete="username"
+               placeholder="voce@corteceres.com.br">
+      </div>
+
+      <div class="field">
+        <div class="pw-head">
+          <label for="senha">Senha</label>
+          <a href="#">Esqueci a senha</a>
+        </div>
+        <input id="senha" type="password" autocomplete="current-password" placeholder="••••••••">
+      </div>
+
+      <button type="button">Entrar</button>
+
+      <p class="help">
+        Esqueceu a senha? O código de 6 dígitos chega no seu WhatsApp e vale por 15 minutos.
+      </p>
+
+      <div class="foot">
+        <span>Corte Ceres · APL</span>
+        <span>v1.0</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // régua da mesa: marca a cada 10 cm, número a cada 50
+  (function () {
+    const r = document.getElementById('ruler');
+    for (let i = 0; i <= 40; i++) {
+      const t = document.createElement('i');
+      const maj = i % 5 === 0;
+      t.className = maj ? 'maj' : 'min';
+      t.style.left = (i * 2.5) + '%';
+      r.appendChild(t);
+      if (maj && i > 0) {
+        const n = document.createElement('b');
+        n.style.left = (i * 2.5) + '%';
+        n.textContent = (i * 10) + ' cm';
+        r.appendChild(n);
+      }
+    }
+  })();
+</script>
+</body>
+</html>

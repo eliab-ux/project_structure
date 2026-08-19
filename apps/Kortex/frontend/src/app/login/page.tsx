@@ -62,9 +62,9 @@ export default function LoginPage() {
 
   return (
     <AuthLayout
-      eyebrow="Kortex"
-      title="Entrar"
-      description="Use o e-mail cadastrado pela sua equipe."
+      title="Entrar no Kortex"
+      description="Modelista, veja a fila do dia. Administrativo, abra a agenda."
+      help="Esqueceu a senha? O código de 6 dígitos chega no seu WhatsApp e vale por 15 minutos."
     >
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack spacing={2.5}>
@@ -87,20 +87,21 @@ export default function LoginPage() {
             helperText={errors.password?.message}
             {...register('password')}
           />
+          {/* O link fica colado no campo de senha, não no rodapé: quem esquece a senha percebe
+              isso ao olhar para o campo, e não depois de varrer a tela inteira. */}
+          <MuiLink
+            component={Link}
+            href="/recuperar-senha"
+            variant="body2"
+            sx={{ alignSelf: 'flex-end', mt: -1.25, fontSize: 12.5, fontWeight: 500 }}
+          >
+            Esqueci a senha
+          </MuiLink>
           <Button type="submit" size="large" disabled={isSubmitting} fullWidth>
             {isSubmitting ? 'Entrando…' : 'Entrar'}
           </Button>
         </Stack>
       </form>
-
-      <MuiLink
-        component={Link}
-        href="/recuperar-senha"
-        variant="body2"
-        sx={{ display: 'block', mt: 2.5, textAlign: 'center' }}
-      >
-        Esqueci minha senha
-      </MuiLink>
     </AuthLayout>
   );
 }

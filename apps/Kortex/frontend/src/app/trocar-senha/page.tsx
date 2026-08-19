@@ -62,7 +62,6 @@ function ChangePasswordForm() {
 
   return (
     <AuthLayout
-      eyebrow="Kortex"
       title={obrigatoria ? 'Defina sua senha' : 'Trocar senha'}
       description={
         obrigatoria

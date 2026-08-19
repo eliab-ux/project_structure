@@ -87,7 +87,6 @@ export default function RecoverPasswordPage() {
   if (!email) {
     return (
       <AuthLayout
-        eyebrow="Kortex"
         title="Recuperar senha"
         description="Enviamos um código de 6 dígitos no WhatsApp cadastrado."
       >
@@ -128,7 +127,6 @@ export default function RecoverPasswordPage() {
 
   return (
     <AuthLayout
-      eyebrow="Kortex"
       title="Digite o código"
       description={`Se houver uma conta com ${email}, o código chegou no WhatsApp cadastrado.`}
     >
