@@ -2,6 +2,7 @@
 
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { alpha } from '@mui/material/styles';
 import { FONT_MONO } from 'src/theme/theme';
 
 /**
@@ -94,7 +95,12 @@ export function CuttingTable() {
         component="svg"
         viewBox="0 0 700 470"
         xmlns="http://www.w3.org/2000/svg"
-        sx={{
+        // `sx` como FUNÇÃO, e as cores resolvidas à mão: o `sx` do MUI só traduz caminho de
+        // paleta (`error.main`) em propriedades de cor que ele conhece — `color`, `bgcolor`,
+        // `borderColor`. Em `fill` e `stroke` ele passa a string crua, e o navegador descarta a
+        // regra inteira por ser inválida. O sintoma é traiçoeiro: nada quebra, o desenho
+        // simplesmente aparece sem contorno e o cabeçote fica preto sobre fundo escuro.
+        sx={(theme) => ({
           position: 'absolute',
           zIndex: 1,
           opacity: { xs: 0.5, md: 0.92 },
@@ -105,13 +111,17 @@ export function CuttingTable() {
           width: { xs: '82%', md: '74%' },
           maxWidth: 640,
           '& .piece': {
-            fill: 'rgba(30,99,208,.07)',
-            stroke: 'info.main',
+            fill: alpha(theme.palette.info.main, 0.07),
+            stroke: theme.palette.info.main,
             strokeWidth: 1.4,
             strokeDasharray: '7 5',
           },
           '& .spread': { fill: 'none', stroke: 'rgba(255,255,255,.16)', strokeWidth: 1 },
-          '& .grain': { stroke: 'rgba(30,99,208,.4)', strokeWidth: 1, strokeDasharray: '2 4' },
+          '& .grain': {
+            stroke: alpha(theme.palette.info.main, 0.4),
+            strokeWidth: 1,
+            strokeDasharray: '2 4',
+          },
           '& .reg': { stroke: 'rgba(255,255,255,.3)', strokeWidth: 1 },
           '& .lbl': {
             fontFamily: FONT_MONO,
@@ -119,10 +129,10 @@ export function CuttingTable() {
             fill: 'rgba(255,255,255,.38)',
             letterSpacing: '.06em',
           },
-          '& .head': { fill: 'error.main' },
+          '& .head': { fill: theme.palette.error.main },
           '& .trace': {
             fill: 'none',
-            stroke: 'error.main',
+            stroke: theme.palette.error.main,
             strokeWidth: 2,
             strokeLinecap: 'round',
             strokeDasharray: 1900,
@@ -136,7 +146,7 @@ export function CuttingTable() {
             '& .trace': { animation: 'none', strokeDashoffset: 0, opacity: 0.55 },
             '& .head': { display: 'none' },
           },
-        }}
+        })}
       >
         <rect className="spread" x="16" y="34" width="668" height="404" rx="3" />
         <text className="lbl" x="16" y="24">
@@ -214,7 +224,10 @@ export function CuttingTable() {
         <g className="head">
           <rect x="-7" y="-7" width="14" height="14" rx="2.5">
             <animateMotion dur="16s" repeatCount="indefinite" rotate="auto">
-              <mpath href="#kortex-cutpath" />
+              {/* Os DOIS atributos. `href` em `<mpath>` é SVG2 e só o Chromium honra;
+                  Firefox e Safari ainda exigem `xlink:href`, e neles o cabeçote fica parado
+                  no canto sem nenhum erro aparecer. */}
+              <mpath href="#kortex-cutpath" xlinkHref="#kortex-cutpath" />
             </animateMotion>
           </rect>
         </g>

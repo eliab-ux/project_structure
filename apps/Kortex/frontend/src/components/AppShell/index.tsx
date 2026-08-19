@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Box from '@mui/material/Box';
@@ -7,6 +8,7 @@ import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 import { useAuth } from 'src/contexts/AuthContext';
+import preOrderService from 'src/services/preOrderService';
 import { USER_ROLE_LABELS, UserRole } from 'src/types/auth';
 import { FONT_MONO } from 'src/theme/theme';
 
@@ -14,6 +16,8 @@ interface NavItem {
   href: string;
   label: string;
   allow?: UserRole[];
+  /** Marca o item que exibe contagem de pendência ao lado do nome. */
+  badge?: 'preOrders';
 }
 
 interface NavGroup {
@@ -32,7 +36,7 @@ const NAV: NavGroup[] = [
     title: 'Operação',
     items: [
       { href: '/agenda', label: 'Agenda' },
-      { href: '/pre-pedidos', label: 'Pré-pedidos' },
+      { href: '/pre-pedidos', label: 'Pré-pedidos', badge: 'preOrders' },
       { href: '/fila-de-espera', label: 'Fila de espera' },
     ],
   },
@@ -67,6 +71,32 @@ const NAV: NavGroup[] = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const pathname = usePathname();
+  const [openPreOrders, setOpenPreOrders] = useState(0);
+
+  /**
+   * Pré-pedidos abertos esperando reserva — a fila que o Administrativo precisa ver sem procurar.
+   *
+   * Recarrega a cada navegação em vez de ficar consultando por tempo. O pré-pedido chega quando o
+   * Modelista termina de conversar com o cliente, não a cada 30 segundos; um `setInterval` traria
+   * uma requisição por minuto por aba aberta o dia inteiro para uma contagem que muda poucas vezes
+   * ao dia. Trocar de tela já é o momento natural de reconferir.
+   */
+  const loadBadge = useCallback(async () => {
+    if (!user || user.role === 'modelista') {
+      return;
+    }
+    try {
+      setOpenPreOrders((await preOrderService.listOpenPreOrders()).length);
+    } catch {
+      // Contador é acessório: se falhar, o menu continua funcionando sem número. Mostrar erro de
+      // um badge atrapalharia quem está tentando fazer outra coisa.
+      setOpenPreOrders(0);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    void loadBadge();
+  }, [loadBadge, pathname]);
 
   const groups = NAV.map((group) => ({
     ...group,
@@ -126,6 +156,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   }}
                 >
                   {item.label}
+                  {item.badge === 'preOrders' && openPreOrders > 0 && (
+                    <Box
+                      component="span"
+                      aria-label={`${openPreOrders} pré-pedidos aguardando reserva`}
+                      sx={{
+                        ml: 0.75,
+                        fontFamily: FONT_MONO,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: 'error.main',
+                      }}
+                    >
+                      ({openPreOrders})
+                    </Box>
+                  )}
                 </Box>
               );
             })}

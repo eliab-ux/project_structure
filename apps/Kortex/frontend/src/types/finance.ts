@@ -35,6 +35,17 @@ export const CASH_ENTRY_TYPE_LABELS: Record<CashEntryType, string> = {
   transfer: 'Transferência',
 };
 
+/** A reserva por trás de um lançamento gerado por pagamento. */
+export interface ReservationRef {
+  reservationId: string;
+  customerName: string;
+  machineName: string;
+  startsAt: string;
+  hours: number;
+  totalCents: number;
+  status: string;
+}
+
 export interface CashEntry {
   id: string;
   type: CashEntryType;
@@ -48,6 +59,8 @@ export interface CashEntry {
   paymentMethod: PaymentMethod | null;
   /** Preenchido quando a entrada nasceu do pagamento de uma reserva. */
   reservationId: string | null;
+  /** Cliente, máquina, horário e valor da reserva paga. `null` em lançamento manual. */
+  reservation: ReservationRef | null;
   createdBy: NamedRef;
   cancelledAt: string | null;
   cancelledReason: string | null;
@@ -85,6 +98,16 @@ export interface AccountBalance {
 export interface Balances {
   accounts: AccountBalance[];
   totalBalanceCents: number;
+}
+
+/** ISO → '05/10 às 07:00', no fuso do navegador. Para horário de agenda, não data de caixa. */
+export function formatSlot(iso: string): string {
+  const date = new Date(iso);
+  const dia = String(date.getDate()).padStart(2, '0');
+  const mes = String(date.getMonth() + 1).padStart(2, '0');
+  const hora = String(date.getHours()).padStart(2, '0');
+  const minuto = String(date.getMinutes()).padStart(2, '0');
+  return `${dia}/${mes} às ${hora}:${minuto}`;
 }
 
 /** 'AAAA-MM-DD' → '05/10/2026'. Data de calendário: sem `new Date`, que puxaria fuso para dentro. */

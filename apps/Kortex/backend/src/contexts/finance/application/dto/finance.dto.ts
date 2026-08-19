@@ -6,7 +6,7 @@ import {
 import { CashEntry, CashEntryType } from '../../domain/entities/cash-entry.entity';
 import { PaymentMethod } from '../../../schedule/domain/entities/reservation.entity';
 import { NamedRef } from '../../../pre-order/application/dto/pre-order.dto';
-import { AccountBalance, DreLine } from '../ports/output/finance-repository.port';
+import { AccountBalance, DreLine, ReservationRef } from '../ports/output/finance-repository.port';
 
 export class BankAccountDto {
   id!: string;
@@ -55,6 +55,14 @@ export class CashEntryDto {
   payee!: string | null;
   paymentMethod!: PaymentMethod | null;
   reservationId!: string | null;
+  /**
+   * A reserva que gerou a entrada — cliente, máquina, horário e valor.
+   *
+   * Só o `reservationId` não serve para ninguém: um uuid no extrato não responde "de quem foi
+   * esse pagamento?". Com o pagamento sendo a catraca que libera a reserva para o Modelista, o
+   * caminho de volta do dinheiro até o pedido precisa estar na tela.
+   */
+  reservation!: ReservationRef | null;
   createdBy!: NamedRef;
   cancelledAt!: string | null;
   cancelledReason!: string | null;
@@ -68,6 +76,7 @@ export class CashEntryDto {
       counterpartAccount: NamedRef | null;
       createdBy: NamedRef;
       cancelledBy: NamedRef | null;
+      reservation: ReservationRef | null;
     },
   ): CashEntryDto {
     const dto = new CashEntryDto();
@@ -82,6 +91,7 @@ export class CashEntryDto {
     dto.payee = entry.payee;
     dto.paymentMethod = entry.paymentMethod;
     dto.reservationId = entry.reservationId?.value ?? null;
+    dto.reservation = refs.reservation;
     dto.createdBy = refs.createdBy;
     dto.cancelledAt = entry.cancellation?.at.toISOString() ?? null;
     dto.cancelledReason = entry.cancellation?.reason ?? null;

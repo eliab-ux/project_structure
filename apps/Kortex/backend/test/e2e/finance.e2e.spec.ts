@@ -226,6 +226,45 @@ describe('Caixa e mini DRE (e2e)', () => {
       expect(doCaixa[0].bankAccount.id).toBe(contaPrincipal);
     });
 
+    it('o lançamento carrega o pedido que o originou', async () => {
+      const doCaixa = (await lancamentos()).body.find(
+        (e: { reservationId: string | null }) => e.reservationId === reservaId,
+      );
+
+      // Só o uuid não responde "de quem foi esse pagamento?". O pagamento é a catraca que libera a
+      // reserva para o Modelista, então o caminho de volta do dinheiro até o pedido tem que existir.
+      expect(doCaixa.reservation).toMatchObject({
+        reservationId: reservaId,
+        customerName: 'Rio Verde',
+        hours: 2,
+        totalCents: 17_000,
+        status: 'confirmed',
+      });
+      expect(doCaixa.reservation.startsAt).not.toBeNull();
+      expect(doCaixa.reservation.machineName).toContain('Máquina');
+    });
+
+    it('lançamento manual não inventa reserva', async () => {
+      const manual = (
+        await ctx.inject({
+          method: 'POST',
+          url: '/api/finance/entries',
+          token: tokens.admin,
+          payload: {
+            type: 'out',
+            occurredOn: '2026-10-09',
+            amountCents: 5_000,
+            categoryId: categoriaDe('Insumos'),
+            bankAccountId: contaPrincipal,
+            description: 'Sem reserva nenhuma',
+          },
+        })
+      ).body;
+
+      expect(manual.reservationId).toBeNull();
+      expect(manual.reservation).toBeNull();
+    });
+
     it('pagar de novo não cria uma segunda entrada', async () => {
       const segunda = await pagar(reservaId);
       // A reserva já está `confirmed`: a catraca recusa antes mesmo de chegar ao caixa.

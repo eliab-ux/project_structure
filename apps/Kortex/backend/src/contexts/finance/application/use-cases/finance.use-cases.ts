@@ -404,11 +404,23 @@ export class FinanceUseCases implements CashRecorderPort {
       return [];
     }
 
-    const [refs, accounts, categories] = await Promise.all([
+    // Os ids de reserva dos lançamentos desta página — uma consulta só para todos eles.
+    const reservationIds = [
+      ...new Set(
+        entries
+          .map((entry) => entry.reservationId?.value)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    ];
+
+    const [refs, accounts, categories, reservations] = await Promise.all([
       this.references.load(accountId),
       this.bankAccounts.listByAccount(accountId),
       this.categories.listByAccount(accountId),
+      this.entries.reservationRefs(accountId, reservationIds),
     ]);
+
+    const reservationById = new Map(reservations.map((item) => [item.reservationId, item]));
 
     const accountRefs = new Map<string, NamedRef>(
       accounts.map((item) => [item.id.value, { id: item.id.value, name: item.name }]),
@@ -427,6 +439,9 @@ export class FinanceUseCases implements CashRecorderPort {
         createdBy: refOrPlaceholder(refs.users, entry.createdBy.value),
         cancelledBy: entry.cancellation
           ? refOrPlaceholder(refs.users, entry.cancellation.by.value)
+          : null,
+        reservation: entry.reservationId
+          ? (reservationById.get(entry.reservationId.value) ?? null)
           : null,
       }),
     );

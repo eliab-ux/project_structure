@@ -50,6 +50,25 @@ export interface AccountBalance {
   balanceCents: number;
 }
 
+/**
+ * A reserva que originou um lançamento — **read model**, só para exibição.
+ *
+ * O financeiro não carrega a entidade `Reservation`: ele não decide nada sobre reserva, só precisa
+ * mostrar de onde o dinheiro veio. Buscar o agregado inteiro para escrever uma linha de extrato
+ * obrigaria o `FinanceModule` a importar o `ScheduleModule` — que já importa o financeiro pelo
+ * `CASH_RECORDER`, fechando um ciclo entre os dois módulos.
+ */
+export interface ReservationRef {
+  reservationId: string;
+  customerName: string;
+  machineName: string;
+  /** ISO. O início da hora de máquina, que é o que o Administrativo reconhece na agenda. */
+  startsAt: string;
+  hours: number;
+  totalCents: number;
+  status: string;
+}
+
 export interface CashEntryRepositoryPort {
   listByPeriod(
     accountId: AccountId,
@@ -75,4 +94,12 @@ export interface CashEntryRepositoryPort {
 
   /** Saldo de cada conta: inicial + entradas + transferências recebidas − saídas − enviadas. */
   balances(accountId: AccountId, until: Date): Promise<AccountBalance[]>;
+
+  /**
+   * As reservas por trás dos lançamentos, em UMA consulta.
+   *
+   * Recebe a lista inteira de ids em vez de ser chamada por linha: um extrato de mês com 80
+   * pagamentos faria 80 idas ao banco para escrever 80 linhas de tela.
+   */
+  reservationRefs(accountId: AccountId, reservationIds: string[]): Promise<ReservationRef[]>;
 }

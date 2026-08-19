@@ -14,6 +14,7 @@ import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import { MASKS, MaskedField } from 'src/components/MaskedField';
 import { CustomerPayload } from 'src/services/customerService';
 import {
   COMPANY_SIZE_LABELS,
@@ -163,17 +164,28 @@ export function CustomerForm({ open, editing, saving, onClose, onSubmit }: Custo
               label="Tipo"
               sx={{ minWidth: 140 }}
               value={form.documentType}
-              onChange={(e) => set('documentType', e.target.value)}
+              onChange={(e) => {
+                // Trocar o tipo limpa o número: 14 dígitos de CNPJ reaproveitados numa máscara de
+                // CPF viram um documento truncado, que passa na máscara e morre no dígito
+                // verificador — com o operador olhando para um campo que parece preenchido.
+                setForm((current) => ({
+                  ...current,
+                  documentType: e.target.value as CustomerPayload['documentType'],
+                  document: '',
+                }));
+              }}
             >
               <MenuItem value="cnpj">CNPJ</MenuItem>
               <MenuItem value="cpf">CPF</MenuItem>
             </TextField>
-            <TextField
+            <MaskedField
               label={form.documentType === 'cnpj' ? 'CNPJ' : 'CPF'}
               fullWidth
               required
+              mask={form.documentType === 'cnpj' ? MASKS.cnpj : MASKS.cpf}
+              placeholder={form.documentType === 'cnpj' ? '00.000.000/0000-00' : '000.000.000-00'}
               value={form.document}
-              onChange={(e) => set('document', e.target.value)}
+              onChange={(value) => set('document', value)}
             />
             <TextField
               label="Inscrição estadual"
@@ -307,12 +319,14 @@ export function CustomerForm({ open, editing, saving, onClose, onSubmit }: Custo
               value={form.repCpf}
               onChange={(e) => set('repCpf', e.target.value)}
             />
-            <TextField
+            <MaskedField
               label="WhatsApp do responsável"
               fullWidth
               required
+              mask={MASKS.phone}
+              placeholder="(62) 9 9999-9999"
               value={form.repPhone}
-              onChange={(e) => set('repPhone', e.target.value)}
+              onChange={(value) => set('repPhone', value)}
             />
             <TextField
               label="E-mail do responsável"
@@ -328,13 +342,15 @@ export function CustomerForm({ open, editing, saving, onClose, onSubmit }: Custo
             Contato da empresa
           </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField
+            <MaskedField
               label="WhatsApp"
               fullWidth
               required
               helperText="Canal principal de contato."
+              mask={MASKS.phone}
+              placeholder="(62) 9 9999-9999"
               value={form.whatsapp}
-              onChange={(e) => set('whatsapp', e.target.value)}
+              onChange={(value) => set('whatsapp', value)}
             />
             <TextField
               label="E-mail"

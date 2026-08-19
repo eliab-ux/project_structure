@@ -8,6 +8,7 @@ import {
   CashEntryRepositoryPort,
   DreLine,
   FinancialCategoryRepositoryPort,
+  ReservationRef,
 } from '../../../../contexts/finance/application/ports/output/finance-repository.port';
 import { BankAccount } from '../../../../contexts/finance/domain/entities/bank-account.entity';
 import { FinancialCategory } from '../../../../contexts/finance/domain/entities/financial-category.entity';
@@ -250,5 +251,50 @@ export class MikroOrmCashEntryRepository implements CashEntryRepositoryPort {
         balanceCents: opening + inCents + transferInCents - outCents - transferOutCents,
       };
     });
+  }
+
+  /**
+   * A reserva de cada lançamento — read model para o extrato.
+   *
+   * Junta na consulta o que a tela mostra junto: cliente, máquina e início da hora vendida. É uma
+   * leitura que atravessa contextos de propósito, e o lugar certo para isso é a persistência: o
+   * alternativo seria o `FinanceModule` importar o `ScheduleModule`, que já importa o financeiro
+   * pelo `CASH_RECORDER` — dois módulos em ciclo por causa de uma linha de tela.
+   *
+   * `account_id = ?` inline no `where`, como toda consulta do projeto. O `= any(?)` com array
+   * parametrizado evita montar `in (...)` por concatenação.
+   */
+  async reservationRefs(accountId: AccountId, reservationIds: string[]): Promise<ReservationRef[]> {
+    if (reservationIds.length === 0) {
+      return [];
+    }
+
+    const result = await this.em.getKnex().raw(
+      `select
+         r.id            as reservation_id,
+         c.trade_name    as customer_name,
+         m.name          as machine_name,
+         e.starts_at     as starts_at,
+         r.hours         as hours,
+         r.total_cents   as total_cents,
+         r.status        as status
+       from "reservation" r
+       join "schedule_entry" e on e.id = r.schedule_entry_id
+       join "customer" c on c.id = r.customer_id
+       join "machine" m on m.id = r.machine_id
+       where r.account_id = ?
+         and r.id = any(? ::uuid[])`,
+      [accountId.value, reservationIds],
+    );
+
+    return (result.rows ?? []).map((row: Record<string, unknown>) => ({
+      reservationId: String(row.reservation_id),
+      customerName: String(row.customer_name),
+      machineName: String(row.machine_name),
+      startsAt: new Date(row.starts_at as string).toISOString(),
+      hours: Number(row.hours),
+      totalCents: Number(row.total_cents),
+      status: String(row.status),
+    }));
   }
 }

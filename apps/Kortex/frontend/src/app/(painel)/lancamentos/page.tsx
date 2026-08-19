@@ -33,6 +33,7 @@ import {
   CashEntry,
   FinancialCategory,
   formatDay,
+  formatSlot,
   monthRange,
   toCents,
 } from 'src/types/finance';
@@ -349,9 +350,20 @@ export default function CashEntriesPage() {
                     >
                       {entry.description}
                     </Typography>
+                    {/* O caminho de volta até o pedido. O pagamento é a catraca que libera a
+                        reserva para o Modelista, então quem confere o caixa precisa enxergar qual
+                        hora de máquina cada entrada pagou — sem abrir a agenda em outra aba. */}
+                    {entry.reservation && (
+                      <Typography
+                        variant="body2"
+                        sx={{ color: 'info.main', fontSize: 12.5, fontWeight: 500 }}
+                      >
+                        {entry.reservation.customerName} · {formatSlot(entry.reservation.startsAt)}{' '}
+                        · {entry.reservation.hours}h · {entry.reservation.machineName}
+                      </Typography>
+                    )}
                     <Typography variant="body2" color="text.secondary">
                       {entry.payee ?? ''}
-                      {entry.reservationId ? 'Gerado pelo pagamento da reserva' : ''}
                       {cancelado
                         ? ` · Cancelado por ${entry.cancelledBy?.name}: ${entry.cancelledReason}`
                         : ''}
