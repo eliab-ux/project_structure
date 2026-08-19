@@ -17,10 +17,11 @@
 > (`COPY apps/Veertex/backend/...`), que é o formato dos demais. O histórico dos 19 commits do
 > período em que o Veertex foi repositório separado está sob a tag **`pre-monorepo`** no GitLab.
 >
-> ⚠️ **A publicação mudou e ainda não foi refeita.** Enquanto o Veertex teve pacotes próprios, ele
-> era publicado em `gitlab.com/eliab1/veertex` por `git subtree split --prefix=apps/Veertex`. Essa
-> receita **não funciona mais** — os pacotes ficaram fora do prefixo. O Veertex passa a ser
-> publicado como os outros apps.
+> **Publicação:** `gitlab.com/eliab1/veertex` é um **espelho de conteúdo** gerado por
+> `./apps/Veertex/deploy/publish-mirror.sh` (o mesmo mecanismo do Kortex) — nunca editado à mão. O
+> `git subtree split --prefix=apps/Veertex` de antes **não funciona mais**: os pacotes ficaram fora
+> do prefixo. ⚠️ A primeira publicação neste formato exige mudar o **Dockerfile Path** no Dokploy
+> para `apps/Veertex/backend/Dockerfile` (idem frontend); até lá o espelho segue no layout antigo.
 >
 > Este arquivo herdou o texto do monorepo e foi alinhado ao Veertex em 10/08/2026: caminhos,
 > escopo dos pacotes, stack (banco e storage), guards, claims do token e exemplos. **As regras não

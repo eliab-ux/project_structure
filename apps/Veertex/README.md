@@ -70,6 +70,14 @@ cd apps/Veertex/backend && npm run verify:isolation
 
 ## Deploy
 
+O Dokploy clona `git@gitlab.com:eliab1/veertex.git`, que é um **espelho de conteúdo** do recorte
+(`packages/` + `apps/Veertex/` + manifests da raiz) — gerado, nunca editado:
+
+```bash
+./apps/Veertex/deploy/publish-mirror.sh --dry-run   # confere o recorte
+./apps/Veertex/deploy/publish-mirror.sh             # publica
+```
+
 Dokploy no servidor mdantas, via Git + Deploy Key **read-only** (dar escrita à chave fecharia o loop
 "comprometer o servidor → injetar código → o servidor deploya"). Detalhes, variáveis e a fila de
 verificação em [`backend/deploy/README.md`](backend/deploy/README.md) e

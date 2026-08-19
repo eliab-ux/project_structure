@@ -230,9 +230,28 @@ o problema na raiz: com um pacote só, não há o que divergir.
 cinco, e é assim que o Dokploy deve apontar para ele: `Docker Context Path = .` e
 `Dockerfile Path = apps/Veertex/backend/Dockerfile`.
 
-⚠️ **Ainda não publiquei nada.** O `gitlab.com/eliab1/veertex` continua com o conteúdo do subtree,
-que agora está defasado — e o que o substitui depende de como os outros apps chegam ao GitLab, coisa
-que eu não verifiquei e não vou presumir. Ver a nota no fim do relatório.
+**O substituto já existe, e é o mecanismo da casa.** O Kortex resolveu o mesmo problema em
+16-18/08/2026 com um **espelho de conteúdo**: `apps/Kortex/deploy/publish-mirror.sh` monta o recorte
+(`packages/` + `apps/Kortex/` + manifests da raiz) num diretório descartável, encadeia um commit no
+histórico remoto e dá `push` fast-forward numa branch protegida. O Veertex ganhou o equivalente:
+
+```bash
+./apps/Veertex/deploy/publish-mirror.sh --dry-run   # confere o recorte
+./apps/Veertex/deploy/publish-mirror.sh             # publica
+```
+
+⚠️ **Ainda não foi publicado.** O `gitlab.com/eliab1/veertex` continua com o layout do subtree (o app
+na raiz, com os pacotes copiados dentro). A primeira publicação neste formato **exige reconfigurar o
+Dokploy**, porque o caminho do Dockerfile muda:
+
+| | antes | agora |
+|---|---|---|
+| Dockerfile Path (backend) | `backend/Dockerfile` | `apps/Veertex/backend/Dockerfile` |
+| Dockerfile Path (frontend) | `frontend/Dockerfile` | `apps/Veertex/frontend/Dockerfile` |
+| Docker Context Path | `/` | `/` (não muda) |
+
+Publicar sem esse ajuste faz o build falhar em "Dockerfile not found" — e o serviço no ar continua
+sendo a versão velha até que alguém repare.
 
 ## A lição, já registrada no `CLAUDE.md`
 
