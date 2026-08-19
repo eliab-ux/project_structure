@@ -18,6 +18,15 @@ export interface Cut {
   isRunning: boolean;
 }
 
+/** A matriz rodando agora — o mínimo para o indicador flutuante. */
+export interface RunningCut {
+  cutId: string;
+  reservationId: string;
+  sequence: number;
+  markerName: string | null;
+  startedAt: string;
+}
+
 export interface FabricHistory {
   fabric: NamedRef & { maxLayerHeightCm: number; layerThicknessCm: number | null };
   samples: number;

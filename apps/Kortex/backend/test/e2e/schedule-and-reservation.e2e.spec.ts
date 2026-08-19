@@ -575,4 +575,222 @@ describe('Agenda, reserva e pagamento (e2e)', () => {
       ).toBe(true);
     });
   });
+
+  describe('mover hora de máquina e editar atendimento (§5)', () => {
+    let reservaId: string;
+    let entryId: string;
+
+    async function entradaDaReserva(id: string): Promise<string> {
+      const agenda = await ctx.inject({
+        method: 'GET',
+        url: `/api/schedule?from=${encodeURIComponent('2026-09-01T00:00:00.000-03:00')}&to=${encodeURIComponent('2026-10-31T00:00:00.000-03:00')}`,
+        token: tokens.admin,
+      });
+      return agenda.body.find((e: { reservationId: string | null }) => e.reservationId === id).id;
+    }
+
+    beforeAll(async () => {
+      reservaId = (
+        await reservar({
+          machineId,
+          preOrderId: await novoPreOrder(),
+          startsAt: `2026-09-28T07:00:00.000-03:00`,
+          endsAt: `2026-09-28T09:00:00.000-03:00`,
+        })
+      ).body.id;
+      entryId = await entradaDaReserva(reservaId);
+    });
+
+    const mover = (id: string, payload: Record<string, unknown>, token = tokens.admin) =>
+      ctx.inject({ method: 'PATCH', url: `/api/schedule/machine-hours/${id}`, token, payload });
+
+    it('move o horário e a reserva acompanha', async () => {
+      const response = await mover(entryId, {
+        startsAt: `2026-09-28T14:00:00.000-03:00`,
+        endsAt: `2026-09-28T17:00:00.000-03:00`,
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.entry.startsAt).toContain('T17:00');
+
+      // Não paga: as horas mudam de 2 para 3 e o total é recalculado.
+      const lista = await ctx.inject({
+        method: 'GET',
+        url: '/api/reservations',
+        token: tokens.admin,
+      });
+      const reserva = lista.body.find((r: { id: string }) => r.id === reservaId);
+      expect(reserva.hours).toBe(3);
+      expect(reserva.totalCents).toBe(25_500);
+    });
+
+    it('mover revalida a janela — não é porta dos fundos para horário inválido', async () => {
+      const response = await mover(entryId, {
+        startsAt: `2026-09-28T05:00:00.000-03:00`,
+        endsAt: `2026-09-28T06:00:00.000-03:00`,
+      });
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('mover revalida hora cheia', async () => {
+      const response = await mover(entryId, {
+        startsAt: `2026-09-28T14:30:00.000-03:00`,
+        endsAt: `2026-09-28T16:30:00.000-03:00`,
+      });
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('mover para cima de outra hora de máquina é recusado', async () => {
+      const vizinha = (
+        await reservar({
+          machineId,
+          preOrderId: await novoPreOrder(),
+          startsAt: `2026-09-28T08:00:00.000-03:00`,
+          endsAt: `2026-09-28T10:00:00.000-03:00`,
+        })
+      ).body.id;
+      expect(vizinha).toBeDefined();
+
+      const response = await mover(entryId, {
+        startsAt: `2026-09-28T08:00:00.000-03:00`,
+        endsAt: `2026-09-28T11:00:00.000-03:00`,
+      });
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toMatch(/já existe hora de máquina/i);
+    });
+
+    it('mover para o MESMO lugar funciona — a entrada não colide consigo mesma', async () => {
+      const response = await mover(entryId, {
+        startsAt: `2026-09-28T14:00:00.000-03:00`,
+        endsAt: `2026-09-28T17:00:00.000-03:00`,
+      });
+      expect(response.statusCode).toBe(200);
+    });
+
+    it('o Modelista não move nada', async () => {
+      const response = await mover(
+        entryId,
+        { startsAt: `2026-09-28T13:00:00.000-03:00`, endsAt: `2026-09-28T16:00:00.000-03:00` },
+        tokens.modelista,
+      );
+      expect(response.statusCode).toBe(403);
+    });
+
+    describe('depois de paga', () => {
+      it('o horário ainda se move', async () => {
+        await ctx.inject({
+          method: 'PATCH',
+          url: `/api/reservations/${reservaId}/payment`,
+          token: tokens.admin,
+          payload: { method: 'pix' },
+        });
+
+        const response = await mover(entryId, {
+          startsAt: `2026-09-28T13:00:00.000-03:00`,
+          endsAt: `2026-09-28T16:00:00.000-03:00`,
+        });
+        expect(response.statusCode).toBe(200);
+      });
+
+      it('mas a DURAÇÃO não — mudaria o total de uma venda já cobrada', async () => {
+        const response = await mover(entryId, {
+          startsAt: `2026-09-28T13:00:00.000-03:00`,
+          endsAt: `2026-09-28T17:00:00.000-03:00`,
+        });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toMatch(/já está paga/i);
+        expect(response.body.message).toMatch(/reserva separada/i);
+      });
+
+      it('nem a MÁQUINA', async () => {
+        // Máquina NOVA e ativa: a `machineBarataId` foi inativada por um teste anterior deste
+        // arquivo, e aí a recusa viria por inatividade — verdadeira, mas outra regra.
+        const outraAtiva = (
+          await ctx.inject({
+            method: 'POST',
+            url: '/api/machines',
+            token: tokens.owner,
+            payload: { name: 'Mesa auxiliar', model: null, hourPriceCents: 7000 },
+          })
+        ).body.id;
+
+        const response = await mover(entryId, {
+          startsAt: `2026-09-28T13:00:00.000-03:00`,
+          endsAt: `2026-09-28T16:00:00.000-03:00`,
+          machineId: outraAtiva,
+        });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toMatch(/trocar de máquina/i);
+      });
+    });
+
+    describe('editar atendimento', () => {
+      let consultaId: string;
+
+      beforeAll(async () => {
+        consultaId = (
+          await ctx.inject({
+            method: 'POST',
+            url: '/api/schedule/consultations',
+            token: tokens.admin,
+            payload: {
+              title: 'Conversa inicial',
+              startsAt: `2026-09-28T19:00:00.000-03:00`,
+              endsAt: `2026-09-28T19:30:00.000-03:00`,
+            },
+          })
+        ).body.entry.id;
+      });
+
+      it('muda título e horário, e continua aceitando meia hora quebrada', async () => {
+        const response = await ctx.inject({
+          method: 'PUT',
+          url: `/api/schedule/consultations/${consultaId}`,
+          token: tokens.admin,
+          payload: {
+            title: 'Conversa remarcada',
+            startsAt: `2026-09-28T20:15:00.000-03:00`,
+            endsAt: `2026-09-28T20:45:00.000-03:00`,
+          },
+        });
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body.entry.title).toBe('Conversa remarcada');
+      });
+
+      /**
+       * 404 e não 400: para a rota de atendimento, aquele id simplesmente não é um atendimento.
+       * Responder 400 sugeriria corpo malformado e mandaria quem depura conferir o payload.
+       */
+      it('a rota de atendimento NÃO edita hora de máquina', async () => {
+        const response = await ctx.inject({
+          method: 'PUT',
+          url: `/api/schedule/consultations/${entryId}`,
+          token: tokens.admin,
+          payload: {
+            title: 'Tentando virar atendimento',
+            startsAt: `2026-09-28T13:00:00.000-03:00`,
+            endsAt: `2026-09-28T16:00:00.000-03:00`,
+          },
+        });
+        expect(response.statusCode).toBe(404);
+      });
+
+      it('o Modelista não edita atendimento', async () => {
+        const response = await ctx.inject({
+          method: 'PUT',
+          url: `/api/schedule/consultations/${consultaId}`,
+          token: tokens.modelista,
+          payload: {
+            title: 'Não deveria',
+            startsAt: `2026-09-28T20:15:00.000-03:00`,
+            endsAt: `2026-09-28T20:45:00.000-03:00`,
+          },
+        });
+        expect(response.statusCode).toBe(403);
+      });
+    });
+  });
 });

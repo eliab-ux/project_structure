@@ -27,6 +27,14 @@ export interface CutRepositoryPort {
   findById(accountId: AccountId, id: CutId): Promise<Cut | null>;
   /** A matriz em andamento desta reserva, se houver. */
   findRunning(accountId: AccountId, reservationId: ReservationId): Promise<Cut | null>;
+
+  /**
+   * A matriz em andamento na conta, qualquer que seja a reserva.
+   *
+   * Só existe uma por vez — o `start` recusa abrir a segunda enquanto a primeira não parar. É o
+   * que sustenta o indicador de "tem trabalho rodando" fora da tela do cronômetro.
+   */
+  findRunningInAccount(accountId: AccountId): Promise<Cut | null>;
   save(cut: Cut): Promise<Cut>;
 
   /**

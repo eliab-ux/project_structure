@@ -74,6 +74,13 @@ export interface CreateConsultationInput {
   endsAt: string;
 }
 
+export interface MoveMachineHourInput {
+  startsAt: string;
+  endsAt: string;
+  /** Trocar de máquina também é mover. Ausente mantém a atual. */
+  machineId?: string | null;
+}
+
 @Injectable()
 export class ScheduleUseCases {
   private readonly logger = new Logger(ScheduleUseCases.name);
@@ -203,6 +210,122 @@ export class ScheduleUseCases {
     });
 
     const sameRange = await this.entries.listInRange(account, startsAt, endsAt);
+    const warnings = entry.collectOverlapWarnings(sameRange);
+
+    const saved = await this.unitOfWork.execute(async () => this.entries.save(entry));
+    const dto = (await this.toEntryDtos(account, [saved]))[0];
+
+    return ScheduleEntryWithWarningsDto.create(dto, warnings);
+  }
+
+  /**
+   * Mover uma hora de máquina na agenda (§5, "criar / **mover** / cancelar reserva").
+   *
+   * Move os DOIS juntos, na mesma transação: o compromisso e a reserva. Eles nascem juntos e
+   * descrevem o mesmo fato — mover só a agenda deixaria a reserva apontando para um horário que
+   * não existe mais, e mover só a reserva deixaria a grade mostrando o antigo.
+   *
+   * Tudo é revalidado: hora cheia, janela de funcionamento e sobreposição. O que a criação
+   * impede, mover também impede — senão bastaria criar num horário válido e arrastar para um
+   * inválido.
+   */
+  async moveMachineHour(
+    accountId: string,
+    entryId: string,
+    input: MoveMachineHourInput,
+  ): Promise<ScheduleEntryWithWarningsDto> {
+    const account = AccountId.from(accountId);
+    const id = ScheduleEntryId.from(entryId);
+
+    const entry = await this.entries.findById(account, id);
+    if (!entry || entry.type !== 'machine_hour') {
+      throw new ScheduleEntryNotFoundException();
+    }
+
+    const reservation = await this.reservations.findByScheduleEntry(account, id);
+    if (!reservation) {
+      throw new ReservationNotFoundException();
+    }
+
+    const machineId = input.machineId ? MachineId.from(input.machineId) : reservation.machineId;
+    const machine = await this.machines.findById(account, machineId);
+    if (!machine) {
+      throw new MachineNotFoundException();
+    }
+    // Máquina inativa mantém histórico mas não recebe agendamento novo (§4.2) — e mover para ela
+    // é agendar nela.
+    if (!machine.isActive && machineId.value !== reservation.machineId.value) {
+      throw new InactiveMachineException();
+    }
+
+    const startsAt = new Date(input.startsAt);
+    const endsAt = new Date(input.endsAt);
+    const windows = await this.businessHours.listByAccount(account);
+
+    const hours = entry.moveMachineHour({
+      startsAt,
+      endsAt,
+      machineId,
+      businessHours: windows,
+      timeZone: await this.timeZoneOf(account),
+    });
+
+    // A própria entrada está no intervalo consultado: sem descartá-la, ela colidiria consigo mesma.
+    const sameRange = (await this.entries.listInRange(account, startsAt, endsAt)).filter(
+      (other) => other.id.value !== entry.id.value,
+    );
+    entry.assertNoMachineOverlap(sameRange);
+
+    // A reserva decide o que aceita: paga, só o horário muda.
+    reservation.moveTo({ hours, machineId, hourPrice: machine.hourPrice });
+
+    const saved = await this.unitOfWork.execute(async () => {
+      await this.reservations.save(reservation);
+      return this.entries.save(entry);
+    });
+
+    this.logger.log('Hora de máquina movida', {
+      entryId: saved.id.value,
+      reservationId: reservation.id.value,
+      hours,
+    });
+
+    const dto = (await this.toEntryDtos(account, [saved]))[0];
+    return ScheduleEntryWithWarningsDto.create(dto, []);
+  }
+
+  /**
+   * Editar um atendimento: horário, título e cliente.
+   *
+   * Devolve `warnings` como a criação: atendimento pode sobrepor qualquer coisa, e quem decide é o
+   * Administrativo (regra 6.10).
+   */
+  async updateConsultation(
+    accountId: string,
+    entryId: string,
+    input: CreateConsultationInput,
+  ): Promise<ScheduleEntryWithWarningsDto> {
+    const account = AccountId.from(accountId);
+    const id = ScheduleEntryId.from(entryId);
+
+    const entry = await this.entries.findById(account, id);
+    if (!entry || entry.type !== 'consultation') {
+      throw new ScheduleEntryNotFoundException();
+    }
+
+    const startsAt = new Date(input.startsAt);
+    const endsAt = new Date(input.endsAt);
+
+    entry.editConsultation({
+      startsAt,
+      endsAt,
+      title: input.title,
+      customerId: input.customerId ? CustomerId.from(input.customerId) : null,
+    });
+
+    const sameRange = (await this.entries.listInRange(account, startsAt, endsAt)).filter(
+      (other) => other.id.value !== entry.id.value,
+    );
     const warnings = entry.collectOverlapWarnings(sameRange);
 
     const saved = await this.unitOfWork.execute(async () => this.entries.save(entry));

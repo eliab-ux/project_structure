@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -30,6 +31,7 @@ import {
   AgendaRangeQueryDto,
   CreateConsultationRequestDto,
   CreateReservationRequestDto,
+  MoveMachineHourRequestDto,
   RegisterPaymentRequestDto,
   RescheduleNoShowRequestDto,
   ResolveNoShowRequestDto,
@@ -70,6 +72,33 @@ export class ScheduleController {
     @Body() dto: CreateConsultationRequestDto,
   ): Promise<ScheduleEntryWithWarningsDto> {
     return this.schedule.createConsultation(user.accountId, dto);
+  }
+
+  /** Editar atendimento: horário, título e cliente. Devolve `warnings` como a criação. */
+  @Put('consultations/:id')
+  @UseGuards(AdminGuard)
+  async updateConsultation(
+    @CurrentUser() user: AuthTokenPayload,
+    @Param('id') id: string,
+    @Body() dto: CreateConsultationRequestDto,
+  ): Promise<ScheduleEntryWithWarningsDto> {
+    return this.schedule.updateConsultation(user.accountId, id, dto);
+  }
+
+  /**
+   * Mover uma hora de máquina — horário e, quando a reserva permite, máquina.
+   *
+   * Revalida hora cheia, janela e sobreposição. Reserva paga aceita só mudança de horário: duração
+   * e máquina alterariam o total de uma venda já cobrada.
+   */
+  @Patch('machine-hours/:id')
+  @UseGuards(AdminGuard)
+  async moveMachineHour(
+    @CurrentUser() user: AuthTokenPayload,
+    @Param('id') id: string,
+    @Body() dto: MoveMachineHourRequestDto,
+  ): Promise<ScheduleEntryWithWarningsDto> {
+    return this.schedule.moveMachineHour(user.accountId, id, dto);
   }
 
   @Delete('consultations/:id')

@@ -47,6 +47,19 @@ export class InactiveMachineException extends DomainException {
 }
 
 /**
+ * Tentativa de mudar, numa reserva PAGA, algo que altera o valor. Vira 400.
+ *
+ * Horário pode mudar depois do pagamento — o cliente remarca, e nada no dinheiro se mexe. Duração
+ * e máquina não: as duas entram no total (`hours × hourPrice`), e alterar o total de uma venda já
+ * paga faria o caixa divergir do extrato do banco sem nenhum lançamento explicando a diferença.
+ */
+export class PaidReservationChangeException extends DomainException {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+/**
  * Remarcação com duração diferente da original. Vira 400.
  *
  * A remarcação não cobra nada de novo (§4.15): a reserva nova nasce paga com o dinheiro da

@@ -202,10 +202,20 @@ export class ScheduleEntry extends AggregateRoot {
       );
   }
 
-  /** Mover a hora de máquina revalida tudo: hora cheia, janela e sobreposição. */
+  /**
+   * Mover a hora de máquina revalida TUDO: hora cheia, janela e — no use case — sobreposição.
+   *
+   * Revalidar é o ponto. Um compromisso que nasceu válido pode virar inválido ao mudar de lugar:
+   * o horário novo cai fora da janela, atravessa o almoço, ou colide com outra hora de máquina.
+   * Mover sem revalidar seria uma porta dos fundos para tudo que a criação impede.
+   *
+   * `machineId` opcional: trocar de máquina é mover também. Quem decide se a reserva aceita essa
+   * troca é a `Reservation` — aqui é só a agenda.
+   */
   moveMachineHour(input: {
     startsAt: Date;
     endsAt: Date;
+    machineId?: MachineId;
     businessHours: BusinessHour[];
     timeZone?: string;
   }): number {
@@ -223,8 +233,45 @@ export class ScheduleEntry extends AggregateRoot {
 
     this._startsAt = input.startsAt;
     this._endsAt = input.endsAt;
+    if (input.machineId) {
+      this._machineId = input.machineId;
+    }
     this._updatedAt = new Date();
     return hours;
+  }
+
+  /**
+   * Editar um atendimento: horário, título e cliente.
+   *
+   * **Sem hora cheia e sem janela**, ao contrário da hora de máquina — a conversa com o cliente
+   * não é o que se vende, e pode ser de 30 minutos às 09:15 (§4.8). Sobreposição continua sendo
+   * aviso, nunca erro: o Administrativo decide (regra 6.10).
+   */
+  editConsultation(input: {
+    startsAt: Date;
+    endsAt: Date;
+    title: string;
+    customerId: CustomerId | null;
+  }): void {
+    if (this._type !== 'consultation') {
+      throw new InvalidValueException(
+        'Hora de máquina não se edita como atendimento — use mover, que revalida janela e hora cheia.',
+      );
+    }
+    if (input.endsAt.getTime() <= input.startsAt.getTime()) {
+      throw new InvalidValueException('O fim do atendimento deve ser depois do início.');
+    }
+
+    const title = (input.title ?? '').trim();
+    if (title.length < 2 || title.length > 200) {
+      throw new InvalidValueException('O atendimento precisa de um título.');
+    }
+
+    this._startsAt = input.startsAt;
+    this._endsAt = input.endsAt;
+    this._title = title;
+    this._customerId = input.customerId;
+    this._updatedAt = new Date();
   }
 
   get id(): ScheduleEntryId {

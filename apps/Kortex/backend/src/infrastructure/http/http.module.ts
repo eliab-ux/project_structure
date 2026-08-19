@@ -33,6 +33,7 @@ import {
   CutController,
   CutStopController,
   FabricHistoryController,
+  RunningCutController,
 } from './controllers/cut/cut.controller';
 import { FinanceModule } from '../../contexts/finance/finance.module';
 import {
@@ -84,6 +85,7 @@ import {
     CutController,
     CutStopController,
     FabricHistoryController,
+    RunningCutController,
     BankAccountController,
     FinancialCategoryController,
     CashEntryController,

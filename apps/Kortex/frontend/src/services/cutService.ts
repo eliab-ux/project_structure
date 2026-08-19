@@ -1,5 +1,5 @@
 import api from 'src/services/api';
-import { Cut, FabricHistory } from 'src/types/cut';
+import { Cut, FabricHistory, RunningCut } from 'src/types/cut';
 
 async function listByReservation(reservationId: string): Promise<Cut[]> {
   const response = await api.get<Cut[]>(`/reservations/${reservationId}/cuts`);
@@ -48,5 +48,18 @@ async function fabricHistory(fabricId: string, pieces?: number | null): Promise<
   return response.data;
 }
 
-const cutService = { listByReservation, start, stop, completeReservation, fabricHistory };
+/** A matriz em andamento na conta, ou `null`. Alimenta o indicador flutuante do Modelista. */
+async function runningCut(): Promise<RunningCut | null> {
+  const response = await api.get<RunningCut | null>('/modelista/running-cut');
+  return response.data ?? null;
+}
+
+const cutService = {
+  runningCut,
+  listByReservation,
+  start,
+  stop,
+  completeReservation,
+  fabricHistory,
+};
 export default cutService;

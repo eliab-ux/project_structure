@@ -52,6 +52,25 @@ export class CreateConsultationRequestDto {
   endsAt!: string;
 }
 
+/**
+ * Mover uma hora de máquina.
+ *
+ * **Não tem `hours` nem preço**: as horas saem de `endsAt − startsAt` e o preço vem da máquina
+ * (decisão 2.9). Aceitar qualquer um dos dois aqui seria deixar o cliente HTTP escolher o valor.
+ */
+export class MoveMachineHourRequestDto {
+  @IsISO8601({ strict: true }, { message: 'Início inválido.' })
+  startsAt!: string;
+
+  @IsISO8601({ strict: true }, { message: 'Fim inválido.' })
+  endsAt!: string;
+
+  /** Ausente mantém a máquina atual. Reserva paga não aceita troca — o domínio recusa. */
+  @IsOptional()
+  @IsUUID('4')
+  machineId?: string | null;
+}
+
 export class RegisterPaymentRequestDto {
   /** Só as três formas da spec (§4.9). */
   @IsIn(PAYMENT_METHODS, { message: `Forma de pagamento: ${PAYMENT_METHODS.join(', ')}.` })

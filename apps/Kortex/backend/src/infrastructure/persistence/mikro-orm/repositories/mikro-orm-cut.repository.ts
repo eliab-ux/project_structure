@@ -48,6 +48,14 @@ export class MikroOrmCutRepository implements CutRepositoryPort {
     return orm ? this.mapper.toDomain(orm) : null;
   }
 
+  async findRunningInAccount(accountId: AccountId): Promise<Cut | null> {
+    const orm = await this.repo.findOne(
+      { accountId: accountId.value, endedAt: null },
+      { orderBy: { startedAt: 'DESC' } },
+    );
+    return orm ? this.mapper.toDomain(orm) : null;
+  }
+
   async save(cut: Cut): Promise<Cut> {
     const existing = await this.repo.findOne({
       accountId: cut.accountId.value,

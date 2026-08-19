@@ -16,7 +16,7 @@ import {
   UNIT_OF_WORK,
   UnitOfWorkPort,
 } from '../../../../infrastructure/persistence/ports/unit-of-work.port';
-import { CutDto, CutWithWarningsDto, FabricHistoryDto } from '../dto/cut.dto';
+import { CutDto, CutWithWarningsDto, FabricHistoryDto, RunningCutDto } from '../dto/cut.dto';
 import {
   ReferenceResolver,
   fabricRefOrPlaceholder,
@@ -211,6 +211,17 @@ export class CutUseCases {
    *
    * A agregação roda no banco justamente por causa do DoD: menos de 300 ms com 5.000 cortes.
    */
+  /**
+   * A matriz em andamento na conta, ou `null`.
+   *
+   * Existe para o Modelista não perder um cronômetro de vista ao sair da tela — e perder de vista
+   * é o caminho para o corte ficar aberto até o dia seguinte, com a duração registrada errada.
+   */
+  async runningCut(accountId: string): Promise<RunningCutDto | null> {
+    const cut = await this.cuts.findRunningInAccount(AccountId.from(accountId));
+    return cut ? RunningCutDto.fromDomain(cut) : null;
+  }
+
   async fabricHistory(
     accountId: string,
     fabricId: string,

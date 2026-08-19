@@ -8,7 +8,10 @@ import { PreOrderId } from '../../../pre-order/domain/value-objects/pre-order-id
 import { UserId } from '../../../user/domain/value-objects/user-id.vo';
 import { ReservationId } from '../value-objects/reservation-id.vo';
 import { ScheduleEntryId } from '../value-objects/schedule-entry-id.vo';
-import { InvalidReservationTransitionException } from '../exceptions/schedule.exceptions';
+import {
+  InvalidReservationTransitionException,
+  PaidReservationChangeException,
+} from '../exceptions/schedule.exceptions';
 
 export const RESERVATION_STATUSES = [
   'pre_reserved',
@@ -70,9 +73,9 @@ export class Reservation extends AggregateRoot {
     private readonly _scheduleEntryId: ScheduleEntryId,
     private readonly _preOrderId: PreOrderId,
     private readonly _customerId: CustomerId,
-    private readonly _machineId: MachineId,
+    private _machineId: MachineId,
     private _hours: number,
-    private readonly _hourPrice: Money,
+    private _hourPrice: Money,
     private _status: ReservationStatus,
     private _payment: Payment | null,
     private _noShowAt: Date | null,
@@ -187,6 +190,46 @@ export class Reservation extends AggregateRoot {
       now,
       now,
     );
+  }
+
+  /**
+   * Acompanha a hora de máquina quando ela muda de lugar na agenda (§5, "mover reserva").
+   *
+   * **O que pode mudar depende de já ter sido pago**, e a diferença não é burocracia:
+   *
+   * - `pre_reserved` — nada foi cobrado. Horário, duração e máquina mudam livremente, e o total é
+   *   recalculado com o preço da máquina nova (decisão 2.9: o preço é da máquina escolhida);
+   * - `confirmed` — o dinheiro entrou. Só o **horário** se move. Mudar duração ou máquina mudaria
+   *   o total de uma venda já paga, e o caixa deixaria de bater com o extrato do banco. Para vender
+   *   mais tempo, cria-se uma reserva separada — mesma regra da remarcação de no-show.
+   *
+   * Depois de `in_progress` não se move: a matriz já começou, e mudar o horário seria mentir sobre
+   * quando o corte aconteceu.
+   */
+  moveTo(input: { hours: number; machineId: MachineId; hourPrice: Money }): void {
+    if (this._status !== 'pre_reserved' && this._status !== 'confirmed') {
+      throw new InvalidReservationTransitionException('mover', this._status);
+    }
+
+    if (this._status === 'confirmed') {
+      if (input.hours !== this._hours) {
+        throw new PaidReservationChangeException(
+          `A reserva já está paga: o horário pode mudar, mas as ${this._hours}h não. ` +
+            'Se o cliente precisa de mais tempo, crie uma reserva separada para o restante.',
+        );
+      }
+      if (input.machineId.value !== this._machineId.value) {
+        throw new PaidReservationChangeException(
+          'A reserva já está paga: trocar de máquina mudaria o valor cobrado. ' +
+            'Cancele e refaça, ou mova apenas o horário.',
+        );
+      }
+    }
+
+    this._hours = input.hours;
+    this._machineId = input.machineId;
+    this._hourPrice = input.hourPrice;
+    this.touch();
   }
 
   /**

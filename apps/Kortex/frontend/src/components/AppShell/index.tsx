@@ -6,7 +6,14 @@ import { usePathname } from 'next/navigation';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
+import ListItemText from '@mui/material/ListItemText';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { useAuth } from 'src/contexts/AuthContext';
 import preOrderService from 'src/services/preOrderService';
 import { USER_ROLE_LABELS, UserRole } from 'src/types/auth';
@@ -26,10 +33,15 @@ interface NavGroup {
 }
 
 /**
- * Navegação do painel — **só o que já existe**.
+ * Navegação lateral — **só o trabalho do dia**.
  *
  * Cada item entra junto com a fase que o construiu: item de menu que leva a uma tela vazia ensina o
  * usuário a não confiar no menu.
+ *
+ * Configuração e perfil NÃO estão aqui. Eles moram no cabeçalho, e a separação é de frequência de
+ * uso: a barra lateral é percorrida com os olhos dezenas de vezes por dia, e cada linha que não é
+ * trabalho corrente aumenta o custo de achar a que é. Cadastrar máquina ou trocar a própria senha
+ * acontece uma vez por mês.
  */
 const NAV: NavGroup[] = [
   {
@@ -47,7 +59,6 @@ const NAV: NavGroup[] = [
     items: [
       { href: '/lancamentos', label: 'Lançamentos', allow: ['admin', 'owner'] },
       { href: '/dre', label: 'DRE', allow: ['admin', 'owner'] },
-      { href: '/contas', label: 'Contas e categorias', allow: ['admin', 'owner'] },
     ],
   },
   {
@@ -58,20 +69,21 @@ const NAV: NavGroup[] = [
       { href: '/produtos', label: 'Produtos' },
     ],
   },
-  {
-    title: 'Conta',
-    items: [
-      { href: '/configuracao', label: 'Configuração', allow: ['owner'] },
-      { href: '/equipe', label: 'Equipe' },
-      { href: '/perfil', label: 'Meu perfil' },
-    ],
-  },
+];
+
+/** O que vive atrás da engrenagem: o que se ajusta, não o que se opera. */
+const SETTINGS: NavItem[] = [
+  { href: '/configuracao', label: 'Configuração da conta', allow: ['owner'] },
+  { href: '/contas', label: 'Contas e categorias', allow: ['admin', 'owner'] },
+  { href: '/equipe', label: 'Equipe' },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const pathname = usePathname();
   const [openPreOrders, setOpenPreOrders] = useState(0);
+  const [settingsAnchor, setSettingsAnchor] = useState<null | HTMLElement>(null);
+  const [userAnchor, setUserAnchor] = useState<null | HTMLElement>(null);
 
   /**
    * Pré-pedidos abertos esperando reserva — a fila que o Administrativo precisa ver sem procurar.
@@ -98,10 +110,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     void loadBadge();
   }, [loadBadge, pathname]);
 
+  const permitido = (item: NavItem) => !item.allow || (user && item.allow.includes(user.role));
   const groups = NAV.map((group) => ({
     ...group,
-    items: group.items.filter((item) => !item.allow || (user && item.allow.includes(user.role))),
+    items: group.items.filter(permitido),
   })).filter((group) => group.items.length > 0);
+  const settings = SETTINGS.filter(permitido);
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -117,16 +131,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           display: { xs: 'none', md: 'block' },
         }}
       >
-        <Typography variant="h3" component="p" sx={{ px: 2 }}>
+        <Typography variant="h3" component="p" sx={{ px: 2, pb: 1.5 }}>
           Kortex
-        </Typography>
-        <Typography
-          component="p"
-          sx={{ px: 2, pb: 1.5, color: 'text.secondary', fontSize: 11, fontFamily: FONT_MONO }}
-        >
-          {user?.name}
-          <br />
-          {user ? USER_ROLE_LABELS[user.role] : ''}
         </Typography>
         <Divider />
 
@@ -152,7 +158,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     color: 'text.primary',
                     textDecoration: 'none',
                     bgcolor: active ? 'background.paper' : 'transparent',
-                    boxShadow: active ? 'inset 3px 0 0 #F04E23' : 'none',
+                    // Faixa laranja no item ativo. `borderLeft` transparente no inativo mantém os
+                    // dois com a mesma largura — senão o texto pula 3px ao trocar de tela.
+                    borderLeft: '3px solid',
+                    borderLeftColor: active ? 'error.main' : 'transparent',
                   }}
                 >
                   {item.label}
@@ -176,33 +185,131 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             })}
           </Box>
         ))}
-
-        <Box sx={{ px: 2, mt: 3 }}>
-          <Button variant="outlined" size="small" fullWidth onClick={signOut}>
-            Sair
-          </Button>
-        </Box>
       </Box>
 
-      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, md: 3 }, minWidth: 0 }}>
-        {/* Cabeçalho móvel: no celular a barra lateral some, e sem isto não haveria como sair. */}
+      <Box component="main" sx={{ flexGrow: 1, minWidth: 0 }}>
+        {/*
+         * Cabeçalho: engrenagem e identidade, sempre no mesmo lugar.
+         *
+         * Aparece nas duas larguras. No celular ele também carrega o nome do sistema, porque a
+         * barra lateral some — sem isso não haveria como sair nem chegar ao perfil.
+         */}
         <Box
           component="header"
           sx={{
-            display: { xs: 'flex', md: 'none' },
-            justifyContent: 'space-between',
+            display: 'flex',
             alignItems: 'center',
-            mb: 2,
+            justifyContent: 'space-between',
+            gap: 1,
+            px: { xs: 2, md: 3 },
+            py: 1.25,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
           }}
         >
-          <Typography variant="h3" component="p">
+          <Typography variant="h3" component="p" sx={{ display: { xs: 'block', md: 'none' } }}>
             Kortex
           </Typography>
-          <Button variant="outlined" size="small" onClick={signOut}>
-            Sair
+          <Box sx={{ flexGrow: 1 }} />
+
+          {settings.length > 0 && (
+            <>
+              <Tooltip title="Configuração">
+                <IconButton
+                  aria-label="Configuração"
+                  aria-haspopup="menu"
+                  aria-expanded={Boolean(settingsAnchor)}
+                  onClick={(event) => setSettingsAnchor(event.currentTarget)}
+                  sx={{ color: 'text.secondary' }}
+                >
+                  <SettingsOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Menu
+                anchorEl={settingsAnchor}
+                open={Boolean(settingsAnchor)}
+                onClose={() => setSettingsAnchor(null)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+              >
+                {settings.map((item) => (
+                  <MenuItem
+                    key={item.href}
+                    component={Link}
+                    href={item.href}
+                    selected={pathname === item.href}
+                    onClick={() => setSettingsAnchor(null)}
+                  >
+                    <ListItemText primaryTypographyProps={{ fontSize: 14 }}>
+                      {item.label}
+                    </ListItemText>
+                  </MenuItem>
+                ))}
+              </Menu>
+            </>
+          )}
+
+          <Button
+            aria-haspopup="menu"
+            aria-expanded={Boolean(userAnchor)}
+            onClick={(event) => setUserAnchor(event.currentTarget)}
+            endIcon={<ExpandMoreIcon />}
+            variant="text"
+            sx={{
+              color: 'text.primary',
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: 13.5,
+              px: 1,
+            }}
+          >
+            <Box sx={{ textAlign: 'right', lineHeight: 1.15 }}>
+              {user?.name}
+              <Box
+                component="span"
+                sx={{
+                  display: { xs: 'none', sm: 'block' },
+                  fontFamily: FONT_MONO,
+                  fontSize: 10,
+                  fontWeight: 400,
+                  color: 'text.secondary',
+                }}
+              >
+                {user ? USER_ROLE_LABELS[user.role] : ''}
+              </Box>
+            </Box>
           </Button>
+          <Menu
+            anchorEl={userAnchor}
+            open={Boolean(userAnchor)}
+            onClose={() => setUserAnchor(null)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          >
+            <MenuItem
+              component={Link}
+              href="/perfil"
+              selected={pathname === '/perfil'}
+              onClick={() => setUserAnchor(null)}
+            >
+              <ListItemText primaryTypographyProps={{ fontSize: 14 }}>Meu perfil</ListItemText>
+            </MenuItem>
+            <Divider />
+            <MenuItem
+              onClick={() => {
+                setUserAnchor(null);
+                signOut();
+              }}
+            >
+              <ListItemText primaryTypographyProps={{ fontSize: 14, color: 'error.main' }}>
+                Sair
+              </ListItemText>
+            </MenuItem>
+          </Menu>
         </Box>
-        {children}
+
+        <Box sx={{ p: { xs: 2, md: 3 } }}>{children}</Box>
       </Box>
     </Box>
   );

@@ -16,6 +16,7 @@ import {
   CutDto,
   CutWithWarningsDto,
   FabricHistoryDto,
+  RunningCutDto,
 } from '../../../../contexts/cut/application/dto/cut.dto';
 import { LAYOUT_TYPES } from '../../../../shared/domain/value-objects/layout-type';
 import { AuthTokenPayload } from '../../../../contexts/auth/application/ports/output/token-service.port';
@@ -138,6 +139,23 @@ export class CutStopController {
     @Body() dto: StopCutRequestDto,
   ): Promise<CutWithWarningsDto> {
     return this.cuts.stop(user.accountId, id, dto);
+  }
+}
+
+/**
+ * A matriz que está rodando agora.
+ *
+ * `ModelistaGuard` e nenhum campo monetário: é identidade e início, o suficiente para o indicador
+ * flutuante levar de volta ao cronômetro.
+ */
+@Controller('modelista/running-cut')
+@UseGuards(ModelistaGuard)
+export class RunningCutController {
+  constructor(private readonly cuts: CutUseCases) {}
+
+  @Get()
+  async running(@CurrentUser() user: AuthTokenPayload): Promise<RunningCutDto | null> {
+    return this.cuts.runningCut(user.accountId);
   }
 }
 

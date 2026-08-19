@@ -64,6 +64,30 @@ export class CutWithWarningsDto {
  *
  * É o produto secundário do sistema: cada corte apontado melhora a estimativa do próximo.
  */
+/**
+ * A matriz que está rodando agora — o mínimo para o indicador flutuante do Modelista.
+ *
+ * Só identidade e início: o tempo decorrido é calculado na tela, a cada segundo, a partir de
+ * `startedAt`. Mandar o cronômetro pronto obrigaria a recarregar a página para o número andar.
+ */
+export class RunningCutDto {
+  cutId!: string;
+  reservationId!: string;
+  sequence!: number;
+  markerName!: string | null;
+  startedAt!: string;
+
+  static fromDomain(cut: Cut): RunningCutDto {
+    const dto = new RunningCutDto();
+    dto.cutId = cut.id.value;
+    dto.reservationId = cut.reservationId.value;
+    dto.sequence = cut.sequence;
+    dto.markerName = cut.markerName;
+    dto.startedAt = cut.startedAt.toISOString();
+    return dto;
+  }
+}
+
 export class FabricHistoryDto {
   fabric!: NamedRef;
   samples!: number;
