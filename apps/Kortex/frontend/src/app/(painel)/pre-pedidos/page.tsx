@@ -28,7 +28,11 @@ import {
 import { numericSx } from 'src/theme/theme';
 
 /**
- * Pré-pedidos no painel do Administrativo.
+ * Pedidos no painel do Administrativo.
+ *
+ * A rota e o domínio continuam `pre-order`/`pre_order` — o rótulo é de tela, e mexer no nome do
+ * agregado por causa de uma palavra na interface renomearia tabela, migration e spec junto.
+ * "Pré-pedido" continua sendo o nome do lado do Modelista, que é quem o cria.
  *
  * **Somente leitura.** As horas chegam prontas e não há campo para editá-las aqui — nem
  * desabilitado: o backend responde 403, e mostrar um campo que sempre falha seria convidar ao
@@ -63,7 +67,7 @@ export default function PreOrdersPage() {
   return (
     <>
       <PageHeader
-        title="Pré-pedidos"
+        title="Pedidos"
         description="A avaliação do Modelista, com as horas já definidas. Reservar e cobrar é com você."
         action={
           <ToggleButtonGroup
@@ -92,7 +96,7 @@ export default function PreOrdersPage() {
           <CircularProgress />
         </Box>
       ) : (
-        <Paper variant="outlined" component="section" aria-label="Pré-pedidos" sx={{ p: 1 }}>
+        <Paper variant="outlined" component="section" aria-label="Pedidos" sx={{ p: 1 }}>
           <Table size="small">
             <TableHead>
               <TableRow>

@@ -159,10 +159,10 @@ function NewPreOrderScreen() {
     <Box component="main" sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 3 }}>
       <Container maxWidth="sm">
         <Typography variant="overline" component="p" sx={{ color: 'info.main' }}>
-          Pré-pedido
+          Modelista
         </Typography>
         <Typography variant="h2" component="h1" gutterBottom>
-          Avaliar corte
+          Pré-pedido
         </Typography>
 
         <Paper variant="outlined" sx={{ p: 2.5, mt: 2 }}>

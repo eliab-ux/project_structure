@@ -47,8 +47,10 @@ const NAV: NavGroup[] = [
   {
     title: 'Operação',
     items: [
+      // Pedidos primeiro: é a fila de entrada do dia — o que chega do Modelista e ainda não virou
+      // reserva. A agenda vem depois porque é consequência dela.
+      { href: '/pre-pedidos', label: 'Pedidos', badge: 'preOrders' },
       { href: '/agenda', label: 'Agenda' },
-      { href: '/pre-pedidos', label: 'Pré-pedidos', badge: 'preOrders' },
       { href: '/fila-de-espera', label: 'Fila de espera' },
     ],
   },
@@ -168,7 +170,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   {item.badge === 'preOrders' && openPreOrders > 0 && (
                     <Box
                       component="span"
-                      aria-label={`${openPreOrders} pré-pedidos aguardando reserva`}
+                      aria-label={`${openPreOrders} pedidos aguardando reserva`}
                       sx={{
                         ml: 0.75,
                         fontFamily: FONT_MONO,

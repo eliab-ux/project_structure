@@ -21,6 +21,7 @@
     "migration:deploy": "node dist/infrastructure/persistence/mikro-orm/run-migrations.js",
     "account:create": "ts-node -P tsconfig.spec.json scripts/create-account.ts",
     "account:bootstrap": "node dist/infrastructure/bootstrap/create-account.js",
+    "password:reset": "node dist/infrastructure/bootstrap/reset-password.js",
     "seed:layer-thickness": "ts-node -P tsconfig.spec.json scripts/seed-layer-thickness.ts",
     "check:tenant-scope": "ts-node -P tsconfig.spec.json scripts/check-tenant-scope.ts"
   },

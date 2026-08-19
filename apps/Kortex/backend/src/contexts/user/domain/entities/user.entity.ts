@@ -124,6 +124,24 @@ export class User extends AggregateRoot {
     this.touch();
   }
 
+  /**
+   * Senha TEMPORÁRIA definida pelo operador do servidor — o oposto de `changePassword`.
+   *
+   * Os dois métodos existem separados porque significam coisas diferentes, e a diferença está no
+   * `mustChangePassword`: `changePassword` o zera, porque a pessoa escolheu a própria senha;
+   * este o LIGA, porque a senha passou por um terceiro e por um terminal.
+   *
+   * **Não existe rota HTTP para isto, e não deve existir.** A recuperação é self-service pelo
+   * código no WhatsApp (regra 9 do CLAUDE.md); senha escolhida por terceiro é senha que duas
+   * pessoas conhecem. O caminho aqui é só o CLI, para quando o canal do WhatsApp ainda não está
+   * configurado ou o próprio dono perdeu o acesso — e mesmo aí a senha vale um login.
+   */
+  resetPasswordByOperator(passwordHash: string): void {
+    this._passwordHash = User.assertPasswordHash(passwordHash);
+    this._mustChangePassword = true;
+    this.touch();
+  }
+
   registerLogin(at: Date = new Date()): void {
     this._lastLoginAt = at;
     this.touch();

@@ -59,7 +59,7 @@ function ModelistaHome() {
             Fila do dia
           </Button>
           <Button component={Link} href="/m/pre-pedido" variant="outlined" fullWidth sx={TOUCH}>
-            Avaliar corte
+            Pré-pedido
           </Button>
           <Button component={Link} href="/m/fila-de-espera" variant="outlined" fullWidth sx={TOUCH}>
             Fila de espera
