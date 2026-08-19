@@ -1,4 +1,4 @@
-import { ValueObject } from '@veertex/domain-primitives';
+import { ValueObject } from '@gitspread/domain-primitives';
 import { InvalidEmailException } from '../exceptions/invalid-email.exception';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;

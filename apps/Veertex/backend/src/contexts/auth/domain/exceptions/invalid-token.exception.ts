@@ -1,4 +1,4 @@
-import { DomainException } from '@veertex/domain-primitives';
+import { DomainException } from '@gitspread/domain-primitives';
 
 /**
  * One opaque failure for every way a token can be unacceptable — absent, malformed, expired, wrong

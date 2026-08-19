@@ -72,7 +72,7 @@ também aponta para `DATABASE_URL_MIGRATIONS` e **avisa em stderr** se cair no f
 
 ```bash
 CONTAINER=$(docker ps --filter "name=veertex" --filter "name=backend" --format '{{.Names}}' | head -1)
-docker cp backend/deploy/verify/run-verification.sh \
+docker cp apps/Veertex/backend/deploy/verify/run-verification.sh \
           "$CONTAINER":/tmp/run-verification.sh
 docker exec -it "$CONTAINER" sh /tmp/run-verification.sh
 ```
@@ -80,9 +80,9 @@ docker exec -it "$CONTAINER" sh /tmp/run-verification.sh
 **Opção B — sem o script, comando por comando:**
 
 ```bash
-docker exec -it "$CONTAINER" sh -c 'cd /repo/backend && npm run migrate:prod'
-docker exec -it "$CONTAINER" sh -c 'cd /repo/backend && npm run verify:isolation:prod'
-docker exec -it "$CONTAINER" sh -c 'cd /repo/backend && npm run verify:rls:prod'
+docker exec -it "$CONTAINER" sh -c 'cd /repo/apps/Veertex/backend && npm run migrate:prod'
+docker exec -it "$CONTAINER" sh -c 'cd /repo/apps/Veertex/backend && npm run verify:isolation:prod'
+docker exec -it "$CONTAINER" sh -c 'cd /repo/apps/Veertex/backend && npm run verify:rls:prod'
 ```
 
 Use a B se quiser acompanhar etapa a etapa; a A para ter o relatório consolidado e um código de
@@ -175,7 +175,7 @@ Mesmas verificações, alvos sem `:prod`, e aí o banco precisa ser alcançável
 túnel SSH ou porta publicada:
 
 ```bash
-cd backend
+cd apps/Veertex/backend
 npm run verify:isolation     # etapa 2
 npm run verify:rls           # etapa 3
 npm run test:integration     # etapa 3 pelo jest, com diagnóstico por asserção

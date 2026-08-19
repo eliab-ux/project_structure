@@ -1,4 +1,4 @@
-import { DomainException, ValueObject } from '@veertex/domain-primitives';
+import { DomainException, ValueObject } from '@gitspread/domain-primitives';
 import {
   BRAZILIAN_STATES,
   BrazilianState,

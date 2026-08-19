@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aceito · **revisado em 2026-08-13** (ver adendo no fim) |
+| **Status** | **REVERTIDO em 2026-08-18** · ver o adendo final |
 | **Data** | 2026-08-10 |
 | **Decisor** | Eliab |
 | **Contexto** | Extração do Veertex do monorepo `project_structure` para repositório próprio (`gitlab.com/eliab1/veertex`) |
@@ -166,3 +166,76 @@ e a receita acima o sobrescreveria sem avisar.
 - Monorepo: `github.com/eliab-ux/project_structure`, em `apps/Veertex/`
 - Repositório publicado: `gitlab.com/eliab1/veertex` (tag `pre-monorepo` = os 19 commits de 10 a
   12/08/2026, quando foi repositório de trabalho)
+
+---
+
+# Adendo de 2026-08-18 — REVERTIDO: os pacotes voltam a ser um só, na raiz
+
+**A decisão de copiar foi desfeita.** O Veertex passou a usar `@gitspread/domain-primitives` e
+`@gitspread/shared-kernel` da raiz do monorepo, como os outros cinco apps. `apps/Veertex/packages/`
+não existe mais.
+
+## O argumento que derrubou a decisão, e ele é do Eliab
+
+> *"Todos são publicados igual, o Veertex vai ser, e nenhum copiou o pacote aqui no repositório. Por
+> que só o Veertex tem que ter? Não aceito."*
+
+Medido antes de aceitar, e ele estava certo:
+
+| | Contexto do build no Dockerfile | Tem `packages/` próprio? |
+|---|---|---|
+| Kortex, batuta, ecoa (e os demais) | **raiz do monorepo** — `COPY apps/<app>/backend/...` | não |
+| Veertex (antes) | **`apps/Veertex/` como raiz** — `COPY backend ./backend` | sim |
+
+A anomalia nunca foi a pasta: era o **esquema de publicação por subtree**, herdado da época em que o
+Veertex vivia num repositório separado. Os Dockerfiles dele esperavam ser a raiz porque vieram de
+lá; os outros cinco nunca esperaram. A cópia dos pacotes existia só para sustentar essa herança.
+
+**Onde eu errei:** sustentei, em duas mensagens seguidas, que os pacotes precisavam ficar no app
+"porque os Dockerfiles esperam isso" — sem verificar que os Dockerfiles dos outros cinco esperam o
+oposto. Era uma verificação de trinta segundos.
+
+## A divergência que a decisão original previu — ela aconteceu
+
+`validation.util.ts` já havia divergido quando a reversão foi feita:
+
+| | linhas | `isValidCPF` / `isValidCNPJ` |
+|---|---|---|
+| `packages/` (raiz) | 87 | **sim** |
+| `apps/Veertex/packages/` (cópia) | 35 | não |
+
+A cópia do Veertex ficou para trás e ninguém notou — em cinco dias. O ADR dizia que a divergência
+seria silenciosa "por construção", e o escopo distinto (`@veertex/*`) **não a impediu**: ele só
+faria uma cópia-e-cola entre apps falhar na compilação, e ninguém copiou e colou. A reversão elimina
+o problema na raiz: com um pacote só, não há o que divergir.
+
+## O que mudou, em concreto
+
+1. `apps/Veertex/packages/` removido;
+2. 83 arquivos voltaram a importar `@gitspread/*`; os workspaces do app viraram
+   `@gitspread/veertex-backend` e `@gitspread/veertex-frontend`, no padrão dos outros;
+3. os dois `Dockerfile` reescritos no formato dos demais (contexto = raiz do monorepo);
+4. removido o andaime do subtree — `package.json`, `package-lock.json`, `tsconfig.json`,
+   `tsconfig.base.json`, `.eslintrc.js`, `.prettierrc`, `.editorconfig`, `.dockerignore`,
+   `.gitignore`, `jest.config.js` e o `CLAUDE_PYTHON.md` duplicado. O backend passou a estender
+   `../../../tsconfig.base.json`, como os outros;
+5. `apps/Veertex/packages/*` saiu dos workspaces da raiz;
+6. mantidos: `CLAUDE.md` (regras específicas do Veertex, que a raiz não cobre — a dela é do
+   GITVEERT), `.gitattributes` (a raiz não tem, e sem ele os arquivos voltam a CRLF) e `README.md`.
+
+## O que isso custa, e é preciso dizer
+
+**A publicação por `git subtree split` deixa de funcionar** — ela levava só o que estava dentro de
+`apps/Veertex/`, e agora os pacotes estão fora. O Veertex passa a ser publicado como os outros
+cinco, e é assim que o Dokploy deve apontar para ele: `Docker Context Path = .` e
+`Dockerfile Path = apps/Veertex/backend/Dockerfile`.
+
+⚠️ **Ainda não publiquei nada.** O `gitlab.com/eliab1/veertex` continua com o conteúdo do subtree,
+que agora está defasado — e o que o substitui depende de como os outros apps chegam ao GitLab, coisa
+que eu não verifiquei e não vou presumir. Ver a nota no fim do relatório.
+
+## A lição, já registrada no `CLAUDE.md`
+
+Este ADR virou um caso da **regra 4**: "duas cópias vão divergir" era previsão correta, e mesmo
+assim eu tratei a divergência como custo aceito sem nunca ter medido se ela já havia ocorrido.
+Bastava um `diff`.

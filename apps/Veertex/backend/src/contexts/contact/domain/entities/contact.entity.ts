@@ -1,4 +1,4 @@
-import { AggregateRoot } from '@veertex/domain-primitives';
+import { AggregateRoot } from '@gitspread/domain-primitives';
 import { Address } from '../../../../shared/domain/value-objects/address.vo';
 import { Document, DocumentType } from '../../../../shared/domain/value-objects/document.vo';
 import { Email } from '../../../../shared/domain/value-objects/email.vo';

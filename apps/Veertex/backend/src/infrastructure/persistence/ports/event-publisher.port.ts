@@ -1,4 +1,4 @@
-import { DomainEvent } from '@veertex/domain-primitives';
+import { DomainEvent } from '@gitspread/domain-primitives';
 
 export const EVENT_PUBLISHER = Symbol('EVENT_PUBLISHER');
 

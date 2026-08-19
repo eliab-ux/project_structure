@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { UseCase } from '@veertex/shared-kernel';
+import { UseCase } from '@gitspread/shared-kernel';
 import { INTENT_PARSER, IntentParserPort } from '../../ports/output/intent-parser.port';
 import { describeCommands, IntentApiResult } from '../../../domain/intent-command';
 import { AuthorizeIntentCommandUseCase } from '../authorize-intent-command/authorize-intent-command.use-case';

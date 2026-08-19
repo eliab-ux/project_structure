@@ -15,7 +15,6 @@
     "apps/plano-diario/frontend",
     "apps/batuta-system/backend",
     "apps/batuta-system/frontend",
-    "apps/Veertex/packages/*",
     "apps/Veertex/backend",
     "apps/Veertex/frontend",
     "apps/Kortex/backend",

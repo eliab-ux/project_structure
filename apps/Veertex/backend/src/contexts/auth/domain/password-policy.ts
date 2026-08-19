@@ -1,4 +1,4 @@
-import { DomainException } from '@veertex/domain-primitives';
+import { DomainException } from '@gitspread/domain-primitives';
 
 export class WeakPasswordException extends DomainException {
   constructor(message: string) {

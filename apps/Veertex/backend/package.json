@@ -1,10 +1,12 @@
 {
-  "name": "@veertex/backend",
+  "name": "@gitspread/veertex-backend",
   "version": "1.0.0",
   "description": "Backend do Veertex — ERP SaaS multi-tenant (hexagonal, NestJS + Fastify + MikroORM/PostgreSQL self-hosted)",
   "scripts": {
     "dev": "nest start --watch",
     "dev:debug": "nest start --debug --watch",
+    "db:up": "docker compose -f docker-compose.dev.yml up -d",
+    "db:down": "docker compose -f docker-compose.dev.yml down",
     "build": "nest build",
     "start": "node dist/main",
     "start:prod": "NODE_ENV=production node dist/main",
@@ -30,8 +32,8 @@
     "test:integration": "jest --testPathPattern=test/integration --runInBand"
   },
   "dependencies": {
-    "@veertex/domain-primitives": "^1.0.0",
-    "@veertex/shared-kernel": "^1.0.0",
+    "@gitspread/domain-primitives": "^1.0.0",
+    "@gitspread/shared-kernel": "^1.0.0",
     "@mikro-orm/core": "^6.2.0",
     "@mikro-orm/migrations": "^6.2.0",
     "@mikro-orm/nestjs": "^6.0.0",

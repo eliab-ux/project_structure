@@ -1,4 +1,4 @@
-import { DomainException } from '@veertex/domain-primitives';
+import { DomainException } from '@gitspread/domain-primitives';
 
 /**
  * O canal de tradução está inutilizável — chave ausente, provedor fora, resposta ilegível.

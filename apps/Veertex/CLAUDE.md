@@ -1,23 +1,26 @@
 # CLAUDE.md
 
-> **ONDE ESTE CÓDIGO VIVE** (atualizado em 13/08/2026 — leia antes de procurar arquivo)
+> **ONDE ESTE CÓDIGO VIVE** (atualizado em 18/08/2026 — leia antes de procurar arquivo)
 >
-> O trabalho acontece **no monorepo `project_structure`, em `apps/Veertex/`**. Este diretório é a
-> raiz do Veertex: `backend/`, `frontend/`, `packages/` e `Requisitos/` são workspaces de primeiro
-> nível **dentro dele** — não há `apps/<app>-system/` aqui dentro.
+> O trabalho acontece **no monorepo `project_structure`, em `apps/Veertex/`**, e o Veertex é um app
+> como os outros cinco (Batuta, Ecoa, Kaza Tem, EMDR Remoto, Plano Diário). Dentro dele há
+> `backend/`, `frontend/` e `Requisitos/` — não há `apps/<app>-system/` aqui dentro.
 >
-> O repositório `gitlab.com/eliab1/veertex` continua existindo, e é o que o **Dokploy** builda: ele
-> é **publicado** a partir daqui por `git subtree split --prefix=apps/Veertex`. Por isso este
-> diretório tem `package.json`, `package-lock.json` e `tsconfig.base.json` PRÓPRIOS: quando o subtree
-> vira repositório, esta pasta é a raiz dele, e é essa forma que os `Dockerfile` assumem
-> (`COPY backend ./backend`). O histórico dos 19 commits do período em que o Veertex foi um
-> repositório separado está preservado sob a tag **`pre-monorepo`** no GitLab.
+> **Os pacotes compartilhados são os da RAIZ do monorepo** — `@gitspread/domain-primitives` e
+> `@gitspread/shared-kernel`, em `packages/`, os mesmos que os outros apps consomem. O Veertex
+> **não tem cópia própria**: teve entre 10/08 e 18/08/2026, e a cópia foi removida porque já havia
+> divergido (`Requisitos/ADR-0002_Pacotes_Copiados.md`).
 >
-> Os pacotes compartilhados (`@veertex/domain-primitives`, `@veertex/shared-kernel`) são CÓPIAS em
-> `apps/Veertex/packages/`, **distintas** das de `packages/` na raiz do monorepo (que usam o escopo
-> `@gitspread/*` e servem os outros cinco apps). São 13 arquivos de classes-base estáveis e sem
-> dependências. O escopo diferente não é detalhe: é o que faz uma divergência entre as duas cópias
-> aparecer como erro de compilação em vez de silêncio.
+> **`apps/Veertex/` não é a raiz de um repositório.** Não tem `package.json`, `tsconfig`,
+> `package-lock.json` nem config de lint próprios: usa os da raiz, como os outros apps. Os
+> `Dockerfile` do backend e do frontend assumem **contexto = raiz do monorepo**
+> (`COPY apps/Veertex/backend/...`), que é o formato dos demais. O histórico dos 19 commits do
+> período em que o Veertex foi repositório separado está sob a tag **`pre-monorepo`** no GitLab.
+>
+> ⚠️ **A publicação mudou e ainda não foi refeita.** Enquanto o Veertex teve pacotes próprios, ele
+> era publicado em `gitlab.com/eliab1/veertex` por `git subtree split --prefix=apps/Veertex`. Essa
+> receita **não funciona mais** — os pacotes ficaram fora do prefixo. O Veertex passa a ser
+> publicado como os outros apps.
 >
 > Este arquivo herdou o texto do monorepo e foi alinhado ao Veertex em 10/08/2026: caminhos,
 > escopo dos pacotes, stack (banco e storage), guards, claims do token e exemplos. **As regras não
@@ -100,17 +103,22 @@ sem precisar que o usuário solicite explicitamente:**
 
 ## Estrutura do repositório
 
-Repositório **próprio do Veertex**, com **npm workspaces** e **arquitetura hexagonal**
-(Ports & Adapters). Quatro diretórios de primeiro nível:
+O Veertex é um app do monorepo `project_structure` (**npm workspaces** + **arquitetura hexagonal**,
+Ports & Adapters). Dentro de `apps/Veertex/`:
 
-- **`backend/`** — API NestJS 10 + Fastify + MikroORM 6 (PostgreSQL)
-- **`frontend/`** — Next.js 14 (App Router) + Material-UI
-- **`packages/`** — bibliotecas compartilhadas: `@veertex/domain-primitives`,
-  `@veertex/shared-kernel`
+- **`backend/`** — API NestJS 10 + Fastify + MikroORM 6 (PostgreSQL) — workspace
+  `@gitspread/veertex-backend`
+- **`frontend/`** — Next.js 14 (App Router) + Material-UI — workspace `@gitspread/veertex-frontend`
 - **`Requisitos/`** — requisitos, decisões de arquitetura (ADRs) e instruções
 
-> **Os pacotes de `packages/` são CÓPIAS**, não referência ao monorepo de origem. Correção feita
-> aqui não chega ao `project_structure`, e vice-versa. Ver `Requisitos/ADR-0002_Pacotes_Copiados.md`.
+Fora daqui, na **raiz do monorepo**, e compartilhado com os outros cinco apps:
+
+- **`packages/`** — `@gitspread/domain-primitives` e `@gitspread/shared-kernel`
+
+> **Uma cópia só, e é a da raiz.** Alterar um desses arquivos afeta Batuta, Ecoa, Kaza Tem, EMDR
+> Remoto e Plano Diário junto — que é o ponto: são classes-base, e duas versões divergem sem avisar.
+> O Veertex chegou a ter cópia própria; ver `Requisitos/ADR-0002_Pacotes_Copiados.md` para a decisão,
+> a divergência que ela produziu em cinco dias, e a reversão.
 
 ### Stack
 
@@ -144,7 +152,7 @@ Repositório **próprio do Veertex**, com **npm workspaces** e **arquitetura hex
 
 ## Essential Commands
 
-### Root-level
+### Root-level (na RAIZ do monorepo, não em `apps/Veertex/`)
 ```bash
 npm install                    # Install all workspace dependencies
 npm run build                  # Build all workspaces
@@ -156,9 +164,9 @@ npm run test:integration       # Integration tests
 npm run test:e2e               # E2E tests
 ```
 
-### Backend (`backend`)
+### Backend (`apps/Veertex/backend`)
 ```bash
-cd backend
+cd apps/Veertex/backend
 
 # Development
 npm run dev                    # Start with watch mode (porta 3020)
@@ -182,9 +190,9 @@ npm run test:cov               # Coverage report
 npm run test -- path/to/test.spec.ts  # Single test file
 ```
 
-### Frontend (`frontend`)
+### Frontend (`apps/Veertex/frontend`)
 ```bash
-cd frontend
+cd apps/Veertex/frontend
 
 npm run dev                    # Next.js dev server (porta 3021)
 npm run build                  # Production build
@@ -439,7 +447,7 @@ Componentes isolados limitam o impacto de uma falha ou comprometimento.
 // ✅ Domain Layer completamente isolada — sem dependências externas
 export class Company extends AggregateRoot {
   // SEM imports de NestJS, MikroORM, Fastify, axios, MinIO, etc.
-  // Apenas TypeScript puro e os packages/ do próprio repositório
+  // Apenas TypeScript puro e os packages/ da raiz do monorepo
   private constructor(
     private readonly _id: CompanyId,     // Value Object — valida no construtor
     private readonly _document: Document, // Value Object — CNPJ, valida dígito no construtor
@@ -851,26 +859,25 @@ SMTP_FROM=no-reply@<dominio>
 
 ## Shared Packages
 
-> ⚠️ **São CÓPIAS, não código compartilhado.** Vieram do monorepo `project_structure` na extração
-> de 10/08/2026. Corrigir algo aqui **não chega** ao Batuta/Ecoa/Kaza Tem, e corrigir lá não chega
-> aqui — sem build quebrado, teste falhando ou aviso de lint. A divergência é silenciosa por
-> construção. Decisão, motivo e o que fazer ao alterar um desses arquivos:
-> `Requisitos/ADR-0002_Pacotes_Copiados.md`.
+> ⚠️ **São compartilhados de verdade — vivem em `packages/` na RAIZ do monorepo.** Corrigir algo
+> aqui chega ao Batuta, ao Ecoa e a todos os outros apps na próxima compilação deles. Antes de
+> mexer, pergunte se a mudança serve a todos: se servir só ao Veertex, o lugar dela é no Veertex.
+> Histórico da decisão: `Requisitos/ADR-0002_Pacotes_Copiados.md`.
 
-### @veertex/domain-primitives
+### @gitspread/domain-primitives
 Base classes para DDD: `AggregateRoot`, `Entity`, `ValueObject`, `DomainEvent`, `DomainException`.
 Framework-agnostic (TypeScript puro).
 
 > **`DomainException` recebe APENAS 1 argumento** (`super(message)`) — nunca 2.
 
-### @veertex/shared-kernel
+### @gitspread/shared-kernel
 Tipos e utilitários comuns: `Result<T>`, `PaginatedResult<T>`, `PaginationParams`,
 `UseCase<TCommand, TResult>`, `IRepository<T>`, `DateUtil`, `ValidationUtil`
 (`isValidEmail`, `isValidCPF`).
 
 ### Package References (path aliases)
-- `@veertex/domain-primitives` → `packages/domain-primitives/src`
-- `@veertex/shared-kernel` → `packages/shared-kernel/src`
+- `@gitspread/domain-primitives` → `packages/domain-primitives/src` (na raiz do monorepo)
+- `@gitspread/shared-kernel` → `packages/shared-kernel/src` (na raiz do monorepo)
 
 Dentro do backend:
 - `@domain/*` → `src/contexts/*/domain/*`
@@ -881,7 +888,7 @@ Dentro do backend:
 
 ## MikroORM & PostgreSQL Specifics
 
-- Config: `backend/mikro-orm.config.ts` (CLI, usuário OWNER) e
+- Config: `apps/Veertex/backend/mikro-orm.config.ts` (CLI, usuário OWNER) e
   `src/infrastructure/persistence/mikro-orm/config/` (aplicação, usuário de RUNTIME)
 - **DUAS connection strings, e não é opcional:** `DATABASE_URL` (`veertex_app`, sem DDL, sujeito ao
   RLS) e `DATABASE_URL_MIGRATIONS` (`veertex_owner`, dono do schema). Apontar as duas para o mesmo
@@ -942,7 +949,7 @@ MINIO_SECRET_KEY=
 MINIO_USE_SSL=true
 ```
 
-> A lista completa e atual vive em `backend/.env.example`, que é o único arquivo de ambiente
+> A lista completa e atual vive em `apps/Veertex/backend/.env.example`, que é o único arquivo de ambiente
 > versionado. Variável nova sem entrada lá é violação da regra 5.
 
 ## CORS Configuration
@@ -1473,12 +1480,12 @@ NEXT_PUBLIC_API_URL=http://localhost:3020/api
 ## Key Files to Reference
 
 **Auth (próprio):**
-- `backend/src/contexts/auth/` — login, refresh, reset de senha
-- `backend/src/infrastructure/security/guards/` — JwtAuthGuard, PermissionGuard, ModuleGuard (F2)
-- `backend/src/infrastructure/security/jwt-token.service.ts`
+- `apps/Veertex/backend/src/contexts/auth/` — login, refresh, reset de senha
+- `apps/Veertex/backend/src/infrastructure/security/guards/` — JwtAuthGuard, PermissionGuard, ModuleGuard (F2)
+- `apps/Veertex/backend/src/infrastructure/security/jwt-token.service.ts`
 
 **Domain/Application/Infra (exemplos):**
-- Domain: `backend/src/contexts/company/domain/entities/company.entity.ts`
+- Domain: `apps/Veertex/backend/src/contexts/company/domain/entities/company.entity.ts`
 - Use case: `src/contexts/<context>/application/use-cases/<name>/<name>.use-case.ts`
 - Repository: `src/infrastructure/persistence/mikro-orm/repositories/`
 - Mapper: `src/infrastructure/persistence/mikro-orm/mappers/`
@@ -1489,7 +1496,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3020/api
 - Bootstrap: `src/main.ts`
 - MikroORM: `mikro-orm.config.ts`
 
-**Shared packages:**
+**Shared packages (raiz do monorepo):**
 - `packages/domain-primitives/src/` · `packages/shared-kernel/src/`
 
 **Documentação de entregas/pendências:**
@@ -1528,7 +1535,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3020/api
 
 O Dokploy builda a partir de um **repo Git** com **Dockerfile**. Neste repositório (workspaces + pacotes compartilhados):
 
-1. **Repo no GitLab** (`eliab1/<projeto>`), branch `main`.
+1. **Repo no GitLab** (`eliab1/<projeto>`), branch `main` — o **monorepo inteiro**, como os outros apps.
 2. **Dockerfiles cientes dos workspaces** (contexto = raiz do repo): copiam `package.json`+`package-lock.json`, os `packages/`, e o app; buildam os pacotes (`tsc`) e o app.
    - **Base `node:22-alpine`** (o `@supabase/*` exige node ≥ 22).
    - Backend NestJS: `node dist/main` (usa imports relativos → não precisa tsconfig-paths).
@@ -1550,13 +1557,13 @@ Estrutura padrão = **3 serviços** por app: **Redis (Database)** + **Backend (A
 
 ### 2. Backend (Application)
 - **Provider = Git** · URL `git@gitlab.com:eliab1/<projeto>.git` · Branch `main` · SSH Key do Dokploy (Deploy Key no GitLab).
-- **Build Type = Dockerfile** · Docker File `backend/Dockerfile` · **Docker Context Path = `/`** (⚠️ raiz do repo — sem isso o `COPY` falha com "not found").
+- **Build Type = Dockerfile** · Docker File `apps/Veertex/backend/Dockerfile` · **Docker Context Path = `/`** (⚠️ raiz do MONOREPO — os `COPY` são `apps/Veertex/...` e `packages/`; sem isso falham com "not found").
 - **Domains → Add**: Host `<sub>.<dominio>` · **Path `/api`** · **Strip Path OFF** (o backend usa `setGlobalPrefix('api')`) · **Container Port** (a real do app, ex. 3005) · **HTTPS ON** (Let's Encrypt).
 - **Environment** (na UI): todas as variáveis (ver abaixo).
 
 ### 3. Frontend (Application)
 - Mesmo Provider Git + Deploy Key.
-- **Build Type = Dockerfile** · Docker File `frontend/Dockerfile` · **Docker Context Path = `/`**.
+- **Build Type = Dockerfile** · Docker File `apps/Veertex/frontend/Dockerfile` · **Docker Context Path = `/`**.
 - **Domains → Add**: Host `<sub>.<dominio>` · **Path `/`** · **Container Port** 3021 · **HTTPS ON**.
 - Com API relativa (`/api`) no mesmo domínio, **não precisa** `NEXT_PUBLIC_API_URL`. Se usar domínio separado p/ API, passar `NEXT_PUBLIC_API_URL` como **Build Arg** (é embutido no build).
 

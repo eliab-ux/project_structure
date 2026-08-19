@@ -115,7 +115,7 @@ cada boot e continua abortando o processo.
 ## 3. Primeira conta
 
 ```bash
-cd backend
+cd apps/Veertex/backend
 npm run create:account -- \
   --account-name "Tudodicasa" \
   --account-document "12345678000195" \

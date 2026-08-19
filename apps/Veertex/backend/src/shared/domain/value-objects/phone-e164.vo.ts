@@ -1,4 +1,4 @@
-import { ValueObject } from '@veertex/domain-primitives';
+import { ValueObject } from '@gitspread/domain-primitives';
 import { InvalidPhoneNumberException } from '../exceptions/invalid-phone-number.exception';
 
 /** Brazil: 55 + 2-digit area code + 8 or 9 subscriber digits. */

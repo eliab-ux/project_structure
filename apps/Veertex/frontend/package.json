@@ -1,5 +1,5 @@
 {
-  "name": "@veertex/frontend",
+  "name": "@gitspread/veertex-frontend",
   "version": "1.0.0",
   "private": true,
   "description": "Frontend do Veertex — ERP SaaS multi-tenant (Next.js 14 + MUI)",

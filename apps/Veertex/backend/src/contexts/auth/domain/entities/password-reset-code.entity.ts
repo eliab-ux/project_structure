@@ -1,4 +1,4 @@
-import { AggregateRoot } from '@veertex/domain-primitives';
+import { AggregateRoot } from '@gitspread/domain-primitives';
 
 /**
  * 15 minutes, and NOT an environment variable.

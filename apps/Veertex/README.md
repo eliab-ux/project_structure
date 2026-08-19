@@ -8,16 +8,19 @@ ERP SaaS multi-tenant para pequenas e médias empresas brasileiras. Arquitetura 
 
 ## Estrutura
 
+O Veertex é um app do monorepo `project_structure`, como Batuta, Ecoa, Kaza Tem, EMDR Remoto,
+Plano Diário e Kortex.
+
 ```
-backend/      API NestJS + Fastify + MikroORM        (porta 3020)
-frontend/     Next.js 14 App Router + MUI            (porta 3021)
-packages/     @veertex/domain-primitives, @veertex/shared-kernel
-Requisitos/   requisitos, ADRs e instruções
+apps/Veertex/backend/     API NestJS + Fastify + MikroORM   (porta 3020)
+apps/Veertex/frontend/    Next.js 14 App Router + MUI       (porta 3021)
+apps/Veertex/Requisitos/  requisitos, ADRs e instruções
+packages/                 @gitspread/domain-primitives, @gitspread/shared-kernel  ← na RAIZ
 ```
 
-> ⚠️ **`packages/` são CÓPIAS** do monorepo `project_structure`, não código compartilhado. Correção
-> feita aqui **não chega** ao Batuta/Ecoa/Kaza Tem, e vice-versa — a divergência é silenciosa por
-> construção. A decisão, o motivo e o que fazer ao alterar um desses arquivos estão em
+> **`packages/` é compartilhado com os outros apps**, e é a única cópia. Alterar um desses arquivos
+> afeta todos eles. O Veertex teve cópia própria entre 10 e 18/08/2026; a decisão, a divergência que
+> ela produziu em cinco dias e a reversão estão em
 > [`Requisitos/ADR-0002_Pacotes_Copiados.md`](Requisitos/ADR-0002_Pacotes_Copiados.md).
 
 ## Começar
@@ -26,8 +29,10 @@ O passo a passo completo — subir o Postgres, provisionar os papéis, migrar, v
 rodar os testes — está em **[`backend/README.md`](backend/README.md)**. Em resumo:
 
 ```bash
-npm install
-npm run db:up                                    # Postgres local em 127.0.0.1:5433
+npm install                        # na RAIZ do monorepo — instala todos os workspaces
+
+cd apps/Veertex/backend
+npm run db:up                      # Postgres local em 127.0.0.1:5433
 
 # provisionar os dois papéis do banco (uma vez por banco) — ver backend/README.md
 MSYS_NO_PATHCONV=1 docker exec -i veertex-pg-dev psql -U postgres -d veertex \
@@ -35,10 +40,10 @@ MSYS_NO_PATHCONV=1 docker exec -i veertex-pg-dev psql -U postgres -d veertex \
   -v owner_password=SENHA_OWNER -v app_password=SENHA_APP \
   -f /sql/001_create_roles.sql
 
-cp backend/.env.example backend/.env.local       # ajuste as senhas do passo anterior
-npm run migration:up -w @veertex/backend         # como veertex_owner
-npm run verify                                   # invariantes de isolamento — precisa sair 0
-npm run dev -w @veertex/backend                  # porta 3020
+cp .env.example .env.local         # ajuste as senhas do passo anterior
+npm run migration:up               # como veertex_owner
+npm run verify:isolation           # invariantes de isolamento — precisa sair 0
+npm run dev                        # porta 3020
 ```
 
 ## O isolamento entre contas, em duas frases
@@ -53,7 +58,7 @@ nenhuma** e não tem `BYPASSRLS` — e esse fato mora fora do código. Por isso 
 boot**, e uma falha **aborta o processo**:
 
 ```bash
-npm run verify        # atalho para verify:isolation no backend
+cd apps/Veertex/backend && npm run verify:isolation
 ```
 
 ## Estado

@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { UseCase } from '@veertex/shared-kernel';
+import { UseCase } from '@gitspread/shared-kernel';
 import { AUDIO_TRANSCRIBER, AudioTranscriberPort } from '../../ports/output/audio-transcriber.port';
 import { AudioTranscriptionDisabledException } from '../../../domain/intent-exceptions';
 

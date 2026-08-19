@@ -1,4 +1,4 @@
-import { DomainEvent } from '@veertex/domain-primitives';
+import { DomainEvent } from '@gitspread/domain-primitives';
 
 /**
  * A new tenant exists. Carries no personal data — a handler that needs the admin's name reads it

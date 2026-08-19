@@ -5,7 +5,7 @@
 # RODA DENTRO DO CONTAINER DO BACKEND. É de lá que o Postgres é alcançável (host interno do
 # Dokploy, ex.: veertex-veertex-xxxxxx:5432); nenhuma porta precisa estar publicada para fora.
 #
-#   docker exec -it <container-do-backend> sh /repo/backend/deploy/verify/run-verification.sh
+#   docker exec -it <container-do-backend> sh /repo/apps/Veertex/backend/deploy/verify/run-verification.sh
 #
 # Ver deploy/verify/README.md para o passo a passo, incluindo como levar este arquivo para dentro
 # do container (a imagem de runtime não carrega deploy/).
@@ -28,7 +28,7 @@
 #                             fronteira é o único erro desta fila que não se desfaz relendo o log.
 # ══════════════════════════════════════════════════════════════════════════════════════════════
 
-APP_DIR="${APP_DIR:-/repo/backend}"
+APP_DIR="${APP_DIR:-/repo/apps/Veertex/backend}"
 cd "$APP_DIR" || { echo "❌ Diretório da aplicação não encontrado: $APP_DIR"; exit 1; }
 
 FAILED=0

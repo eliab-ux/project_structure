@@ -1,4 +1,4 @@
-import { DomainException } from '@veertex/domain-primitives';
+import { DomainException } from '@gitspread/domain-primitives';
 
 /**
  * Os quatro tipos de contato — §3.4 do CORE, decisão fechada.

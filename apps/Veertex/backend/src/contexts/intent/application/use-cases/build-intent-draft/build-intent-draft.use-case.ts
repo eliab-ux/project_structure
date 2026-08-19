@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable, Logger } from '@nestjs/common';
-import { UseCase } from '@veertex/shared-kernel';
+import { UseCase } from '@gitspread/shared-kernel';
 import { INTENT_COMMANDS, IntentField } from '../../../domain/intent-command';
 import {
   AuthorizeIntentCommandQuery,

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { UseCase } from '@veertex/shared-kernel';
+import { UseCase } from '@gitspread/shared-kernel';
 import { CompanyId } from '../../../domain/value-objects/company-id.vo';
 import { CompanyNotFoundException } from '../../../domain/exceptions/company-exceptions';
 import {

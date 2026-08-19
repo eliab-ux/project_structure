@@ -1,4 +1,4 @@
-import { DomainException } from '@veertex/domain-primitives';
+import { DomainException } from '@gitspread/domain-primitives';
 
 /**
  * The account exists but cannot be used: suspended for non-payment, or cancelled.
