@@ -41,6 +41,35 @@ async function createConsultation(payload: {
   return response.data;
 }
 
+async function updateConsultation(
+  id: string,
+  payload: { title: string; customerId?: string | null; startsAt: string; endsAt: string },
+): Promise<{ entry: ScheduleEntry; warnings: string[] }> {
+  const response = await api.put<{ entry: ScheduleEntry; warnings: string[] }>(
+    `/schedule/consultations/${id}`,
+    payload,
+  );
+  return response.data;
+}
+
+/**
+ * Mover uma hora de máquina na agenda.
+ *
+ * **Sem horas e sem preço no payload**: as horas saem de `endsAt − startsAt` e o preço vem da
+ * máquina. Reserva paga aceita só mudança de horário — duração e máquina alterariam o total de uma
+ * venda já cobrada, e o backend recusa.
+ */
+async function moveMachineHour(
+  entryId: string,
+  payload: { startsAt: string; endsAt: string; machineId?: string | null },
+): Promise<{ entry: ScheduleEntry; warnings: string[] }> {
+  const response = await api.patch<{ entry: ScheduleEntry; warnings: string[] }>(
+    `/schedule/machine-hours/${entryId}`,
+    payload,
+  );
+  return response.data;
+}
+
 async function removeConsultation(id: string): Promise<void> {
   await api.delete(`/schedule/consultations/${id}`);
 }
@@ -108,6 +137,8 @@ const scheduleService = {
   createReservation,
   listReservations,
   createConsultation,
+  updateConsultation,
+  moveMachineHour,
   removeConsultation,
   registerPayment,
   release,

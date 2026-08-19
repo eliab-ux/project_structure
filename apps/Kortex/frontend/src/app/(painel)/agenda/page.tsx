@@ -54,6 +54,18 @@ export default function AgendaPage() {
   const [form, setForm] = useState({ machineId: '', preOrderId: '', startHour: '07', hours: 3 });
   /** Conta que recebeu. Só precisa ser escolhida quando há mais de uma ativa. */
   const [bankAccountId, setBankAccountId] = useState('');
+  /** Mover hora de máquina. `machineId` vazio mantém a atual. */
+  const [moving, setMoving] = useState<ScheduleEntry | null>(null);
+  const [moveForm, setMoveForm] = useState({ day: '', startHour: '07', hours: 1, machineId: '' });
+  /** Atendimento: o MESMO formulário cria e edita — `editing` diz qual dos dois. */
+  const [consultOpen, setConsultOpen] = useState(false);
+  const [consultEditing, setConsultEditing] = useState<ScheduleEntry | null>(null);
+  const [consultForm, setConsultForm] = useState({
+    title: '',
+    day: '',
+    startTime: '09:00',
+    endTime: '09:30',
+  });
   const [rescheduling, setRescheduling] = useState<Reservation | null>(null);
   const [rescheduleForm, setRescheduleForm] = useState({
     day: isoDate(new Date()),
@@ -148,6 +160,73 @@ export default function AgendaPage() {
     }
   }
 
+  /** ISO → 'HH:MM' no relógio local, que é como o Administrativo lê a agenda. */
+  function horaLocal(iso: string): string {
+    const date = new Date(iso);
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  }
+
+  function abrirMover(entry: ScheduleEntry) {
+    const inicio = new Date(entry.startsAt);
+    const fim = new Date(entry.endsAt);
+    setMoveForm({
+      day: isoDate(inicio),
+      startHour: String(inicio.getHours()).padStart(2, '0'),
+      hours: Math.max(1, Math.round((fim.getTime() - inicio.getTime()) / 3_600_000)),
+      machineId: entry.machine?.id ?? '',
+    });
+    setMoving(entry);
+  }
+
+  async function moverHoraDeMaquina() {
+    if (!moving) return;
+    const startsAt = new Date(`${moveForm.day}T${moveForm.startHour.padStart(2, '0')}:00:00`);
+    const endsAt = new Date(startsAt.getTime() + moveForm.hours * 3_600_000);
+
+    await act(
+      () =>
+        scheduleService.moveMachineHour(moving.id, {
+          startsAt: startsAt.toISOString(),
+          endsAt: endsAt.toISOString(),
+          machineId: moveForm.machineId || null,
+        }),
+      'Horário movido.',
+    );
+    setMoving(null);
+  }
+
+  function abrirAtendimento(entry?: ScheduleEntry) {
+    if (entry) {
+      setConsultForm({
+        title: entry.title ?? '',
+        day: isoDate(new Date(entry.startsAt)),
+        startTime: horaLocal(entry.startsAt),
+        endTime: horaLocal(entry.endsAt),
+      });
+    } else {
+      setConsultForm({ title: '', day, startTime: '09:00', endTime: '09:30' });
+    }
+    setConsultEditing(entry ?? null);
+    setConsultOpen(true);
+  }
+
+  async function salvarAtendimento() {
+    const payload = {
+      title: consultForm.title,
+      startsAt: new Date(`${consultForm.day}T${consultForm.startTime}:00`).toISOString(),
+      endsAt: new Date(`${consultForm.day}T${consultForm.endTime}:00`).toISOString(),
+    };
+
+    await act(
+      () =>
+        consultEditing
+          ? scheduleService.updateConsultation(consultEditing.id, payload)
+          : scheduleService.createConsultation(payload),
+      consultEditing ? 'Atendimento atualizado.' : 'Atendimento criado.',
+    );
+    setConsultOpen(false);
+  }
+
   async function createReservation() {
     const startsAt = new Date(`${day}T${form.startHour.padStart(2, '0')}:00:00`);
     const endsAt = new Date(startsAt.getTime() + form.hours * 3_600_000);
@@ -190,6 +269,9 @@ export default function AgendaPage() {
               value={day}
               onChange={(event) => setDay(event.target.value)}
             />
+            <Button variant="outlined" onClick={() => abrirAtendimento()}>
+              + Atendimento
+            </Button>
             <Button onClick={() => setNewOpen(true)}>+ Reserva</Button>
           </Stack>
         }
@@ -304,16 +386,34 @@ export default function AgendaPage() {
           </Button>
 
           {selected?.type === 'consultation' && (
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={() =>
-                act(() => scheduleService.removeConsultation(selected.id), 'Atendimento removido.')
-              }
-            >
-              Remover
-            </Button>
+            <>
+              <Button variant="outlined" onClick={() => abrirAtendimento(selected)}>
+                Editar
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={() =>
+                  act(
+                    () => scheduleService.removeConsultation(selected.id),
+                    'Atendimento removido.',
+                  )
+                }
+              >
+                Remover
+              </Button>
+            </>
           )}
+
+          {/* Mover só antes da execução: depois do primeiro start, mudar o horário mentiria sobre
+              quando o corte aconteceu. */}
+          {selected?.type === 'machine_hour' &&
+            (selectedReservation?.status === 'pre_reserved' ||
+              selectedReservation?.status === 'confirmed') && (
+              <Button variant="outlined" onClick={() => abrirMover(selected)}>
+                Mover
+              </Button>
+            )}
 
           {selectedReservation?.status === 'pre_reserved' && (
             <>
@@ -440,6 +540,140 @@ export default function AgendaPage() {
             }}
           >
             Remarcar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ==== Mover hora de máquina ==== */}
+      <Dialog open={Boolean(moving)} onClose={() => setMoving(null)} fullWidth maxWidth="sm">
+        <DialogTitle>Mover hora de máquina</DialogTitle>
+        <DialogContent>
+          {selectedReservation?.status === 'confirmed' ? (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              Esta reserva já está paga: só o <strong>horário</strong> pode mudar. Duração e máquina
+              entram no valor cobrado — para vender mais tempo, crie uma reserva separada.
+            </Alert>
+          ) : (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Nada foi cobrado ainda, então horário, duração e máquina podem mudar. O total é
+              recalculado com o preço da máquina escolhida.
+            </Alert>
+          )}
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <Stack direction="row" spacing={2}>
+              <TextField
+                type="date"
+                label="Dia"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                value={moveForm.day}
+                onChange={(event) => setMoveForm({ ...moveForm, day: event.target.value })}
+              />
+              <TextField
+                label="Começa às"
+                type="number"
+                sx={{ minWidth: 130 }}
+                inputProps={{ min: 0, max: 23 }}
+                helperText="Hora cheia"
+                value={moveForm.startHour}
+                onChange={(event) => setMoveForm({ ...moveForm, startHour: event.target.value })}
+              />
+              <TextField
+                label="Horas"
+                type="number"
+                sx={{ minWidth: 110 }}
+                inputProps={{ min: 1, max: 24 }}
+                disabled={selectedReservation?.status === 'confirmed'}
+                value={moveForm.hours}
+                onChange={(event) =>
+                  setMoveForm({ ...moveForm, hours: Number(event.target.value) })
+                }
+              />
+            </Stack>
+            <TextField
+              select
+              label="Máquina"
+              fullWidth
+              disabled={selectedReservation?.status === 'confirmed'}
+              value={moveForm.machineId}
+              onChange={(event) => setMoveForm({ ...moveForm, machineId: event.target.value })}
+            >
+              {machines
+                .filter((machine) => machine.isActive || machine.id === moveForm.machineId)
+                .map((machine) => (
+                  <MenuItem key={machine.id} value={machine.id}>
+                    {machine.name} · {formatCents(machine.hourPriceCents)}/h
+                  </MenuItem>
+                ))}
+            </TextField>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button variant="outlined" onClick={() => setMoving(null)}>
+            Cancelar
+          </Button>
+          <Button onClick={moverHoraDeMaquina} disabled={!moveForm.day}>
+            Mover
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ==== Atendimento: criar e editar no mesmo formulário ==== */}
+      <Dialog open={consultOpen} onClose={() => setConsultOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>{consultEditing ? 'Editar atendimento' : 'Novo atendimento'}</DialogTitle>
+        <DialogContent>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Atendimento não é faturável e não segue hora cheia — pode ser de 30 minutos às 09:15. Se
+            sobrepuser hora de máquina, o sistema avisa e deixa seguir.
+          </Alert>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              label="Título"
+              fullWidth
+              required
+              placeholder="Primeira conversa — Malharia São Bento"
+              value={consultForm.title}
+              onChange={(event) => setConsultForm({ ...consultForm, title: event.target.value })}
+            />
+            <Stack direction="row" spacing={2}>
+              <TextField
+                type="date"
+                label="Dia"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                value={consultForm.day}
+                onChange={(event) => setConsultForm({ ...consultForm, day: event.target.value })}
+              />
+              <TextField
+                type="time"
+                label="Início"
+                InputLabelProps={{ shrink: true }}
+                value={consultForm.startTime}
+                onChange={(event) =>
+                  setConsultForm({ ...consultForm, startTime: event.target.value })
+                }
+              />
+              <TextField
+                type="time"
+                label="Fim"
+                InputLabelProps={{ shrink: true }}
+                value={consultForm.endTime}
+                onChange={(event) =>
+                  setConsultForm({ ...consultForm, endTime: event.target.value })
+                }
+              />
+            </Stack>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button variant="outlined" onClick={() => setConsultOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={salvarAtendimento}
+            disabled={!consultForm.title.trim() || !consultForm.day}
+          >
+            {consultEditing ? 'Salvar' : 'Criar'}
           </Button>
         </DialogActions>
       </Dialog>
