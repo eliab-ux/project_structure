@@ -1138,7 +1138,7 @@ APP_PUBLIC_URL=             # domínio público do frontend (https://) — p/ o 
 
 ## Regras aprendidas com defeito real
 
-**Estas três não vieram de requisito — vieram de coisas que quebraram.** Cada uma custou tempo, e
+**Estas seis não vieram de requisito — vieram de coisas que quebraram.** Cada uma custou tempo, e
 cada uma volta a custar se for esquecida. Valem para todo código deste repositório.
 
 ### 1. Adapter de teste nunca é fallback de produção — e nunca divirja do de produção
@@ -1247,6 +1247,50 @@ código é fácil, desfazer dado que saiu da máquina não é.
 
 Isto vale especialmente quando a instrução ambígua **destrava** algo que estava travado. Trava
 registrada existe porque alguém pesou algo; ambiguidade não é autorização.
+
+### 6. Instrumento de medição precisa de teste próprio antes de produzir número
+
+Regra do Eliab, 19/08/2026, depois de a página de medição do microfone produzir **duas vezes**
+exatamente o defeito que ela existia para detectar:
+
+| | O que a página fez | O número que saiu |
+|---|---|---|
+| **v1** | acumulava o resultado intermediário: o mesmo segmento entrava duas vezes | transcrição inflada, com palavras repetidas que ninguém falou |
+| **v4** | concatenou as **oito** frases do roteiro numa execução só, pontuada contra a frase 1 | `NEGACAO_INVENTADA = SIM` — sendo que a frase-alvo não tem nenhum "não" e os cinco vieram das outras sete |
+| **v7** | casou palavra por **substring**: `"desativar".includes("ativar")` | **descartou uma execução válida** como "contaminada" — e `"cobre".includes("cob")` contou a sigla COB como `exata` |
+
+**Nas três, o número saiu com cara de dado.** Vírgula, coluna, cabeçalho, CSV — a mesma aparência
+que o número certo teria. Não havia como olhar para a linha e desconfiar dela; foi preciso ler o log
+de eventos bruto para descobrir que a medição não media o que dizia medir.
+
+É pior do que não ter medição. Sem medição, a decisão fica em aberto e todo mundo sabe. Com medição
+viciada, a decisão é tomada — e o erro só aparece quando o produto já está construído em cima dela.
+No caso do microfone, o número falso apontava para a métrica mais grave que existe neste sistema
+(negação inventada inverte uma permissão), e teria condenado um recurso que talvez funcione.
+
+**O que a regra exige, em concreto:**
+
+1. **O instrumento roda o próprio teste antes de aceitar a primeira medição** — e, falhando um caso,
+   ele **não mede**. Não é aviso: é bloqueio. A página de microfone desliga o botão de gravar.
+2. **Cada caso do autoteste reproduz um defeito REAL já ocorrido**, com o dado real. O blob das oito
+   frases de 19/08 está no teste, literal. Caso hipotético envelhece; caso que já aconteceu, não.
+3. **O teste roda fora do instrumento também.** Um autoteste que só executa quando alguém abre a
+   página é um autoteste que ninguém viu — vale um harness de linha de comando
+   (`node rodar-autoteste.js`) que possa entrar numa verificação.
+4. **Sabote antes de confiar.** Quebre cada guarda e confirme o vermelho. Foi assim que as da
+   página se provaram: acumulação sem `indicesAplicados` → 9/11; detector de contaminação desligado
+   → 10/11; negação inventada fixada em `false` → 10/11; e, na v7, o `includes()` de substring
+   restaurado → 18/19, acusando exatamente a frase que ele havia descartado por engano.
+5. **Desconfie do erro que favorece o resultado.** Dos três defeitos da página, dois eram
+   **otimistas** — contavam como acerto o que não era. Erro otimista não gera reclamação: ninguém
+   investiga um número bom. O da v7 só apareceu porque descartou uma linha e a ausência incomodou.
+6. **A medição contaminada é marcada, não descartada em silêncio** — sai de todas as estatísticas,
+   continua no bruto, e o CSV traz a coluna `valida` **como primeira coluna**, para quem abrir a
+   planilha ver antes de qualquer número.
+
+> Isto vale para todo código que **produz um número que sustenta decisão**: medição, benchmark,
+> relatório, métrica de dashboard. A pergunta não é "o código roda?", é "se ele estivesse errado, eu
+> perceberia?". Quando a resposta é não, falta o teste do instrumento.
 
 ## Testing Strategy
 

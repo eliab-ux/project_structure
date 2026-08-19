@@ -134,10 +134,28 @@ export default function MesaPage() {
    *
    * Anexa ao que já está escrito: ditar duas vezes complementa a frase em vez de apagá-la.
    */
+  /*
+   * O hook entrega o texto JÁ COMPOSTO (o que havia no campo + o que ele firmou), então aqui é
+   * substituição, não concatenação. Concatenar aqui duplicaria a frase a cada evento, porque o
+   * ditado em tempo real reemite o texto inteiro conforme o motor firma cada trecho.
+   */
   const voz = useOnDeviceDictation((texto) => {
-    setText((atual) => (atual ? `${atual} ${texto}`.trim() : texto));
-    inputRef.current?.focus();
+    setText(texto);
   });
+
+  /*
+   * O ditado falhou — DIGA. Antes o microfone simplesmente voltava ao normal, e permissão negada,
+   * motor recusado e "não ouvi nada" eram indistinguíveis: três causas com correções diferentes,
+   * nenhuma delas do sistema, e o operador sem saber qual era a dele.
+   */
+  const { ultimoErro: erroVoz, limparErro: limparErroVoz } = voz;
+  useEffect(() => {
+    if (!erroVoz) {
+      return;
+    }
+    enqueueSnackbar(erroVoz, { variant: 'warning' });
+    limparErroVoz();
+  }, [erroVoz, limparErroVoz, enqueueSnackbar]);
 
   const firstName = user?.name?.split(' ')[0] ?? '';
 
@@ -324,10 +342,24 @@ export default function MesaPage() {
           autoFocus
           inputProps={{ 'aria-label': 'O que você precisa' }}
           InputProps={{
+            /*
+             * SOMENTE LEITURA enquanto o microfone está aberto.
+             *
+             * Digitar e ditar ao mesmo tempo é conflito real, não hipotético: o hook reemite o texto
+             * inteiro a cada trecho firmado, e o que a pessoa digitasse no meio seria sobrescrito no
+             * evento seguinte — sem nada na tela explicando por quê. Travar é honesto; deixar
+             * editável seria aceitar a digitação e depois apagá-la.
+             */
+            readOnly: voz.state === 'listening' || voz.state === 'opening',
             endAdornment: (
               <InputAdornment position="end">
                 {/* Microfone à esquerda do enviar: ditar vem antes de mandar. */}
-                <DictationButton state={voz.state} onStart={voz.iniciar} onStop={voz.parar} />
+                {/* A base vai no início: ditar duas vezes complementa o que já está escrito. */}
+                <DictationButton
+                  state={voz.state}
+                  onStart={() => voz.iniciar(text)}
+                  onStop={voz.parar}
+                />
                 {podeAnexar ? (
                   <DocumentCapture
                     image={null}
@@ -361,7 +393,11 @@ export default function MesaPage() {
           }}
         />
 
-        <VoiceHint state={voz.state} />
+        <VoiceHint
+          state={voz.state}
+          motivoIndisponivel={voz.motivoIndisponivel}
+          parcial={voz.parcial}
+        />
 
         {image ? (
           <DocumentCapture
@@ -508,7 +544,30 @@ export default function MesaPage() {
  * (ver `Requisitos/ADR-0005_Captura_de_Voz.md`). A medição do on-device é feita pela página de teste
  * descartável, fora do produto.
  */
-function VoiceHint({ state }: { state: OnDeviceState }) {
+function VoiceHint({
+  state,
+  motivoIndisponivel,
+  parcial,
+}: {
+  state: OnDeviceState;
+  motivoIndisponivel: string | null;
+  parcial: string;
+}) {
+  /*
+   * O microfone ausente ganhou uma EXPLICAÇÃO — e é o oposto de um controle inerte: não há botão
+   * para clicar, só a razão pela qual não há.
+   *
+   * Sem isto, o operador que nunca viu o ícone conclui que o sistema não tem ditado; e quem
+   * desenvolve não distingue "o Chrome deste computador não tem" de "a chamada quebrou". As duas
+   * levaram uma manhã em 19/08/2026.
+   */
+  if ((state === 'unsupported' || state === 'error') && motivoIndisponivel) {
+    return (
+      <Typography variant="caption" sx={{ mt: 1, display: 'block', color: 'text.secondary' }}>
+        Ditado por voz indisponível: {motivoIndisponivel}
+      </Typography>
+    );
+  }
   if (state === 'opening') {
     return (
       <Typography
@@ -529,6 +588,19 @@ function VoiceHint({ state }: { state: OnDeviceState }) {
       >
         ● Ouvindo. Fale e clique no microfone para parar — o texto vem para o campo e você confere
         antes de enviar. Nada sai do seu computador.
+        {parcial ? (
+          /*
+           * O provisório, apagado e em itálico: é o que o motor AINDA está decidindo, e ele se
+           * reescreve. Distinguir do texto do campo não é enfeite — sem isso, o operador não sabe o
+           * que já está firme e o que pode mudar sozinho no instante seguinte.
+           */
+          <Box
+            component="span"
+            sx={{ display: 'block', mt: 0.5, color: 'text.disabled', fontStyle: 'italic' }}
+          >
+            {parcial}…
+          </Box>
+        ) : null}
       </Typography>
     );
   }

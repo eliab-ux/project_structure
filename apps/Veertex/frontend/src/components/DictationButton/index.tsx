@@ -11,9 +11,13 @@ import { OnDeviceState } from 'src/hooks/useOnDeviceDictation';
 /**
  * O botão do ditado ON-DEVICE. Usado só na Mesa.
  *
- * **Ele não existe quando o reconhecimento local não existe** (`unsupported`). Não é botão cinza: é
- * ausência — regra 2 do `useOnDeviceDictation`. Um microfone que aceita o clique e não ouve é pior
- * que microfone nenhum.
+ * **Ele não existe quando o reconhecimento local não existe** (`unsupported`) nem quando a consulta
+ * de disponibilidade falhou (`error`). Não é botão cinza: é ausência — regra 2 do
+ * `useOnDeviceDictation`. Um microfone que aceita o clique e não ouve é pior que microfone nenhum.
+ *
+ * Os dois estados escondem o botão, e é proposital que sejam estados SEPARADOS: `error` carrega o
+ * motivo, e a Mesa o exibe. Sumiço sem explicação era o que impedia distinguir "o Chrome não tem"
+ * de "a chamada quebrou".
  *
  * O estado `opening` é o que salva o começo da frase: o motor demora a abrir, e quem fala nesse
  * intervalo perde o verbo — "ativar", "criar", "cadastrar". Por isso ele é visível e diz para
@@ -31,7 +35,7 @@ export function DictationButton({
   onStart: () => void;
   onStop: () => void;
 }) {
-  if (state === 'unsupported') {
+  if (state === 'unsupported' || state === 'error') {
     return null;
   }
 

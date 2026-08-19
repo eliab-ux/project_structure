@@ -358,6 +358,69 @@ Enquanto a `GEMINI_API_KEY` for de free tier, o conteúdo enviado pode ser lido 
 usado para treino (§5 acima). **Áudio de comando carrega nome de pessoa e de empresa — ele não sai
 por esse canal.** A flag liga junto com a chave própria com billing ativo, nunca antes.
 
+### 📏 MEDIÇÃO 2 — 19/08/2026, 8 frases, locutor A, modo `direto`, **uma frase por gravação**
+
+**Medido por Eliab**, na página v10 em `localhost:3099`, com o autoteste do instrumento passando
+(27/27). Uma repetição por frase — **não** as dez que o critério pede. Só o modo `direto` foi
+exercido; `armado` e `aquecido` não entraram.
+
+| O que se mediu | Resultado | Critério |
+|---|---|---|
+| **Início íntegro** | **100%** (8/8) | ≥ 95% |
+| **Verbo** | **100%** (8/8) | ≥ 95% |
+| **Negação preservada** | **100%** (4 de 4 frases com negação) | = 100% |
+| **Negação INVENTADA** | **0** | qualquer uma reprova |
+| Número ("dez por cento") | 1/1 | — |
+| Entidades | exata 6 · aproximada 2 · **perdida 1** → 89% utilizável | — |
+| Abertura (aperto → ouvindo) | **mediana 5 ms** (min 4, max 21) | — |
+| `onstart` → 1º resultado | mediana 2,7 s | — |
+
+**O corte do início desapareceu.** A medição 1 teve 5 de 7 frases com verbo ou sujeito comido, e
+uma negação FABRICADA (*"a Ana pode vender"* → *"não pode vender"*). Aqui, nenhuma das duas coisas —
+e a abertura do microfone, que na medição 1 aparecia como o suspeito, foi de **5 ms**.
+
+⚠️ **Isto não conclui a decisão, e a diferença de protocolo é grande demais para atribuir causa.**
+Entre as duas medições mudaram pelo menos três coisas ao mesmo tempo: a versão do instrumento (o
+disparo, o índice de resultado lido, a acumulação), o número de frases por gravação, e a própria
+sessão de fala. Um resultado limpo com n=1 por frase não distingue "o defeito era do instrumento" de
+"o defeito era intermitente" de "o locutor falou diferente". As dez repetições e os três modos
+existem para isso.
+
+**O que sobrou como falha real, e é consistente com as duas medições:** nome próprio e sigla.
+
+| Falado | Transcrito | Veredito |
+|---|---|---|
+| Tudodicasa | "tudo de casa" | **perdida** |
+| COB | "cobre" | aproximada |
+| Kaza Tem | "casa tem" | aproximada |
+
+Nenhuma dessas é recuperável sem busca aproximada por entidade — que é o próximo passo já registrado
+no ADR-0006. Um comando *"desativar módulo cobre"* não acha módulo nenhum; *"cadastrar empresa tudo
+de casa"* cadastra uma empresa com o nome errado, e o operador precisa corrigir no rascunho.
+
+### ⚠️ Os números desta medição foram RECONTADOS — o marcador estava errado
+
+O CSV que a página produziu na hora trazia duas coisas falsas, ambas por casamento de **substring**
+em vez de palavra:
+
+1. **uma execução válida foi descartada**: a frase 7 (*"desativar módulo COB…"*) foi acusada de
+   conter a frase 1 (*"ativar módulo VND"*), porque **"desativar" contém "ativar"** e "módulo"
+   casava também — 2 de 3 palavras, acima do limite de 60%;
+2. **`COB` foi contado como `exata`** para a transcrição "cobre", porque `"cobre".includes("cob")`.
+   Erro **otimista**, na métrica que decide se código de módulo sobrevive ao ditado — e os códigos
+   deste sistema são siglas de três letras (VND, COB, EST, FIS, CAN), o alvo mais frágil possível.
+
+Uma terceira folga apareceu na verificação: com distância de edição, a palavra **"o"** contava como
+`aproximada` para COB (duas inserções). Corrigido — para alvo de até 4 caracteres, só o **prefixo**
+conta como recuperável.
+
+Os **dados brutos** (transcrição e tempos) estavam corretos; o que estava errado era a pontuação. A
+tabela acima é o resultado da recontagem com o marcador corrigido, e a rodada ficou **8/8 válidas**.
+
+Este é o terceiro caso do instrumento produzindo número errado — os dois primeiros estão na regra 6
+do `CLAUDE.md`, e este entrou nela junto com as oito transcrições reais, que agora são caso de
+regressão do autoteste.
+
 ### A medição, quando ligar
 
 Cinco frases, dez repetições cada, registrando **transcrição bruta**, **latência do fim da fala até o
