@@ -146,10 +146,10 @@ Fora daqui, na **raiz do monorepo**, e compartilhado com os outros cinco apps:
 ### Contexts (bounded contexts do backend)
 
 **F1 (em `main`):** `plan`, `account`, `company`, `role`, `user`, `auth`.
-**F2 (em `feat/f2-modules`, sem merge até a F1 fechar):** `module`.
+**F2 (em `feat/f2-modules`, sem merge até a F1 fechar):** `module`, `intent`, `contact`, `product`.
 
-**Previstos** (Visão Geral §4): `contact`, `product`, `order`, `commission`, `stock`, `trip`,
-`collection`, `fiscal`, `channel`, `fulfillment`.
+**Previstos** (Visão Geral §4): `order`, `commission`, `stock`, `trip`, `collection`, `fiscal`,
+`channel`, `fulfillment`.
 
 ## Essential Commands
 

@@ -17,6 +17,7 @@ import { PlanModule } from './contexts/plan/plan.module';
 import { AccountModule } from './contexts/account/account.module';
 import { CompanyModule } from './contexts/company/company.module';
 import { ContactModule } from './contexts/contact/contact.module';
+import { ProductModule } from './contexts/product/product.module';
 import { ModuleModule } from './contexts/module/module.module';
 import { RoleModule } from './contexts/role/role.module';
 import { UserModule } from './contexts/user/user.module';
@@ -44,6 +45,7 @@ import { AuthModule } from './contexts/auth/auth.module';
     AccountModule,
     CompanyModule,
     ContactModule,
+    ProductModule,
     ModuleModule,
     RoleModule,
     UserModule,

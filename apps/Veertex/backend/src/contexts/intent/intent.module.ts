@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CompanyModule } from '../company/company.module';
 import { ModuleModule } from '../module/module.module';
 import { ContactModule } from '../contact/contact.module';
+import { ProductModule } from '../product/product.module';
 import { RoleModule } from '../role/role.module';
 import { UserModule } from '../user/user.module';
 import { DeterministicIntentParser } from '../../infrastructure/intent/deterministic-intent-parser';
@@ -42,6 +43,7 @@ import { GeminiAudioTranscriber } from '../../infrastructure/intent/gemini-audio
     // Pelo despacho de CreateContact/UpdateContact — a aprovação chama os MESMOS use cases que o
     // controller de contatos chama.
     ContactModule,
+    ProductModule,
     UserModule,
     ModuleModule,
     CompanyModule,

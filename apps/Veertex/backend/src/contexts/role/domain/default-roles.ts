@@ -42,6 +42,10 @@ export const DEFAULT_ROLES: readonly DefaultRoleDefinition[] = [
       PERMISSIONS.contacts.read,
       PERMISSIONS.contacts.create,
       PERMISSIONS.contacts.update,
+      // Produto também é CORE, e cadastrá-lo é "cadastro do dia a dia" pela mesma leitura.
+      PERMISSIONS.products.read,
+      PERMISSIONS.products.create,
+      PERMISSIONS.products.update,
       PERMISSIONS.companies.update,
       PERMISSIONS.users.read,
       PERMISSIONS.roles.read,
@@ -57,6 +61,8 @@ export const DEFAULT_ROLES: readonly DefaultRoleDefinition[] = [
       PERMISSIONS.contacts.read,
       PERMISSIONS.contacts.create,
       PERMISSIONS.contacts.update,
+      PERMISSIONS.products.read,
+      PERMISSIONS.products.update,
     ],
   },
   {
@@ -66,7 +72,8 @@ export const DEFAULT_ROLES: readonly DefaultRoleDefinition[] = [
     // `contacts.read` porque atender no balcão começa por achar o cliente. Criar/alterar não: o
     // cadastro correto é responsabilidade de quem administra, e um cadastro duplicado feito às
     // pressas no caixa é o começo de duas verdades sobre o mesmo cliente.
-    permissions: [PERMISSIONS.companies.read, PERMISSIONS.contacts.read],
+    // `products.read` pela mesma razão: não se vende o que não se consegue achar na tela.
+    permissions: [PERMISSIONS.companies.read, PERMISSIONS.contacts.read, PERMISSIONS.products.read],
   },
   {
     code: 'SALES_REP',
@@ -75,7 +82,7 @@ export const DEFAULT_ROLES: readonly DefaultRoleDefinition[] = [
     // Só leitura, e ATENÇÃO: sem carteirização, isto significa ver TODOS os contatos da conta, não
     // só os dele. A carteirização está fora desta fatia por inteiro (ver a entidade `Contact`), e
     // quando chegar é aqui que o efeito deste papel muda.
-    permissions: [PERMISSIONS.companies.read, PERMISSIONS.contacts.read],
+    permissions: [PERMISSIONS.companies.read, PERMISSIONS.contacts.read, PERMISSIONS.products.read],
   },
   {
     code: 'DELIVERY',
@@ -87,6 +94,12 @@ export const DEFAULT_ROLES: readonly DefaultRoleDefinition[] = [
     code: 'ACCOUNTANT',
     name: 'Contador',
     description: 'Acesso contábil/fiscal somente leitura. Ampliado com FIS/CTB.',
-    permissions: [PERMISSIONS.account.read, PERMISSIONS.companies.read, PERMISSIONS.contacts.read],
+    permissions: [
+      PERMISSIONS.account.read,
+      PERMISSIONS.companies.read,
+      PERMISSIONS.contacts.read,
+      // NCM, CEST e origem vivem no produto: é leitura de insumo fiscal, não de catálogo comercial.
+      PERMISSIONS.products.read,
+    ],
   },
 ];

@@ -71,6 +71,28 @@ export const INTENT_COMMANDS = {
     requiredPermission: PERMISSIONS.contacts.update,
     requiredModule: null,
   },
+  /*
+   * CreateProduct e UpdateProduct são SEPARADOS pela mesma razão de CreateContact/UpdateContact: a
+   * Mesa precisa dizer ao humano QUAL das duas coisas vai acontecer. "Cadastrar o parafuso M8"
+   * resolvendo em silêncio numa alteração de um parafuso existente é uma edição que o operador não
+   * pediu — e no produto o estrago é maior, porque preço alterado por engano vai para a próxima
+   * venda.
+   *
+   * ⚠️ Não existe comando de KIT, e a ausência acompanha a decisão do §3.5: o kit ficou fora por
+   * inteiro até o EST existir. Um comando aqui faria a Mesa aceitar "montar um kit com 3 itens",
+   * construir o rascunho e falhar na aprovação — ou, pior, gravar uma composição que nunca baixa
+   * estoque.
+   */
+  CreateProduct: {
+    label: 'Cadastrar produto',
+    requiredPermission: PERMISSIONS.products.create,
+    requiredModule: null,
+  },
+  UpdateProduct: {
+    label: 'Alterar produto',
+    requiredPermission: PERMISSIONS.products.update,
+    requiredModule: null,
+  },
   ToggleModule: {
     // Ativar e desativar módulo é configuração da CONTA, não de papel.
     label: 'Ativar ou desativar módulo',

@@ -594,3 +594,97 @@ O §3.4 diz que o limite bloqueia venda acima, e quem aplica são VND/COB, que n
 de Eliab: *"campo preenchido com um valor é promessa ao usuário, e ninguém lê comentário de código"*.
 O aviso viaja no `hint` do catálogo de campos — vem do backend, aparece abaixo do campo, e **some
 sozinho** no dia em que o VND aplicar de verdade. Há teste de contrato prendendo esse texto.
+
+---
+
+## 8. Produto (§3.5) — o que ficou fora, e o motivo de cada um
+
+Fatia construída em 19/08/2026. O recorte foi aprovado por Eliab com três ajustes, e as ausências
+abaixo são **decisão registrada**, no mesmo formato da carteirização do Contato: não são atrasos, são
+escolhas com condição de volta.
+
+### 🔴 KIT (`bundle`) — fora POR INTEIRO, nem a composição
+
+Este é o ajuste mais importante do recorte, e a distinção é do Eliab:
+
+> *Diferente do limite de crédito: o limite é um número que alguém consulta; o kit é estrutura de
+> venda cujo sentido é baixar componente ao vender. Sem EST, o usuário monta a composição, vende, e
+> nada se move no estoque — **não é campo inerte, é comportamento errado silencioso**. E o §3.5 remete
+> o kit ao EST.*
+
+A proposta inicial (minha) era construir a **composição** e avisar na tela que a baixa dependia do
+EST — o mesmo tratamento do limite de crédito. Estava errada, e a razão cabe numa linha: **o limite de
+crédito não faz nada e a tela diz isso; o kit pareceria ter funcionado.** O operador monta, vende, e a
+venda acontece. Só que o estoque dos componentes fica intacto, e a diferença aparece semanas depois,
+no inventário — quando ninguém liga mais uma coisa à outra.
+
+| | O que o sistema faz | O que o usuário acredita |
+|---|---|---|
+| Sem kit (escolhido) | não dá para cadastrar kit; a mensagem diz que depende do módulo de Estoque | o mesmo — não há o que supor |
+| Kit **com** EST | vende e baixa componentes | o mesmo |
+| Kit **sem** EST | vende e **não baixa nada** | *"vendi o kit, o estoque baixou"* — **falso** |
+
+**Como está impedido, e em duas camadas:** o enum tem `bundle` (o §3.5 pede enum aberto), e
+`parseProductFormat` **recusa** com a mensagem que nomeia o módulo. Nenhuma tabela de composição foi
+criada; a tela não oferece a opção porque `creatableFormats` vem do servidor.
+
+**Volta INTEIRO com o EST:** composição, derivação de saldo e baixa ao vender. Não em partes.
+
+### As outras seis
+
+| O que | Por que fora | Condição de volta |
+|---|---|---|
+| **Variações (`variant`)** | §3.5: implementação antes do CAN completo, não agora. Enum aberto, criação recusada | módulo CAN |
+| **Imagens / MinIO** | **MinIO não existe no ambiente** — verificado: nenhuma variável no `.env.example`, nenhuma dependência no `package.json`, nenhum serviço no `docker-compose.dev.yml`. Nem a tabela `product_images` foi criada: guardar chave de objeto que nada produz sugere um recurso que não há | MinIO provisionado |
+| **CFOP** | §3.5, explícito: *"CFOP NÃO é campo de configuração global (erro do Nexo a não repetir)"*. Deriva de natureza de operação × contexto. Há um `export const CFOP_DELIBERADAMENTE_AUSENTE` no catálogo de campos, para quem for "só acrescentar o campo" encontrar a resposta antes | módulo FIS (e lá não será campo do produto) |
+| **Herança do grupo fiscal** | o grupo entra como **rótulo** (texto, não FK). A tabela de grupos e a herança são regra do FIS | módulo FIS |
+| **Saldo e custo médio** | do EST. O §3.5 diz que o custo médio é *"exibido aqui somente leitura"* — não há o que exibir sem o módulo, e coluna com número que ninguém atualiza é número que alguém soma | módulo EST |
+| **Tabela de preço** | preço base só, como no Contato e pelo mesmo motivo | módulo de preços |
+
+### Categoria — texto PROVISÓRIO, com o nome escolhido para a migração
+
+Decisão do Eliab: *"texto simples, como você recomendou, mas registre como provisório e escolha o
+nome da coluna pensando na migração para árvore. É o campo que mais vira árvore de verdade em ERP."*
+
+Daí `category_path`, e não `category`. O valor é um **caminho** (`"Ferramentas > Manuais"`), que é a
+forma que sobrevive: cada caminho distinto vira uma cadeia de nós, e o path continua verdadeiro como
+caminho materializado. Quando a árvore existir, `category_id` entra **ao lado** — as duas coexistem
+durante o backfill, e a antiga pode ficar como cache de exibição. Com o nome `category` sobraria um
+campo ambíguo (é o id ou o texto?) exatamente no momento em que clareza importa.
+
+O índice é `varchar_pattern_ops`, porque o filtro é por prefixo (`like 'Ferramentas%'`) e um btree com
+o collate padrão **não** atende prefixo — funcionaria fazendo varredura completa, que é o defeito que
+passa com 10 produtos e aparece com 10 mil.
+
+### Unidade comercial — lista fechada, e uma ressalva de procedência
+
+Decisão do Eliab: lista fechada com as siglas usuais, *"elas vão para a NF-e quando o FIS existir;
+sigla inventada agora custa migração depois"*.
+
+⚠️ **A ressalva, para ninguém escrever "tabela oficial" sem conferir** (regra 4 do `CLAUDE.md`): no
+layout da NF-e a **unidade comercial** (`uCom`) é **texto livre de até 6 caracteres** — não há tabela
+que a SEFAZ valide. O que tem tabela fechada é a **unidade tributável** (`uTrib`) de exportação, que é
+outro campo. Portanto a lista adotada é o **conjunto convencional** do mercado, e o motivo dela é
+qualidade de dado, não exigência fiscal. Se o FIS precisar de uma sigla fora dela, acrescentá-la é uma
+linha — não uma migração.
+
+A **origem da mercadoria** (0 a 8), essa sim, é tabela fechada da NF-e, e está implementada como tal.
+
+### O widget de completude — a redação é a decisão
+
+O §3.5 pede que a tela diga para o que o cadastro serve hoje. Duas das três finalidades dependem de
+módulos que não existem, e a diferença entre duas frases parecidas é categórica:
+
+| Frase | O que afirma | Verdadeira hoje? |
+|---|---|---|
+| *"pronto para emissão fiscal"* | sobre **o sistema** | **não** — sem FIS não há emissão |
+| *"campos fiscais preenchidos"* | sobre **o cadastro** | sim, verificável |
+
+Redação decidida por Eliab: a segunda, sempre, com o aviso de qual módulo falta. O aviso vem do
+servidor (que conhece os módulos ativos pelo token) e **desaparece sozinho** quando o módulo é
+ativado — mesmo desenho do `hint` do limite de crédito. Há teste prendendo os dois rótulos e a
+ausência da palavra "pronto".
+
+**Cotação de frete é a única finalidade completa de ponta a ponta**, porque peso e dimensão são dados
+do produto e não dependem de módulo. É o que torna o widget útil em vez de decorativo — e a razão de
+o bloco de medidas ser o único que nasce visível no catálogo de campos.

@@ -38,6 +38,7 @@ const ADMIN_NAV = [
   { href: MESA, label: 'Mesa', permission: null },
   { href: '/companies', label: 'Empresas', permission: 'companies.read' },
   { href: '/contacts', label: 'Contatos', permission: 'contacts.read' },
+  { href: '/products', label: 'Produtos', permission: 'products.read' },
   { href: '/users', label: 'Usuários', permission: 'users.read' },
   { href: '/roles', label: 'Papéis', permission: 'roles.read' },
   // Módulos é tela de CONFIGURAÇÃO DA CONTA, não de módulo — por isso entra aqui, fixa, e não no

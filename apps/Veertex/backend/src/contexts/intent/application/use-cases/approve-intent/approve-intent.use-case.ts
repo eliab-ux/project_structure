@@ -1,6 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UseCase } from '@gitspread/shared-kernel';
 import {
+  CreateProductCommand,
+  CreateProductUseCase,
+} from '../../../../product/application/use-cases/create-product/create-product.use-case';
+import {
+  UpdateProductCommand,
+  UpdateProductUseCase,
+} from '../../../../product/application/use-cases/update-product/update-product.use-case';
+import {
   CreateContactCommand,
   CreateContactUseCase,
 } from '../../../../contact/application/use-cases/create-contact/create-contact.use-case';
@@ -104,6 +112,8 @@ export class ApproveIntentUseCase implements UseCase<ApproveIntentCommand, Appro
     private readonly createCompany: CreateCompanyUseCase,
     private readonly updateCompany: UpdateCompanyUseCase,
     private readonly createContact: CreateContactUseCase,
+    private readonly createProduct: CreateProductUseCase,
+    private readonly updateProduct: UpdateProductUseCase,
     private readonly updateContact: UpdateContactUseCase,
   ) {}
 
@@ -289,6 +299,52 @@ export class ApproveIntentUseCase implements UseCase<ApproveIntentCommand, Appro
         break;
       }
 
+      case 'CreateProduct': {
+        /*
+         * A unidade é OBRIGATÓRIA aqui, como no formulário — e é o campo que o ditado mais erra
+         * ("caixa" vira "CX"? o tradutor decide). Deixá-la opcional com um default "UN" pareceria
+         * gentileza e produziria produto vendido na unidade errada, que só aparece na nota.
+         *
+         * `activeModules` vem do comando, que os leu do TOKEN: é o que decide se o widget de
+         * completude avisa sobre módulo ausente.
+         */
+        const product = await this.createProduct.execute(
+          new CreateProductCommand(command.accountId, command.activeModules, {
+            name: reader.text('name'),
+            unit: reader.text('unit'),
+            sku: reader.optionalText('sku'),
+            kind: reader.optionalText('kind'),
+            brand: reader.optionalText('brand'),
+            categoryPath: reader.optionalText('categoryPath'),
+            basePrice: reader.optionalNumber('basePrice'),
+            barcode: reader.optionalText('barcode'),
+            shortDescription: reader.optionalText('shortDescription'),
+            ncm: reader.optionalText('ncm'),
+            grossWeightKg: reader.optionalNumber('grossWeightKg'),
+          }),
+        );
+        resourceId = product.id;
+        summary = `Produto "${product.name}" cadastrado.`;
+        break;
+      }
+
+      case 'UpdateProduct': {
+        const product = await this.updateProduct.execute(
+          new UpdateProductCommand(reader.text('productId'), command.activeModules, {
+            name: reader.optionalText('name') ?? undefined,
+            unit: reader.optionalText('unit') ?? undefined,
+            sku: reader.optionalText('sku'),
+            brand: reader.optionalText('brand'),
+            categoryPath: reader.optionalText('categoryPath'),
+            basePrice: reader.optionalNumber('basePrice'),
+            shortDescription: reader.optionalText('shortDescription'),
+          }),
+        );
+        resourceId = product.id;
+        summary = `Produto "${product.name}" atualizado.`;
+        break;
+      }
+
       default: {
         // Sem `default` silencioso: um comando novo no catálogo sem `case` aqui quebra o `switch` em
         // tempo de compilação (`name` é união literal e o TypeScript exige exaustividade quando o
@@ -342,6 +398,34 @@ class FieldReader {
   optionalText(name: string): string | null {
     const value = this.fields[name]?.value;
     return typeof value === 'string' && value.trim() !== '' ? value : null;
+  }
+
+  /**
+   * Número opcional — e ele ACEITA a vírgula decimal do português.
+   *
+   * "12,50" chega assim quando o operador dita ou digita como fala. `Number("12,50")` é `NaN`, e um
+   * NaN silencioso viraria preço nulo: o produto seria cadastrado sem preço e ninguém veria o
+   * problema até alguém tentar vendê-lo. Valor que não vira número **recusa**, em vez de sumir.
+   */
+  optionalNumber(name: string): number | null {
+    const value = this.fields[name]?.value;
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : this.recusarNumero(name, String(value));
+    }
+    if (typeof value !== 'string') {
+      return this.recusarNumero(name, String(value));
+    }
+    // Tira separador de milhar e troca a vírgula decimal por ponto: "1.234,56" → "1234.56".
+    const normalizado = value.trim().replace(/\./g, '').replace(',', '.');
+    const numero = Number(normalizado);
+    return Number.isFinite(numero) ? numero : this.recusarNumero(name, value);
+  }
+
+  private recusarNumero(name: string, valor: string): never {
+    throw new IncompleteIntentDraftException([`${name} (valor não numérico: "${valor}")`]);
   }
 
   /** Lista opcional: ausente vira `undefined`, e `undefined` significa "não mexa neste campo". */

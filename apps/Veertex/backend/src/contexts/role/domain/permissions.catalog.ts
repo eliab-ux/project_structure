@@ -40,6 +40,14 @@ export const PERMISSIONS = {
     create: 'contacts.create',
     update: 'contacts.update',
   },
+  // Sem `delete`, mesma razão de contatos: nenhuma rota apaga produto nesta fatia. Produto
+  // referenciado por venda ou por nota não pode desaparecer — desativar é o que o negócio quer, e é
+  // `products.update`.
+  products: {
+    read: 'products.read',
+    create: 'products.create',
+    update: 'products.update',
+  },
   roles: {
     read: 'roles.read',
     create: 'roles.create',

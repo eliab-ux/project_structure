@@ -3,6 +3,7 @@ import { AccountModule } from '../../contexts/account/account.module';
 import { AuthModule } from '../../contexts/auth/auth.module';
 import { CompanyModule } from '../../contexts/company/company.module';
 import { ContactModule } from '../../contexts/contact/contact.module';
+import { ProductModule } from '../../contexts/product/product.module';
 import { ModuleModule } from '../../contexts/module/module.module';
 import { PlanModule } from '../../contexts/plan/plan.module';
 import { RoleModule } from '../../contexts/role/role.module';
@@ -12,6 +13,7 @@ import { AuthController } from './controllers/auth/auth.controller';
 import { AccountController } from './controllers/account/account.controller';
 import { CompanyController } from './controllers/company/company.controller';
 import { ContactController } from './controllers/contact/contact.controller';
+import { ProductController } from './controllers/product/product.controller';
 import { ModuleController } from './controllers/module/module.controller';
 import { RoleController } from './controllers/role/role.controller';
 import { UserController } from './controllers/user/user.controller';
@@ -41,6 +43,7 @@ import { IntentModule } from '../../contexts/intent/intent.module';
     AccountModule,
     CompanyModule,
     ContactModule,
+    ProductModule,
     ModuleModule,
     PlanModule,
     RoleModule,
@@ -53,6 +56,7 @@ import { IntentModule } from '../../contexts/intent/intent.module';
     AccountController,
     CompanyController,
     ContactController,
+    ProductController,
     ModuleController,
     RoleController,
     UserController,
