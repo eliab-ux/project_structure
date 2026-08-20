@@ -156,7 +156,128 @@ O teste de integração verifica os invariantes no `beforeAll` e aborta o suite 
 provisionado — um suite verde contra um banco sem isolamento seria pior que nenhum teste. Para pular
 conscientemente (máquina sem banco), `VEERTEX_SKIP_DB_TESTS=true`.
 
-## 5. Dokploy
+## 5. Dokploy — runbook de `veertex.techbs.com.br`
+
+> Definido por Eliab em 20/08/2026: **um hostname só**, `veertex.techbs.com.br`, com o Traefik
+> roteando `/api` para o backend e `/` para o frontend. É por isso que o frontend **não** precisa de
+> `NEXT_PUBLIC_API_URL`: o `services/api.ts` usa `/api` relativo.
+
+**Repositório que o Dokploy clona:** `git@gitlab.com:eliab1/veertex.git`, branch `main`. É um
+**espelho de conteúdo** gerado por `./apps/Veertex/deploy/publish-mirror.sh` — nunca editado à mão.
+
+### Ordem, e ela importa
+
+| # | Passo | Onde | Por que nesta ordem |
+|---|---|---|---|
+| 1 | DNS: registro **A** `veertex` → `72.61.43.90`, **nuvem CINZA** | Cloudflare (`techbs.com.br`) | O Let's Encrypt precisa do DNS resolvendo. Com "Proxied" (laranja) o certificado **não é emitido** |
+| 2 | Criar o **Postgres** (Database → Postgres) | Dokploy | O backend aborta no boot se não alcançar o banco — subir a aplicação antes é gastar um deploy para ver o mesmo erro |
+| 3 | Provisionar papéis (`001_create_roles.sql`) | psql, **superusuário**, uma vez | Sem `veertex_owner`/`veertex_app` o boot falha na verificação de isolamento, que é o comportamento correto |
+| 4 | Criar o **Backend** (Application) e preencher Environment | Dokploy | — |
+| 5 | Criar o **Frontend** (Application) | Dokploy | — |
+| 6 | Deploy dos dois, e conferir o **Logs** do backend | Dokploy | O bootstrap migra, **verifica o isolamento e ABORTA se falhar** — o log é onde isso aparece |
+| 7 | Primeira conta: `npm run create:account:prod -- …` | dentro do container | Não há endpoint: todo INSERT do onboarding é para um tenant que ainda não existe |
+
+### Passo 3 — provisionamento, com os dados do Postgres do Dokploy
+
+Use o **Internal Host** que o Dokploy mostra na página do serviço (não o nome amigável), e rode de
+dentro da rede do servidor (por exemplo, `docker exec` no container do Postgres):
+
+```bash
+psql "postgresql://postgres:<senha-do-postgres>@localhost:5432/postgres" \
+  -v ON_ERROR_STOP=1 \
+  -v db_name=veertex \
+  -v owner_password=SENHA_DO_OWNER \
+  -v app_password=SENHA_DO_APP \
+  -f 001_create_roles.sql
+```
+
+O script imprime uma conferência no fim. **`rolsuper` e `rolbypassrls` têm de ser `f` nos dois
+papéis** — um `t` em `rolbypassrls` no `veertex_app` torna todo o RLS decorativo, e nada no código
+perceberia.
+
+O arquivo não vai na imagem (`deploy/` fica fora do runtime), então copie-o do repositório:
+`apps/Veertex/backend/deploy/sql/001_create_roles.sql`.
+
+### Passos 4 e 5 — os dois serviços
+
+| | Backend | Frontend |
+|---|---|---|
+| Build Type | Dockerfile | Dockerfile |
+| **Dockerfile Path** | `apps/Veertex/backend/Dockerfile` | `apps/Veertex/frontend/Dockerfile` |
+| **Docker Context Path** | `/` | `/` |
+| Domain | `veertex.techbs.com.br` | `veertex.techbs.com.br` |
+| Path | **`/api`** · Strip Path **OFF** | `/` |
+| Container Port | **3020** | **3021** |
+| HTTPS | ON (Let's Encrypt) | ON |
+
+**Strip Path OFF** porque o backend usa `setGlobalPrefix('api')`: com o strip ligado, o Traefik
+entregaria `/contacts` para uma aplicação que só responde em `/api/contacts`, e tudo daria 404.
+
+### Environment do backend — o bloco inteiro
+
+Valores entre `<>` são segredos e ficam **apenas na UI do Dokploy**. Nunca neste arquivo, nunca no
+repositório.
+
+```env
+NODE_ENV=production
+PORT=3020
+HOST=0.0.0.0
+VEERTEX_APP_NAME=Veertex
+
+# Dois papéis, duas connection strings — apontar as duas para o mesmo usuário
+# faz o RLS parar de valer para a aplicação (o dono ignora as policies).
+DATABASE_URL=postgresql://veertex_app:<SENHA_DO_APP>@<INTERNAL_HOST>:5432/veertex
+DATABASE_URL_MIGRATIONS=postgresql://veertex_owner:<SENHA_DO_OWNER>@<INTERNAL_HOST>:5432/veertex
+DATABASE_OWNER_ROLE=veertex_owner
+DATABASE_APP_ROLE=veertex_app
+AUTO_MIGRATE=true
+
+JWT_ACCESS_SECRET=<segredo-forte-1>
+JWT_REFRESH_SECRET=<segredo-forte-2-DIFERENTE-do-primeiro>
+JWT_ACCESS_EXPIRATION=15m
+JWT_REFRESH_EXPIRATION=7d
+
+CORS_ORIGIN=https://veertex.techbs.com.br
+FRONTEND_URL=https://veertex.techbs.com.br
+
+# Recuperação de senha por WhatsApp. A apikey é a DA INSTÂNCIA, nunca a global.
+EVOLUTION_API_URL=https://evo2.techbs.com.br
+EVOLUTION_SYSTEM_INSTANCE=<instancia-de-sistema>
+EVOLUTION_SYSTEM_APIKEY=<apikey-da-instancia>
+
+# A Mesa. Sem a chave, o adapter RECUSA a intenção — nunca cai para o determinístico.
+INTENT_PARSER_DRIVER=gemini
+GEMINI_API_URL=https://generativelanguage.googleapis.com/v1beta
+GEMINI_API_KEY=<chave-do-gemini>
+GEMINI_MODEL=gemini-2.5-flash
+AUDIO_TRANSCRIPTION_ENABLED=false
+```
+
+**O frontend não precisa de nenhuma variável** — API relativa no mesmo domínio.
+
+⚠️ **`DATABASE_URL_TEST` e `DATABASE_URL_MIGRATIONS_TEST` não vão para produção.** Elas existem para
+a suíte, apontam para o banco de teste, e um valor delas em produção é uma connection string a mais
+num lugar que não precisa dela.
+
+### Depois do deploy — o que conferir no log, e nesta ordem
+
+```
+1. migrations aplicadas          → "Successfully migrated" / "no pending migrations"
+2. ✅ isolamento íntegro          → se falhar, o processo ABORTA e a mensagem diz qual invariante
+3. catálogo de planos reconciliado
+4. servidor escutando em 3020
+```
+
+Se o passo 2 abortar, **não force o start**: a mensagem nomeia o invariante quebrado (tabela sem
+policy, papel com `BYPASSRLS`, `veertex_app` com DELETE). Subir por cima disso é atender requisições
+sem isolamento entre contas garantido — o único erro desta fila que não se desfaz relendo o log.
+
+### Fila de verificação completa
+
+`deploy/verify/README.md` — as seis etapas (migration, invariantes, comportamento do RLS, primeira
+conta, smoke de autenticação, WhatsApp), com os comandos `:prod` que rodam de dentro do container.
+
+## 5.1 Referência resumida do Dokploy
 
 Estrutura: **Backend (Application)** + **Frontend (Application)**. Sem Redis no F1 — nenhum job
 ainda; ele entra com a fatia que precisar de fila (geocodificação de endereço, no F2).
