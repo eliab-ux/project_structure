@@ -162,6 +162,12 @@ conscientemente (máquina sem banco), `VEERTEX_SKIP_DB_TESTS=true`.
 > roteando `/api` para o backend e `/` para o frontend. É por isso que o frontend **não** precisa de
 > `NEXT_PUBLIC_API_URL`: o `services/api.ts` usa `/api` relativo.
 
+**Project no Dokploy:** `Veertex e Kortex`, environment `production` — o mesmo que hospeda o Kortex.
+Serviços de lá: `kortex-frontend`, `kortex-backend`, `kortex-postgres` e **`Veertex-postgres`**.
+
+**Nomes dos serviços a criar:** `veertex-backend` e `veertex-frontend`, seguindo a convenção do
+Kortex. O nome importa pouco para o Traefik e muito para quem olha a lista às três da manhã.
+
 **Repositório que o Dokploy clona:** `git@gitlab.com:eliab1/veertex.git`, branch `main`. É um
 **espelho de conteúdo** gerado por `./apps/Veertex/deploy/publish-mirror.sh` — nunca editado à mão.
 
@@ -170,14 +176,34 @@ conscientemente (máquina sem banco), `VEERTEX_SKIP_DB_TESTS=true`.
 | # | Passo | Onde | Por que nesta ordem |
 |---|---|---|---|
 | 1 | DNS: registro **A** `veertex` → `72.61.43.90`, **nuvem CINZA** | Cloudflare (`techbs.com.br`) | O Let's Encrypt precisa do DNS resolvendo. Com "Proxied" (laranja) o certificado **não é emitido** |
-| 2 | Criar o **Postgres** (Database → Postgres) | Dokploy | O backend aborta no boot se não alcançar o banco — subir a aplicação antes é gastar um deploy para ver o mesmo erro |
-| 3 | Provisionar papéis (`001_create_roles.sql`) | psql, **superusuário**, uma vez | Sem `veertex_owner`/`veertex_app` o boot falha na verificação de isolamento, que é o comportamento correto |
+| 2 | Criar o **Postgres** (Database → Postgres) | Dokploy | ✅ **feito** — `Veertex-postgres` existe desde 08/08/2026. O backend aborta no boot se não alcançar o banco, então ele precisa vir antes |
+| 3 | Provisionar papéis (`001_create_roles.sql`) | psql, **superusuário**, uma vez | Sem `veertex_owner`/`veertex_app` o boot falha na verificação de isolamento, que é o comportamento correto. **Confira se já foi feito** — ver abaixo |
 | 4 | Criar o **Backend** (Application) e preencher Environment | Dokploy | — |
 | 5 | Criar o **Frontend** (Application) | Dokploy | — |
 | 6 | Deploy dos dois, e conferir o **Logs** do backend | Dokploy | O bootstrap migra, **verifica o isolamento e ABORTA se falhar** — o log é onde isso aparece |
 | 7 | Primeira conta: `npm run create:account:prod -- …` | dentro do container | Não há endpoint: todo INSERT do onboarding é para um tenant que ainda não existe |
 
-### Passo 3 — provisionamento, com os dados do Postgres do Dokploy
+### Passo 3 — o provisionamento já foi feito neste banco?
+
+O `Veertex-postgres` existe desde antes desta fatia, então a resposta pode ser sim. Uma consulta
+responde, e ela é a mesma que o boot vai fazer:
+
+```sql
+select rolname, rolsuper, rolbypassrls
+  from pg_roles
+ where rolname in ('veertex_owner', 'veertex_app');
+```
+
+| Resultado | O que fazer |
+|---|---|
+| duas linhas, `rolsuper` e `rolbypassrls` = `f` nas duas | nada — pule para o passo 4 |
+| nenhuma linha | rodar o script abaixo |
+| `rolbypassrls` = `t` em qualquer uma | **parar**: com `BYPASSRLS` o RLS é decorativo. `alter role … nobypassrls` antes de seguir |
+
+Confira também se o banco `veertex` existe (`\l` no psql). O script cria os dois papéis **e** o
+banco; rodá-lo num banco que já os tem é seguro, mas ele vai reclamar do que já existe.
+
+### Passo 3b — o script, com os dados do Postgres do Dokploy
 
 Use o **Internal Host** que o Dokploy mostra na página do serviço (não o nome amigável), e rode de
 dentro da rede do servidor (por exemplo, `docker exec` no container do Postgres):
