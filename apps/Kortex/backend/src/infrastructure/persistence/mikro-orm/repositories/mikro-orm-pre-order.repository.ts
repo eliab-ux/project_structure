@@ -48,6 +48,10 @@ export class MikroOrmPreOrderRepository implements PreOrderRepositoryPort {
     return rows.map((row) => this.mapper.toDomain(row));
   }
 
+  async countOpen(accountId: AccountId): Promise<number> {
+    return this.repo.count({ accountId: accountId.value, status: 'open' });
+  }
+
   async findById(accountId: AccountId, id: PreOrderId): Promise<PreOrder | null> {
     const orm = await this.repo.findOne({ accountId: accountId.value, id: id.value });
     return orm ? this.mapper.toDomain(orm) : null;

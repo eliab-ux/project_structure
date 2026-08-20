@@ -35,6 +35,7 @@ import {
   FabricHistoryController,
   RunningCutController,
 } from './controllers/cut/cut.controller';
+import { PendingController } from './controllers/pending/pending.controller';
 import { FinanceModule } from '../../contexts/finance/finance.module';
 import {
   BankAccountController,
@@ -86,6 +87,7 @@ import {
     CutStopController,
     FabricHistoryController,
     RunningCutController,
+    PendingController,
     BankAccountController,
     FinancialCategoryController,
     CashEntryController,

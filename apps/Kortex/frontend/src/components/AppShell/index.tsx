@@ -12,10 +12,13 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import Badge from '@mui/material/Badge';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import { useRouter } from 'next/navigation';
 import { useAuth } from 'src/contexts/AuthContext';
-import preOrderService from 'src/services/preOrderService';
+import pendingService, { PendingSummary } from 'src/services/pendingService';
 import { USER_ROLE_LABELS, UserRole } from 'src/types/auth';
 import { FONT_MONO } from 'src/theme/theme';
 
@@ -23,8 +26,8 @@ interface NavItem {
   href: string;
   label: string;
   allow?: UserRole[];
-  /** Marca o item que exibe contagem de pendência ao lado do nome. */
-  badge?: 'preOrders';
+  /** Qual contagem de pendência aparece ao lado do nome. */
+  badge?: keyof PendingSummary;
 }
 
 interface NavGroup {
@@ -51,7 +54,7 @@ const NAV: NavGroup[] = [
       // reserva. A agenda vem depois porque é consequência dela.
       { href: '/pre-pedidos', label: 'Pedidos', badge: 'preOrders' },
       { href: '/agenda', label: 'Agenda' },
-      { href: '/fila-de-espera', label: 'Fila de espera' },
+      { href: '/fila-de-espera', label: 'Fila de espera', badge: 'waitingList' },
     ],
   },
   {
@@ -73,6 +76,18 @@ const NAV: NavGroup[] = [
   },
 ];
 
+/**
+ * O que o número ao lado do menu significa, para o leitor de tela.
+ *
+ * "(3)" sozinho não diz nada a quem não vê a tela — e é justamente quem mais precisa da frase
+ * inteira.
+ */
+const LABEL_PENDENCIA: Record<keyof PendingSummary, string> = {
+  preOrders: 'pedidos aguardando reserva',
+  waitingList: 'na fila de espera, por resolver',
+  slotNotices: 'avisos de vaga por tratar',
+};
+
 /** O que vive atrás da engrenagem: o que se ajusta, não o que se opera. */
 const SETTINGS: NavItem[] = [
   { href: '/configuracao', label: 'Configuração da conta', allow: ['owner'] },
@@ -80,37 +95,34 @@ const SETTINGS: NavItem[] = [
   { href: '/equipe', label: 'Equipe' },
 ];
 
+const SEM_PENDENCIA: PendingSummary = { preOrders: 0, waitingList: 0, slotNotices: 0 };
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const pathname = usePathname();
-  const [openPreOrders, setOpenPreOrders] = useState(0);
+  const router = useRouter();
+  const [pending, setPending] = useState<PendingSummary>(SEM_PENDENCIA);
   const [settingsAnchor, setSettingsAnchor] = useState<null | HTMLElement>(null);
   const [userAnchor, setUserAnchor] = useState<null | HTMLElement>(null);
 
   /**
-   * Pré-pedidos abertos esperando reserva — a fila que o Administrativo precisa ver sem procurar.
+   * O que está pendente agora: pedidos, fila e avisos de vaga.
    *
-   * Recarrega a cada navegação em vez de ficar consultando por tempo. O pré-pedido chega quando o
-   * Modelista termina de conversar com o cliente, não a cada 30 segundos; um `setInterval` traria
-   * uma requisição por minuto por aba aberta o dia inteiro para uma contagem que muda poucas vezes
-   * ao dia. Trocar de tela já é o momento natural de reconferir.
+   * Recarrega a cada navegação em vez de consultar por tempo. Pedido chega quando o Modelista
+   * termina de conversar com o cliente, e aviso de vaga quando ele vê a mesa livre — não a cada
+   * 30 segundos. Um `setInterval` traria uma requisição por minuto, por aba aberta, o dia inteiro,
+   * para números que mudam poucas vezes ao dia. Trocar de tela já é o momento de reconferir.
    */
-  const loadBadge = useCallback(async () => {
+  const loadPending = useCallback(async () => {
     if (!user || user.role === 'modelista') {
       return;
     }
-    try {
-      setOpenPreOrders((await preOrderService.listOpenPreOrders()).length);
-    } catch {
-      // Contador é acessório: se falhar, o menu continua funcionando sem número. Mostrar erro de
-      // um badge atrapalharia quem está tentando fazer outra coisa.
-      setOpenPreOrders(0);
-    }
+    setPending(await pendingService.summary());
   }, [user]);
 
   useEffect(() => {
-    void loadBadge();
-  }, [loadBadge, pathname]);
+    void loadPending();
+  }, [loadPending, pathname]);
 
   const permitido = (item: NavItem) => !item.allow || (user && item.allow.includes(user.role));
   const groups = NAV.map((group) => ({
@@ -167,10 +179,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   }}
                 >
                   {item.label}
-                  {item.badge === 'preOrders' && openPreOrders > 0 && (
+                  {item.badge && pending[item.badge] > 0 && (
                     <Box
                       component="span"
-                      aria-label={`${openPreOrders} pedidos aguardando reserva`}
+                      aria-label={`${pending[item.badge]} ${LABEL_PENDENCIA[item.badge]}`}
                       sx={{
                         ml: 0.75,
                         fontFamily: FONT_MONO,
@@ -179,7 +191,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         color: 'error.main',
                       }}
                     >
-                      ({openPreOrders})
+                      ({pending[item.badge]})
                     </Box>
                   )}
                 </Box>
@@ -214,6 +226,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             Kortex
           </Typography>
           <Box sx={{ flexGrow: 1 }} />
+
+          {/*
+           * O sino: avisos de vaga que o Modelista mandou e ninguém tratou.
+           *
+           * Só aparece quando há algo — sino permanentemente zerado vira parte do cenário, e aí
+           * deixa de ser notado no dia em que acende. Leva direto para a fila de espera, que é
+           * onde a decisão acontece.
+           */}
+          {pending.slotNotices > 0 && (
+            <Tooltip title={`${pending.slotNotices} aviso(s) de vaga do Modelista`}>
+              <IconButton
+                aria-label={`${pending.slotNotices} avisos de vaga por tratar. Ir para a fila de espera.`}
+                onClick={() => router.push('/fila-de-espera')}
+                sx={{ color: 'error.main' }}
+              >
+                <Badge badgeContent={pending.slotNotices} color="error">
+                  <NotificationsNoneIcon fontSize="small" />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+          )}
 
           {settings.length > 0 && (
             <>

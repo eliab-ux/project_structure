@@ -15,7 +15,13 @@ import { useSnackbar } from 'notistack';
 import { RequireAuth } from 'src/components/RequireAuth';
 import scheduleService from 'src/services/scheduleService';
 import { apiErrorMessage } from 'src/services/api';
-import { RESERVATION_STATUS_LABELS, ReservationForModelista, hhmm } from 'src/types/schedule';
+import {
+  RESERVATION_STATUS_LABELS,
+  ReservationForModelista,
+  ScheduleEntry,
+  hhmm,
+  isoDate,
+} from 'src/types/schedule';
 import { numericSx } from 'src/theme/theme';
 
 const TOUCH = { minHeight: 56 };
@@ -31,10 +37,23 @@ function QueueScreen() {
   const { enqueueSnackbar } = useSnackbar();
   const [loading, setLoading] = useState(true);
   const [queue, setQueue] = useState<ReservationForModelista[]>([]);
+  const [consultations, setConsultations] = useState<ScheduleEntry[]>([]);
 
   const load = useCallback(async () => {
     try {
-      setQueue(await scheduleService.modelistaQueue());
+      // O dia inteiro, no relógio local. O Modelista precisa ver o atendimento marcado para as
+      // 16h logo cedo, não quando ele já passou.
+      const hoje = isoDate(new Date());
+      const [fila, agenda] = await Promise.all([
+        scheduleService.modelistaQueue(),
+        scheduleService.agenda(
+          new Date(`${hoje}T00:00:00`).toISOString(),
+          new Date(`${hoje}T23:59:59`).toISOString(),
+        ),
+      ]);
+
+      setQueue(fila);
+      setConsultations(agenda.filter((entry) => entry.type === 'consultation'));
     } catch (error) {
       enqueueSnackbar(apiErrorMessage(error, 'Não foi possível carregar a fila.'), {
         variant: 'error',
@@ -79,6 +98,36 @@ function QueueScreen() {
         <Typography variant="h2" component="h1" gutterBottom>
           Cortes pagos
         </Typography>
+
+        {/*
+         * Atendimentos do dia — conversa marcada, não corte.
+         *
+         * Aparecem aqui porque ocupam a agenda DELE: é hora em que ele não está na máquina. O
+         * `ScheduleEntryDto` não carrega campo monetário nenhum, então a §5 continua respeitada
+         * mesmo com o Modelista lendo a agenda.
+         */}
+        {consultations.length > 0 && (
+          <Stack spacing={1} sx={{ mt: 2 }}>
+            <Typography variant="overline" component="p" sx={{ color: 'text.secondary' }}>
+              Atendimentos de hoje
+            </Typography>
+            {consultations.map((entry) => (
+              <Paper
+                key={entry.id}
+                variant="outlined"
+                sx={{ p: 1.75, borderLeft: '3px solid', borderLeftColor: 'info.main' }}
+              >
+                <Typography variant="h4" component="h2">
+                  {entry.title ?? entry.customer?.name ?? 'Atendimento'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={numericSx}>
+                  {hhmm(entry.startsAt)}–{hhmm(entry.endsAt)}
+                  {entry.customer ? ` · ${entry.customer.name}` : ''}
+                </Typography>
+              </Paper>
+            ))}
+          </Stack>
+        )}
 
         {queue.length === 0 ? (
           <Alert severity="info" sx={{ mt: 2 }}>

@@ -62,6 +62,11 @@ export class WaitingListUseCases {
     return this.toDtos(account, entries);
   }
 
+  /** Fila por resolver — `waiting` + `offered`. Alimenta o balão do menu. */
+  async countPending(accountId: string): Promise<number> {
+    return this.waitingListRepository.countPending(AccountId.from(accountId));
+  }
+
   async create(accountId: string, input: WaitingListInput): Promise<WaitingListEntryDto> {
     const account = AccountId.from(accountId);
 
@@ -173,6 +178,11 @@ export class SlotNoticeUseCases {
     const account = AccountId.from(accountId);
     const notices = await this.slotNoticeRepository.listByAccount(account);
     return this.toDtos(account, notices);
+  }
+
+  /** Avisos de vaga ainda não tratados — alimenta o sino do cabeçalho. */
+  async countOpen(accountId: string): Promise<number> {
+    return this.slotNoticeRepository.countOpen(AccountId.from(accountId));
   }
 
   async create(accountId: string, createdByUserId: string, note: string): Promise<SlotNoticeDto> {

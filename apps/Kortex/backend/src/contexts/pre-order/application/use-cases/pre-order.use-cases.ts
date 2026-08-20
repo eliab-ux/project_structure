@@ -64,6 +64,11 @@ export class PreOrderUseCases {
     return this.toDtos(account, preOrders);
   }
 
+  /** Quantos pedidos esperam reserva — alimenta o balão do menu. */
+  async countOpen(accountId: string): Promise<number> {
+    return this.preOrderRepository.countOpen(AccountId.from(accountId));
+  }
+
   /** App do Modelista: o que ELE avaliou. */
   async listMine(accountId: string, userId: string): Promise<PreOrderDto[]> {
     const account = AccountId.from(accountId);

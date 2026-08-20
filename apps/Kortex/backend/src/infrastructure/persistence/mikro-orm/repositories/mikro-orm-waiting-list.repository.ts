@@ -39,6 +39,13 @@ export class MikroOrmWaitingListRepository implements WaitingListRepositoryPort 
     return rows.map((row) => this.mapper.toDomain(row));
   }
 
+  async countPending(accountId: AccountId): Promise<number> {
+    return this.repo.count({
+      accountId: accountId.value,
+      status: { $in: ['waiting', 'offered'] },
+    });
+  }
+
   async findById(accountId: AccountId, id: WaitingListEntryId): Promise<WaitingListEntry | null> {
     const orm = await this.repo.findOne({ accountId: accountId.value, id: id.value });
     return orm ? this.mapper.toDomain(orm) : null;
@@ -71,6 +78,10 @@ export class MikroOrmSlotNoticeRepository implements SlotNoticeRepositoryPort {
       { orderBy: { status: 'ASC', createdAt: 'DESC' } },
     );
     return rows.map((row) => this.mapper.toDomain(row));
+  }
+
+  async countOpen(accountId: AccountId): Promise<number> {
+    return this.repo.count({ accountId: accountId.value, status: 'open' });
   }
 
   async findById(accountId: AccountId, id: SlotNoticeId): Promise<SlotNotice | null> {

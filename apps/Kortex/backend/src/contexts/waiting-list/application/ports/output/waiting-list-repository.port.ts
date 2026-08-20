@@ -14,12 +14,23 @@ export interface WaitingListRepositoryPort {
    * antecipar é justamente quem se chama quando um horário vaga.
    */
   listByAccount(accountId: AccountId): Promise<WaitingListEntry[]>;
+
+  /**
+   * Fila ainda por resolver: `waiting` + `offered`.
+   *
+   * `converted` virou reserva e `dropped` desistiu — os dois são desfecho, e contá-los deixaria o
+   * número crescendo para sempre, o que é o mesmo que não ter número nenhum.
+   */
+  countPending(accountId: AccountId): Promise<number>;
   findById(accountId: AccountId, id: WaitingListEntryId): Promise<WaitingListEntry | null>;
   save(entry: WaitingListEntry): Promise<WaitingListEntry>;
 }
 
 export interface SlotNoticeRepositoryPort {
   listByAccount(accountId: AccountId): Promise<SlotNotice[]>;
+
+  /** Avisos de vaga que o Administrativo ainda não tratou. */
+  countOpen(accountId: AccountId): Promise<number>;
   findById(accountId: AccountId, id: SlotNoticeId): Promise<SlotNotice | null>;
   save(notice: SlotNotice): Promise<SlotNotice>;
 }

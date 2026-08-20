@@ -129,7 +129,27 @@ export function CuttingTable() {
             fill: 'rgba(255,255,255,.38)',
             letterSpacing: '.06em',
           },
-          '& .head': { fill: theme.palette.error.main },
+          /**
+           * O cabeçote anda por `offset-path` do CSS, não por `<animateMotion>` do SMIL.
+           *
+           * SMIL não se controla por media query: para respeitar `prefers-reduced-motion` a única
+           * saída era `display: none`, e aí o ponto SUMIA para quem pede menos movimento — some o
+           * elemento em vez de acalmá-lo. Com CSS, tirar a animação deixa o cabeçote parado no
+           * início do corte, visível.
+           *
+           * De quebra, resolve a compatibilidade: `href` em `<mpath>` é SVG2 e só o Chromium
+           * honra; Firefox e Safari exigiam `xlink:href`.
+           */
+          '& .head': {
+            fill: theme.palette.error.main,
+            offsetPath: `path('M40 92 H310 M334 92 H674 M674 198 H506 M506 224 H674 M674 340 H506 M476 318 H334 M310 318 H30 M30 348 H330 M330 412 H40 M348 348 H562 M576 404 H672')`,
+            offsetRotate: '0deg',
+            animation: 'kortex-head 16s linear infinite',
+          },
+          '@keyframes kortex-head': {
+            from: { offsetDistance: '0%' },
+            to: { offsetDistance: '100%' },
+          },
           '& .trace': {
             fill: 'none',
             stroke: theme.palette.error.main,
@@ -142,9 +162,11 @@ export function CuttingTable() {
           '@keyframes kortex-cut': { to: { strokeDashoffset: 0 } },
           // Movimento contínuo atrapalha quem tem sensibilidade vestibular, e esta é a porta de
           // entrada do sistema: o desenho continua legível parado, com o corte inteiro visível.
+          // Menos movimento: o corte aparece inteiro e o cabeçote fica parado no começo dele.
+          // Nada some — a tela continua contando a mesma coisa, sem nada se mexendo.
           '@media (prefers-reduced-motion: reduce)': {
             '& .trace': { animation: 'none', strokeDashoffset: 0, opacity: 0.55 },
-            '& .head': { display: 'none' },
+            '& .head': { animation: 'none' },
           },
         })}
       >
@@ -221,16 +243,8 @@ export function CuttingTable() {
           d="M40 92 H310 M334 92 H674 M674 198 H506 M506 224 H674 M674 340 H506
              M476 318 H334 M310 318 H30 M30 348 H330 M330 412 H40 M348 348 H562 M576 404 H672"
         />
-        <g className="head">
-          <rect x="-7" y="-7" width="14" height="14" rx="2.5">
-            <animateMotion dur="16s" repeatCount="indefinite" rotate="auto">
-              {/* Os DOIS atributos. `href` em `<mpath>` é SVG2 e só o Chromium honra;
-                  Firefox e Safari ainda exigem `xlink:href`, e neles o cabeçote fica parado
-                  no canto sem nenhum erro aparecer. */}
-              <mpath href="#kortex-cutpath" xlinkHref="#kortex-cutpath" />
-            </animateMotion>
-          </rect>
-        </g>
+        {/* O cabeçote. Centrado em (0,0) porque quem o posiciona é o `offset-path` do CSS. */}
+        <rect className="head" x="-7" y="-7" width="14" height="14" rx="2.5" />
       </Box>
 
       <Box sx={{ position: 'relative', zIndex: 3 }}>

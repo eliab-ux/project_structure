@@ -417,17 +417,16 @@ export default function AgendaPage() {
 
           {selectedReservation?.status === 'pre_reserved' && (
             <>
-              <Button
-                variant="outlined"
-                onClick={() =>
-                  act(
-                    () => scheduleService.release(selectedReservation.id),
-                    'Horário liberado para a fila de espera.',
-                  )
-                }
-              >
-                Liberar para a fila
-              </Button>
+              {/*
+               * "Liberar para a fila" saiu daqui a pedido do Eliab.
+               *
+               * O rótulo confundia duas filas diferentes: quem lê entende "mandar para a fila do
+               * Modelista", que é o que o PAGAMENTO faz. A ação era o contrário — desistir da
+               * pré-reserva e devolver o horário para a fila de ESPERA.
+               *
+               * Quem cobre esse caso agora é "Cancelar", que também libera o horário. O endpoint
+               * `PATCH /reservations/:id/release` continua existindo e testado; só não tem botão.
+               */}
               {(Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]).map((method) => (
                 <Button
                   key={method}
@@ -635,7 +634,9 @@ export default function AgendaPage() {
               value={consultForm.title}
               onChange={(event) => setConsultForm({ ...consultForm, title: event.target.value })}
             />
-            <Stack direction="row" spacing={2}>
+            {/* Empilha no celular: os três lado a lado num diálogo estreito cortam o relógio
+                do campo de hora, e o operador perde o botão que abre o seletor. */}
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
                 type="date"
                 label="Dia"
@@ -648,6 +649,9 @@ export default function AgendaPage() {
                 type="time"
                 label="Início"
                 InputLabelProps={{ shrink: true }}
+                // `flexShrink: 0` é o que segura: sem ele o campo de dia, que é `fullWidth`,
+                // come a largura dos dois vizinhos e o relógio fica cortado.
+                sx={{ minWidth: 138, flexShrink: 0 }}
                 value={consultForm.startTime}
                 onChange={(event) =>
                   setConsultForm({ ...consultForm, startTime: event.target.value })
@@ -657,6 +661,7 @@ export default function AgendaPage() {
                 type="time"
                 label="Fim"
                 InputLabelProps={{ shrink: true }}
+                sx={{ minWidth: 138, flexShrink: 0 }}
                 value={consultForm.endTime}
                 onChange={(event) =>
                   setConsultForm({ ...consultForm, endTime: event.target.value })
