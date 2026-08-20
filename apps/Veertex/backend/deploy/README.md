@@ -215,9 +215,17 @@ ser colado inteiro num `psql` interativo, que é o que o terminal do Dokploy ofe
 **1.** Gere duas senhas fortes e DIFERENTES, na sua máquina:
 
 ```bash
-openssl rand -base64 24   # veertex_owner
-openssl rand -base64 24   # veertex_app
+openssl rand -hex 32   # veertex_owner
+openssl rand -hex 32   # veertex_app
 ```
+
+⚠️ **`-hex`, não `-base64`.** As senhas vão dentro de uma **connection string**
+(`postgresql://usuario:senha@host/banco`), e o base64 produz `/`, `+` e `=` — os três com
+significado na URL. Uma senha com `/` corta a URL ali e o driver tenta conectar num banco de nome
+absurdo; o erro que aparece é "database does not exist", que manda você procurar no lugar errado.
+
+Hexadecimal só tem `0-9a-f`: nada a escapar, em nenhum dos dois lugares onde a senha vai (o `\set`
+do psql e a variável do Dokploy). 32 bytes em hex são 64 caracteres — entropia de sobra.
 
 **2.** No Dokploy, abra o terminal do serviço `Veertex-postgres` e entre no psql como superusuário:
 
@@ -260,7 +268,32 @@ Não é paranoia: o histórico do psql é texto puro, e a senha do `veertex_owne
 DDL — a única capaz de `DROP TABLE` neste sistema. Ela existir num arquivo dentro do container do
 banco é exatamente o tipo de coisa que ninguém procura.
 
-### Passo 3c — a forma canônica, quando o arquivo estiver no servidor
+### Passo 3c — a forma canônica, pela porta externa do Dokploy (recomendada)
+
+Se o serviço de banco tiver **External Port** configurada, o script roda **da sua máquina**, com
+`-f`, exatamente como o cabeçalho dele descreve — sem colar nada em terminal nenhum e sem senha
+passando pelo histórico do psql do container:
+
+```bash
+cd apps/Veertex/backend
+psql "postgresql://postgres:<senha-do-postgres>@<EXTERNAL_HOST>:<EXTERNAL_PORT>/veertex" \
+  -v ON_ERROR_STOP=1 \
+  -v db_name=veertex \
+  -v owner_password=SENHA_DO_OWNER \
+  -v app_password=SENHA_DO_APP \
+  -f deploy/sql/001_create_roles.sql
+```
+
+Aqui as senhas vão **sem aspas** (o shell entrega o valor cru; o script as escapa com `%L`).
+
+> 🔒 **Feche a porta externa depois.** Ela expõe o Postgres à internet, e a aplicação não precisa
+> dela — o backend alcança o banco pelo **Internal Host**, dentro da rede do Docker. Um Postgres
+> publicado com um superusuário chamado `postgres` é o alvo mais escaneado que existe: deixá-lo
+> aberto porque foi útil uma vez é como deixar a chave na porta porque você entrou por ela.
+>
+> No Dokploy: apague o valor de **External Port** e clique em **Save**.
+
+### Passo 3d — a forma canônica, quando o arquivo estiver no servidor
 
 Se você tiver o repositório na máquina do mdantas (ou copiar o arquivo com `docker cp`), a forma do
 cabeçalho do script é a preferida — as variáveis vêm da linha de comando e não passam pelo histórico
