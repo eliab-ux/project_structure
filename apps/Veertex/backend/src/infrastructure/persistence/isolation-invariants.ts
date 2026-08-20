@@ -40,6 +40,72 @@ const AUTH_FUNCTION = 'veertex_auth_find_user_by_email';
 
 export type SqlExecutor = (sql: string, params?: unknown[]) => Promise<Record<string, unknown>[]>;
 
+/**
+ * Verifies WHO the application actually connects as — a question every other check here leaves open.
+ *
+ * ## The gap this closes, found on 20/08/2026 during the first Dokploy deploy
+ *
+ * Every invariant below inspects the roles BY NAME (`veertex_owner`, `veertex_app`): their
+ * attributes, their grants, who owns the tables. All of it can be perfectly configured while the
+ * running API connects as `postgres` — because someone pasted Dokploy's "Internal Connection URL"
+ * into `DATABASE_URL`, which is the credential of the database SERVICE, not of the runtime role.
+ *
+ * In that state the boot verification passed and printed "isolamento íntegro", while the API held a
+ * superuser connection: RLS silently inert, DDL and DELETE available, and every account visible to
+ * every request. The check that exists to catch exactly this did not look at it.
+ *
+ * It runs with the RUNTIME connection on purpose — `current_user` is the only way to answer the
+ * question, and no amount of catalogue reading substitutes for asking the connection itself.
+ */
+export async function verifyRuntimeIdentity(
+  runtimeQuery: SqlExecutor,
+  roles: IsolationRoles = DEFAULT_ISOLATION_ROLES,
+): Promise<IsolationViolation[]> {
+  const violations: IsolationViolation[] = [];
+
+  const [row] = await runtimeQuery(
+    `select current_user as usuario,
+            current_database() as banco,
+            current_setting('is_superuser') as superusuario,
+            (select rolbypassrls from pg_roles where rolname = current_user) as bypassrls`,
+  );
+
+  if (!row) {
+    violations.push({
+      check: 'runtime-identity',
+      detail: 'A conexão de runtime não respondeu quem ela é — verificação impossível.',
+    });
+    return violations;
+  }
+
+  if (row.usuario !== roles.app) {
+    violations.push({
+      check: 'runtime-identity',
+      detail:
+        `A aplicação conecta como "${row.usuario}", não como "${roles.app}". ` +
+        'Confira DATABASE_URL: no Dokploy, a "Internal Connection URL" do serviço de banco é a ' +
+        'credencial DELE (normalmente superusuário), e não a do papel de runtime.',
+    });
+  }
+
+  // 'on' aqui é o fim do isolamento: superusuário ignora toda policy, incondicionalmente.
+  if (String(row.superusuario) === 'on') {
+    violations.push({
+      check: 'runtime-identity',
+      detail: `A conexão de runtime é SUPERUSUÁRIO ("${row.usuario}"). Toda policy de RLS é ignorada.`,
+    });
+  }
+
+  if (row.bypassrls === true) {
+    violations.push({
+      check: 'runtime-identity',
+      detail: `A conexão de runtime tem BYPASSRLS ("${row.usuario}"). Toda policy de RLS é ignorada.`,
+    });
+  }
+
+  return violations;
+}
+
 export async function verifyIsolationInvariants(
   query: SqlExecutor,
   roles: IsolationRoles = DEFAULT_ISOLATION_ROLES,

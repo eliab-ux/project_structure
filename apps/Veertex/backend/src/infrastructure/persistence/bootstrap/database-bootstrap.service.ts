@@ -7,6 +7,7 @@ import {
   DEFAULT_ISOLATION_ROLES,
   IsolationRoles,
   verifyIsolationInvariants,
+  verifyRuntimeIdentity,
 } from '../isolation-invariants';
 import { seedModuleCatalog } from './module-catalog.seed';
 import { seedPlanCatalog } from './plan-catalog.seed';
@@ -94,6 +95,7 @@ export class DatabaseBootstrapService implements OnApplicationBootstrap {
       }
 
       await this.verify(client, roles);
+      await this.verifyRuntime(roles);
       await this.seed(client);
     } finally {
       // Released before the connection closes so a failed boot does not leave the next replica
@@ -179,6 +181,46 @@ export class DatabaseBootstrapService implements OnApplicationBootstrap {
     }
 
     this.logger.log('Invariantes de isolamento verificados.');
+  }
+
+  /**
+   * Abre uma conexão com a credencial de RUNTIME e pergunta a ela quem ela é.
+   *
+   * Todas as outras checagens leem o catálogo pelo NOME dos papéis, e passariam intactas com a
+   * aplicação conectando como `postgres` — foi o que quase aconteceu no primeiro deploy no Dokploy,
+   * onde a "Internal Connection URL" do serviço de banco (credencial DELE, normalmente superusuário)
+   * é o valor mais à mão para colar no `DATABASE_URL`.
+   *
+   * A conexão é aberta e fechada aqui, e é a única do boot que usa a credencial de runtime: o resto
+   * do bootstrap precisa do owner. Uma consulta, quatro colunas.
+   */
+  private async verifyRuntime(roles: IsolationRoles): Promise<void> {
+    const runtimeUrl = process.env.DATABASE_URL;
+    if (!runtimeUrl) {
+      throw new Error('DATABASE_URL ausente — a aplicação não tem como atender requisição.');
+    }
+
+    const runtime = new Client({ connectionString: runtimeUrl });
+    await runtime.connect();
+    try {
+      const violations = await verifyRuntimeIdentity(
+        async (sql, params) => (await runtime.query(sql, params as unknown[])).rows,
+        roles,
+      );
+
+      if (violations.length > 0) {
+        const detail = violations.map((v) => `  [${v.check}] ${v.detail}`).join('\n');
+        throw new Error(
+          `Conexão de runtime comprometida — a aplicação NÃO vai subir.\n\n${detail}\n\n` +
+            'DATABASE_URL deve ser o papel de runtime no banco da aplicação. ' +
+            'Ver "Environment do backend" em deploy/README.md.',
+        );
+      }
+
+      this.logger.log(`Conexão de runtime confirmada como "${roles.app}", sujeita ao RLS.`);
+    } finally {
+      await runtime.end().catch(() => undefined);
+    }
   }
 
   private async seed(client: Client): Promise<void> {
