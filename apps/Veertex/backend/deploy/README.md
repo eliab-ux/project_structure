@@ -203,7 +203,70 @@ select rolname, rolsuper, rolbypassrls
 Confira também se o banco `veertex` existe (`\l` no psql). O script cria os dois papéis **e** o
 banco; rodá-lo num banco que já os tem é seguro, mas ele vai reclamar do que já existe.
 
-### Passo 3b — o script, com os dados do Postgres do Dokploy
+### Passo 3b — rodando o script sem ter o arquivo no servidor
+
+O `001_create_roles.sql` vive no repositório e **não** vai para a imagem (`deploy/` fica fora do
+runtime). No servidor, então, ele não está em disco — e o script depende de variáveis `-v` do psql,
+que só existem quando ele é invocado com `-f`.
+
+A saída é o **prelúdio com `\set`**: as mesmas variáveis, definidas na sessão. Assim o arquivo pode
+ser colado inteiro num `psql` interativo, que é o que o terminal do Dokploy oferece.
+
+**1.** Gere duas senhas fortes e DIFERENTES, na sua máquina:
+
+```bash
+openssl rand -base64 24   # veertex_owner
+openssl rand -base64 24   # veertex_app
+```
+
+**2.** No Dokploy, abra o terminal do serviço `Veertex-postgres` e entre no psql como superusuário:
+
+```bash
+psql -U postgres
+```
+
+**3.** Cole o prelúdio, trocando os três valores:
+
+```sql
+\set ON_ERROR_STOP on
+\set db_name veertex
+\set owner_password 'SENHA_DO_OWNER'
+\set app_password 'SENHA_DO_APP'
+```
+
+Aqui as senhas vão **entre aspas simples**, ao contrário da forma com `-v` (onde vão sem aspas). O
+motivo é o mesmo nas duas: o script usa `:'variavel'`, que transforma o VALOR num literal SQL
+escapado. Com `-v` o shell já entrega o valor cru; com `\set` interativo, sem as aspas o psql
+engoliria a senha até o primeiro espaço.
+
+**4.** Cole o conteúdo de `apps/Veertex/backend/deploy/sql/001_create_roles.sql` **a partir da linha
+`\set ON_ERROR_STOP on`** (o cabeçalho é comentário, pode ir junto). Ele cria os papéis, cria o
+banco, dá `\connect` nele e ajusta schema, revokes, grants e privilégios padrão.
+
+**5.** A última consulta do arquivo imprime a conferência. **`rolsuper` e `rolbypassrls` têm de ser
+`f` nas duas linhas.**
+
+⚠️ **As senhas ficam no scrollback do terminal e no `~/.psql_history` do container.** Depois de
+terminar:
+
+```sql
+\q
+```
+```bash
+rm -f ~/.psql_history
+```
+
+Não é paranoia: o histórico do psql é texto puro, e a senha do `veertex_owner` é a credencial com
+DDL — a única capaz de `DROP TABLE` neste sistema. Ela existir num arquivo dentro do container do
+banco é exatamente o tipo de coisa que ninguém procura.
+
+### Passo 3c — a forma canônica, quando o arquivo estiver no servidor
+
+Se você tiver o repositório na máquina do mdantas (ou copiar o arquivo com `docker cp`), a forma do
+cabeçalho do script é a preferida — as variáveis vêm da linha de comando e não passam pelo histórico
+da sessão:
+
+
 
 Use o **Internal Host** que o Dokploy mostra na página do serviço (não o nome amigável), e rode de
 dentro da rede do servidor (por exemplo, `docker exec` no container do Postgres):
