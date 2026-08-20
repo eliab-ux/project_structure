@@ -27,3 +27,23 @@ export class PreOrderNotEditableException extends DomainException {
     super(`Este pré-pedido ${motivo} e não pode mais ser alterado.`);
   }
 }
+
+/**
+ * O Administrativo tentou abrir um pedido para um tecido sem histórico. Vira 400.
+ *
+ * A regra 6.1 existe porque o cliente não sabe quanto tempo precisa: quem estima é quem opera a
+ * máquina. Isso vale para o PRIMEIRO corte de um tecido — a partir do segundo, a estimativa deixa
+ * de ser conhecimento tácito e vira dado: mediana de camadas, de peças encaixadas e de minutos por
+ * 100 peças, tudo já registrado.
+ *
+ * Por isso a liberação é condicional e não geral. Sem nenhum corte concluído, o Administrativo
+ * estaria digitando um número que ninguém tem como sustentar.
+ */
+export class NoCutHistoryForAdminException extends DomainException {
+  constructor(fabricName: string) {
+    super(
+      `Ainda não há corte concluído com ${fabricName}: a primeira estimativa é do Modelista. ` +
+        'A partir do segundo corte deste tecido o histórico sustenta o número e você pode abrir o pedido aqui.',
+    );
+  }
+}

@@ -514,7 +514,8 @@ resultado = entradas − saídas
 | Cadastrar/editar cliente                             | ❌              | ✅      | ✅      |
 | Ver CPF, CNPJ, endereço e representante do cliente   | ❌              | ✅      | ✅      |
 | Cadastrar tecido, tipo de produto                    | ✅              | ✅      | ✅      |
-| Criar pré-pedido                                     | ✅              | ❌      | ✅      |
+| Criar pré-pedido — tecido SEM histórico              | ✅              | ❌      | ✅      |
+| Criar pré-pedido — tecido COM histórico              | ✅              | ✅      | ✅      |
 | Definir `estimated_hours`                            | ✅              | ❌      | ❌      |
 | Criar / mover / cancelar reserva                     | ❌              | ✅      | ✅      |
 | Registrar pagamento                                  | ❌              | ✅      | ✅      |
@@ -554,10 +555,26 @@ resultado = entradas − saídas
 
 ## 6. Regras de negócio que o agente não pode "melhorar"
 
-**6.1 — O pré-pedido nasce com o Modelista, não com o Administrativo.**
-O cliente não sabe quanto tempo precisa. A ordem é: cliente fala com o Modelista →
-Modelista cria o pré-pedido com as horas → Administrativo reserva e cobra. Não crie fluxo
-onde o Administrativo cria pré-pedido definindo horas.
+**6.1 — A PRIMEIRA estimativa de um tecido é do Modelista.**
+O cliente não sabe quanto tempo precisa. Na estreia de um tecido a ordem é: cliente fala
+com o Modelista → Modelista cria o pré-pedido com as horas → Administrativo reserva e
+cobra.
+
+**A partir do segundo corte daquele tecido, o Administrativo também cria.** A regra
+protege a estimativa que só existe na cabeça de quem opera a máquina — e, cumprido o
+primeiro corte, ela deixa de ser conhecimento tácito e vira dado: mediana de camadas, de
+peças encaixadas e de minutos por 100 peças, tudo registrado pela Fase 5. Nesse ponto o
+atendente do Administrativo tem em tela o que precisa para atender um cliente recorrente
+sem esperar o Modelista.
+
+A liberação é **condicional, nunca geral**: o backend conta os cortes concluídos com aquele
+tecido e recusa o Administrativo quando são zero, com a mensagem explicando que a primeira
+estimativa é do Modelista. Não substitua essa contagem por um guard de papel — perderia
+exatamente a proteção que a regra existe para dar.
+
+> **Histórico anterior desta regra:** até a entrega em produção ela era absoluta — o
+> Administrativo não criava em hipótese nenhuma. Foi relaxada com o critério acima, e a
+> forma condicional é parte da decisão, não um detalhe de implementação.
 
 **6.2 — O Modelista nunca cadastra cliente.** Cliente novo entra pelo Administrativo, que
 também agenda a primeira conversa como `consultation`. Não crie upload de foto de documento

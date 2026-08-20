@@ -477,4 +477,121 @@ describe('Apontamento e histórico por tecido (e2e)', () => {
       expect(response.body.samples).toBe(0);
     });
   });
+
+  /**
+   * A liberação da regra 6.1 depende de dado que só existe DEPOIS de um corte concluído — por isso
+   * o teste vive aqui, e não no arquivo de pré-pedido: é este arquivo que produz o histórico.
+   */
+  describe('o Administrativo cria pedido quando o tecido já tem histórico (regra 6.1)', () => {
+    it('sem corte concluído no tecido novo, ele é recusado com explicação', async () => {
+      const semHistorico = (
+        await ctx.inject({
+          method: 'POST',
+          url: '/api/fabrics',
+          token: tokens.modelista,
+          payload: { name: 'Linho estreante', maxLayerHeightCm: 2 },
+        })
+      ).body;
+
+      const response = await ctx.inject({
+        method: 'POST',
+        url: '/api/pre-orders',
+        token: tokens.admin,
+        payload: {
+          customerId,
+          fabricId: semHistorico.id,
+          productTypeId,
+          estimatedPieces: 100,
+          estimatedHours: 2,
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toMatch(/Linho estreante/);
+      expect(response.body.message).toMatch(/primeira estimativa é do Modelista/i);
+    });
+
+    it('com corte concluído, ele cria', async () => {
+      // `fabricId` é a malha deste arquivo, que já teve matriz iniciada E encerrada nos testes
+      // acima — é exatamente o histórico que a regra exige.
+      const response = await ctx.inject({
+        method: 'POST',
+        url: '/api/pre-orders',
+        token: tokens.admin,
+        payload: {
+          customerId,
+          fabricId,
+          productTypeId,
+          estimatedPieces: 120,
+          estimatedHours: 2,
+        },
+      });
+
+      expect(response.statusCode).toBe(201);
+      expect(response.body.createdBy.name).toBe('Usuário admin');
+    });
+
+    it('o Modelista continua criando para tecido sem histórico nenhum', async () => {
+      const estreante = (
+        await ctx.inject({
+          method: 'POST',
+          url: '/api/fabrics',
+          token: tokens.modelista,
+          payload: { name: 'Sarja estreante', maxLayerHeightCm: 3 },
+        })
+      ).body;
+
+      const response = await ctx.inject({
+        method: 'POST',
+        url: '/api/pre-orders',
+        token: tokens.modelista,
+        payload: {
+          customerId,
+          fabricId: estreante.id,
+          productTypeId,
+          estimatedPieces: 100,
+          estimatedHours: 2,
+        },
+      });
+
+      expect(response.statusCode).toBe(201);
+    });
+
+    it('matriz em andamento NÃO conta como histórico', async () => {
+      const emAberto = (
+        await ctx.inject({
+          method: 'POST',
+          url: '/api/fabrics',
+          token: tokens.modelista,
+          payload: { name: 'Crepe em aberto', maxLayerHeightCm: 2, layerThicknessCm: 0.04 },
+        })
+      ).body;
+
+      // `novaReserva()` já paga — o start exige reserva confirmada.
+      const reserva = await novaReserva();
+      // Start SEM stop: a matriz abre e fica correndo.
+      await ctx.inject({
+        method: 'POST',
+        url: `/api/reservations/${reserva}/cuts`,
+        token: tokens.modelista,
+        payload: {},
+      });
+
+      const response = await ctx.inject({
+        method: 'POST',
+        url: '/api/pre-orders',
+        token: tokens.admin,
+        payload: {
+          customerId,
+          fabricId: emAberto.id,
+          productTypeId,
+          estimatedPieces: 100,
+          estimatedHours: 2,
+        },
+      });
+
+      // Corte aberto não tem duração, e é a duração que sustenta a estimativa.
+      expect(response.statusCode).toBe(400);
+    });
+  });
 });

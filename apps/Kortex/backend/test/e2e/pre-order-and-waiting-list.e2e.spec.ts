@@ -105,14 +105,22 @@ describe('Pré-pedido e fila de espera (e2e)', () => {
       preOrderId = response.body.id;
     });
 
-    it('o Administrativo NÃO cria pré-pedido', async () => {
+    /**
+     * A regra 6.1 deixou de ser absoluta: ela protege a PRIMEIRA estimativa de um tecido, não
+     * todas. Sem corte concluído, o Administrativo continua barrado — e a recusa vem do domínio,
+     * com mensagem, não de um guard de papel.
+     */
+    it('o Administrativo NÃO cria pedido de tecido sem histórico', async () => {
       const response = await ctx.inject({
         method: 'POST',
         url: '/api/pre-orders',
         token: tokens.admin,
         payload: preOrderPayload(),
       });
-      expect(response.statusCode).toBe(403);
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toMatch(/primeira estimativa é do Modelista/i);
+      expect(response.body.message).toMatch(/segundo corte/i);
     });
 
     it('o Administrativo recebe o pré-pedido com as horas prontas', async () => {

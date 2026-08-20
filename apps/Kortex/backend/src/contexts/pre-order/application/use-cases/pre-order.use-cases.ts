@@ -10,7 +10,10 @@ import {
 import { PreOrderDto } from '../dto/pre-order.dto';
 import { ReferenceResolver, fabricRefOrPlaceholder, refOrPlaceholder } from '../reference-resolver';
 import { PreOrder, PreOrderStatus } from '../../domain/entities/pre-order.entity';
-import { PreOrderNotFoundException } from '../../domain/exceptions/pre-order.exceptions';
+import {
+  NoCutHistoryForAdminException,
+  PreOrderNotFoundException,
+} from '../../domain/exceptions/pre-order.exceptions';
 import { PreOrderId } from '../../domain/value-objects/pre-order-id.vo';
 import { AccountId } from '../../../account/domain/value-objects/account-id.vo';
 import { CustomerId } from '../../../customer/domain/value-objects/customer-id.vo';
@@ -18,6 +21,12 @@ import { FabricId } from '../../../catalog/domain/value-objects/fabric-id.vo';
 import { ProductTypeId } from '../../../catalog/domain/value-objects/product-type-id.vo';
 import { UserId } from '../../../user/domain/value-objects/user-id.vo';
 import { UserRole } from '../../../user/domain/value-objects/user-role.vo';
+import { CUT_HISTORY, CutHistoryPort } from '../ports/output/cut-history.port';
+import {
+  FABRIC_REPOSITORY,
+  FabricRepositoryPort,
+} from '../../../catalog/application/ports/output/catalog-repository.port';
+import { FabricNotFoundException } from '../../../catalog/domain/exceptions/catalog.exceptions';
 import { LayoutType } from '../../../../shared/domain/value-objects/layout-type';
 
 export interface PreOrderInput {
@@ -39,6 +48,11 @@ export class PreOrderUseCases {
     @Inject(PRE_ORDER_REPOSITORY)
     private readonly preOrderRepository: PreOrderRepositoryPort,
     private readonly references: ReferenceResolver,
+    @Inject(FABRIC_REPOSITORY)
+    private readonly fabricRepository: FabricRepositoryPort,
+    // Histórico de cortes do tecido — o que autoriza o Administrativo a estimar (regra 6.1).
+    @Inject(CUT_HISTORY)
+    private readonly cutHistory: CutHistoryPort,
     @Inject(UNIT_OF_WORK)
     private readonly unitOfWork: UnitOfWorkPort,
   ) {}
@@ -57,17 +71,36 @@ export class PreOrderUseCases {
     return this.toDtos(account, preOrders);
   }
 
+  /**
+   * Criar pedido.
+   *
+   * Modelista e dono criam sempre. O **Administrativo só cria para tecido com histórico** — a
+   * regra 6.1 protege a PRIMEIRA estimativa, que é conhecimento de quem está na máquina; a
+   * segunda em diante está no sistema (mediana de camadas, peças e minutos por 100 peças).
+   */
   async create(
     accountId: string,
     createdByUserId: string,
+    actorRole: UserRole,
     input: PreOrderInput,
   ): Promise<PreOrderDto> {
     const account = AccountId.from(accountId);
+    const fabricId = FabricId.from(input.fabricId);
+
+    if (actorRole === 'admin') {
+      const fabric = await this.fabricRepository.findById(account, fabricId);
+      if (!fabric) {
+        throw new FabricNotFoundException();
+      }
+      if ((await this.cutHistory.countFinished(account, fabricId)) === 0) {
+        throw new NoCutHistoryForAdminException(fabric.name);
+      }
+    }
 
     const preOrder = PreOrder.create({
       accountId: account,
       customerId: CustomerId.from(input.customerId),
-      fabricId: FabricId.from(input.fabricId),
+      fabricId,
       productTypeId: ProductTypeId.from(input.productTypeId),
       createdByUserId: UserId.from(createdByUserId),
       estimate: toEstimate(input),

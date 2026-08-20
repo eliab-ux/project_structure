@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PreOrderOrmEntity } from '../../infrastructure/persistence/mikro-orm/entities/pre-order-orm.entity';
+import { CutOrmEntity } from '../../infrastructure/persistence/mikro-orm/entities/cut-orm.entity';
+import { MikroOrmCutHistoryRepository } from '../../infrastructure/persistence/mikro-orm/repositories/mikro-orm-cut-history.repository';
+import { CUT_HISTORY } from './application/ports/output/cut-history.port';
 import { PreOrderMapper } from '../../infrastructure/persistence/mikro-orm/mappers/pre-order.mapper';
 import { MikroOrmPreOrderRepository } from '../../infrastructure/persistence/mikro-orm/repositories/mikro-orm-pre-order.repository';
 import { CustomerModule } from '../customer/customer.module';
@@ -17,7 +20,9 @@ import { ReferenceResolver } from './application/reference-resolver';
  */
 @Module({
   imports: [
-    MikroOrmModule.forFeature([PreOrderOrmEntity]),
+    // `CutOrmEntity` entra só para o adapter de histórico contar cortes — ler a tabela, não
+    // depender do contexto. Importar o `CutModule` fecharia ciclo (o corte já importa este).
+    MikroOrmModule.forFeature([PreOrderOrmEntity, CutOrmEntity]),
     // Para o ReferenceResolver: CUSTOMER_REPOSITORY, FABRIC_REPOSITORY,
     // PRODUCT_TYPE_REPOSITORY e USER_REPOSITORY.
     CustomerModule,
@@ -28,6 +33,7 @@ import { ReferenceResolver } from './application/reference-resolver';
     PreOrderMapper,
     ReferenceResolver,
     { provide: PRE_ORDER_REPOSITORY, useClass: MikroOrmPreOrderRepository },
+    { provide: CUT_HISTORY, useClass: MikroOrmCutHistoryRepository },
     PreOrderUseCases,
   ],
   exports: [PreOrderUseCases, ReferenceResolver, PRE_ORDER_REPOSITORY],

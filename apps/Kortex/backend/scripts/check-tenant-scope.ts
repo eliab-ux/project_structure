@@ -55,6 +55,8 @@ const SCOPE_KEY_BY_FILE: Record<string, string[]> = {
   'mikro-orm-schedule.repository.ts': ['accountId'],
   // O SQL cru do histórico filtra por `account_id = ?` — o verificador aceita as duas grafias.
   'mikro-orm-cut.repository.ts': ['accountId', 'account_id'],
+  // Lê a tabela `cut` a partir do contexto de pré-pedido — conta cortes concluídos do tecido.
+  'mikro-orm-cut-history.repository.ts': ['accountId'],
   // DRE e saldos são agregações em SQL cru; o filtro vai como `e.account_id = ?` / `b.account_id = ?`.
   'mikro-orm-finance.repository.ts': ['accountId', 'account_id'],
   // O fluxo de recuperação começa anônimo, sem token e portanto sem conta. O `userId` é um escopo

@@ -63,14 +63,22 @@ export class PreOrderController {
     return this.preOrders.listMine(user.accountId, user.sub);
   }
 
+  /**
+   * Criar pedido — `JwtAuthGuard`, e a regra fina fica no use case.
+   *
+   * Modelista e dono criam sempre. O Administrativo cria **só para tecido com histórico**: a regra
+   * 6.1 protege a primeira estimativa, que é conhecimento de quem está na máquina. Guard não
+   * consegue expressar "depende do tecido" — por isso ele libera os três e quem recusa é o domínio,
+   * com a mensagem que explica o porquê.
+   */
   @Post()
-  @UseGuards(ModelistaGuard)
+  @UseGuards(JwtAuthGuard)
   @HttpCode(201)
   async create(
     @CurrentUser() user: AuthTokenPayload,
     @Body() dto: PreOrderRequestDto,
   ): Promise<PreOrderDto> {
-    return this.preOrders.create(user.accountId, user.sub, dto);
+    return this.preOrders.create(user.accountId, user.sub, user.role, dto);
   }
 
   @Put(':id')
@@ -175,6 +183,12 @@ export class SlotNoticeController {
     return this.slotNotices.list(user.accountId);
   }
 
+  /**
+   * Avisar que vagou horário — exclusivo do Modelista (regra 6.3).
+   *
+   * Quem enxerga a vaga é quem está na máquina. O aviso não carrega horário nem cliente: é "vagou
+   * alguma coisa, olha a agenda", e quem decide o que fazer com o horário é o Administrativo.
+   */
   @Post()
   @UseGuards(ModelistaGuard)
   @HttpCode(201)
