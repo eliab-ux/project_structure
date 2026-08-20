@@ -11,7 +11,15 @@
 FROM node:22-alpine AS builder
 WORKDIR /repo
 
-COPY package.json package-lock.json tsconfig.json tsconfig.base.json ./
+# O `.prettierrc` entra na imagem, e não é detalhe de estilo: o `next build` roda o ESLint, o ESLint
+# do frontend usa o plugin do prettier, e o prettier SEM este arquivo volta ao padrão dele — aspas
+# duplas. O build então reprovava todo arquivo do app por "Replace 'react' with \"react\"", enquanto
+# o mesmo build passava na máquina de desenvolvimento, onde o arquivo existe.
+#
+# Descoberto em 20/08/2026 buildando a imagem ANTES de publicar. A alternativa seria
+# `eslint.ignoreDuringBuilds` (o que o Kortex faz), mas isso esconde a divergência em vez de
+# corrigi-la: o certo é o container lintar com a mesma configuração da máquina.
+COPY package.json package-lock.json tsconfig.json tsconfig.base.json .prettierrc .prettierignore ./
 COPY packages/domain-primitives/package.json ./packages/domain-primitives/
 COPY packages/shared-kernel/package.json ./packages/shared-kernel/
 COPY apps/Veertex/backend/package.json ./apps/Veertex/backend/
