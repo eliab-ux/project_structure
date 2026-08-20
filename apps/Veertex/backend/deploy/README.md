@@ -163,8 +163,13 @@ ainda; ele entra com a fatia que precisar de fila (geocodificação de endereço
 
 | Serviço | Dockerfile | Context Path | Domain | Container Port |
 |---|---|---|---|---|
-| Backend | `backend/Dockerfile` | `/` | `<sub>.<dominio>` · Path `/api` · Strip Path **OFF** | 3020 |
-| Frontend | `frontend/Dockerfile` | `/` | `<sub>.<dominio>` · Path `/` | 3021 |
+| Backend | `apps/Veertex/backend/Dockerfile` | `/` | `<sub>.<dominio>` · Path `/api` · Strip Path **OFF** | 3020 |
+| Frontend | `apps/Veertex/frontend/Dockerfile` | `/` | `<sub>.<dominio>` · Path `/` | 3021 |
+
+> ⚠️ **O caminho do Dockerfile mudou em 18/08/2026.** O espelho publicado passou a ser o recorte
+> do MONOREPO (`packages/` + `apps/Veertex/` + manifests da raiz), e não mais o subtree com o app
+> na raiz. Um serviço configurado com `backend/Dockerfile` falha com "Dockerfile not found" e o
+> container antigo continua no ar — o deploy não quebra nada, ele simplesmente não acontece.
 
 **Docker Context Path = `/`** (a raiz do repo) nos dois — sem isso os `COPY` do monorepo falham.
 
@@ -184,3 +189,21 @@ DNS na Cloudflare: registro **A** → `72.61.43.90`, **Proxy status = DNS only (
 
 Sem as variáveis do Evolution a aplicação sobe normalmente, e o pedido de recuperação de senha
 responde "não foi possível enviar agora" — o restante do sistema não é afetado.
+
+### A Mesa em produção — decisão antes de configurar
+
+| Variável | Efeito |
+|---|---|
+| `INTENT_PARSER_DRIVER` | `gemini` (produção) ou `deterministic` (só suíte) |
+| `GEMINI_API_KEY` | a chave do canal. **Sem ela o adapter RECUSA** |
+| `GEMINI_API_URL` / `GEMINI_MODEL` | endpoint e modelo |
+| `AUDIO_TRANSCRIPTION_ENABLED` | **`false`** — o caminho de áudio está parado e desligado (ADR-0005) |
+
+⚠️ **O adapter determinístico NUNCA é fallback** (`CLAUDE.md`, regra 1). Se `GEMINI_API_KEY` faltar
+com o driver `gemini`, a Mesa **recusa a intenção** em voz alta em vez de responder com um comando
+enlatado por palavra-chave — falhar fechado é a escolha registrada. O resto do sistema (telas de
+cadastro, autenticação) funciona sem a chave.
+
+E `INTENT_PARSER_DRIVER=deterministic` em produção seria pior que não ter Mesa: ele devolveria
+comando por palavra-chave chamando-o de tradução, e a procedência diria "ditado". **Nunca em
+produção.**
