@@ -268,6 +268,36 @@ Não é paranoia: o histórico do psql é texto puro, e a senha do `veertex_owne
 DDL — a única capaz de `DROP TABLE` neste sistema. Ela existir num arquivo dentro do container do
 banco é exatamente o tipo de coisa que ninguém procura.
 
+### 📌 Decisão datada — senha provisória, revisar antes do primeiro cliente
+
+**20/08/2026 — Eliab.** Os dois papéis foram provisionados com a senha **`12345678`**, para destravar
+o primeiro deploy.
+
+**A condição que torna isso aceitável, e ela não é opcional:** a **External Port do Postgres fica
+fechada**. Com ela aberta, `12345678` no `veertex_owner` — a única credencial deste sistema capaz de
+`DROP TABLE` — está a um scan de distância. Postgres publicado na internet é varrido em minutos, e
+essa senha está em qualquer dicionário. Fechada, o banco só é alcançável de dentro da rede do Docker,
+e a senha fraca deixa de estar exposta a quem já não esteja no servidor.
+
+**Efeito colateral de usar a MESMA senha nos dois papéis:** a assimetria de privilégio continua
+valendo (o `veertex_app` não tem DDL nem DELETE, e está sujeito ao RLS — isso vem dos atributos do
+papel, não da senha), mas a separação deixa de proteger contra vazamento: quem obtiver a credencial
+de runtime obtém também a de migração. As duas defesas são independentes, e neste momento só uma
+está de pé.
+
+**Como trocar depois** — três passos, sem downtime de dados:
+
+```sql
+alter role veertex_owner with password 'nova-senha-hex';
+alter role veertex_app   with password 'outra-senha-hex';
+```
+
+Depois: atualizar `DATABASE_URL` e `DATABASE_URL_MIGRATIONS` na aba Environment e **Redeploy** (env só
+entra em novo deploy). Gere as senhas com `openssl rand -hex 32` — ver o aviso sobre base64 acima.
+
+**Gatilho da revisão:** antes do primeiro cliente real na conta, ou antes de reabrir a porta externa
+por qualquer motivo — o que vier primeiro.
+
 ### Passo 3c — a forma canônica, pela porta externa do Dokploy (recomendada)
 
 Se o serviço de banco tiver **External Port** configurada, o script roda **da sua máquina**, com
