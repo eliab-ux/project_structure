@@ -18,6 +18,22 @@ import { loadEnvFiles } from '../../../config/load-env';
  */
 loadEnvFiles();
 
+/**
+ * Marca o processo como **CLI de operador**, e não como a API.
+ *
+ * O bootstrap verifica que a conexão de runtime é o papel `veertex_app` — proteção acrescentada em
+ * 20/08/2026 porque a "Internal Connection URL" do Dokploy (superusuário) é o valor mais à mão para
+ * colar no `DATABASE_URL`, e nada percebia. Só que **este arquivo produz exatamente a condição que a
+ * checagem recusa**: ele troca a conexão para o owner de propósito.
+ *
+ * Sem esta marca, a checagem abortava todo CLI — inclusive o `create:account`, que é o único caminho
+ * documentado para criar a primeira conta em produção. 97 testes vermelhos disseram isso.
+ *
+ * A marca vive AQUI, no mesmo arquivo que causa a condição, e não numa lista de exceções em outro
+ * lugar: quem trocar a conexão para o owner declara o motivo na mesma linha em que troca.
+ */
+process.env.VEERTEX_OPERATOR_CLI = 'true';
+
 if (process.env.DATABASE_URL_MIGRATIONS) {
   process.env.DATABASE_URL = process.env.DATABASE_URL_MIGRATIONS;
 } else {

@@ -195,6 +195,26 @@ export class DatabaseBootstrapService implements OnApplicationBootstrap {
    * do bootstrap precisa do owner. Uma consulta, quatro colunas.
    */
   private async verifyRuntime(roles: IsolationRoles): Promise<void> {
+    /*
+     * CLI de operador NÃO passa por esta checagem, e a razão é de desenho, não conveniência.
+     *
+     * `create:account`, `seed:dev` e os demais trocam a conexão para o OWNER de propósito
+     * (`cli-owner-connection.ts`): o onboarding escreve para um tenant que ainda não existe, então
+     * não há escopo a estabelecer e o RLS recusaria todo INSERT sob o papel de runtime.
+     *
+     * A checagem existe para o processo que ATENDE REQUISIÇÃO. Aplicá-la ao CLI abortava o único
+     * caminho documentado de criar a primeira conta em produção — descoberto pela suíte em
+     * 21/08/2026, com 97 testes vermelhos.
+     *
+     * O `else` NÃO é silencioso: um pulo sem registro é indistinguível de uma checagem que passou.
+     */
+    if (process.env.VEERTEX_OPERATOR_CLI === 'true') {
+      this.logger.log(
+        'CLI de operador: conexão de runtime não verificada (conecta como owner por desenho).',
+      );
+      return;
+    }
+
     const runtimeUrl = process.env.DATABASE_URL;
     if (!runtimeUrl) {
       throw new Error('DATABASE_URL ausente — a aplicação não tem como atender requisição.');
