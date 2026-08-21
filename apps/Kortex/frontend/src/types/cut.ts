@@ -3,6 +3,9 @@ import { LayoutType, NamedRef } from 'src/types/preOrder';
 export interface Cut {
   id: string;
   reservationId: string;
+  /** A matriz declarada que este apontamento executa. */
+  preOrderItemId: string;
+  /** Ordem da matriz **no pedido** — vem do pedido, não do corte. */
   sequence: number;
   markerName: string | null;
   startedAt: string;
@@ -25,6 +28,34 @@ export interface RunningCut {
   sequence: number;
   markerName: string | null;
   startedAt: string;
+}
+
+/** Uma matriz declarada com o apontamento dela, se já houver. A linha da tela do Modelista. */
+export interface ReservationMatriz {
+  preOrderItemId: string;
+  sequence: number;
+  fabric: NamedRef & { maxLayerHeightCm: number; layerThicknessCm: number | null };
+  productType: NamedRef;
+  estimatedPieces: number;
+  estimatedLayers: number | null;
+  cut: Cut | null;
+}
+
+/**
+ * A tela de matrizes de uma reserva.
+ *
+ * O **tempo que vale é o do pedido**: do primeiro start ao último stop, intervalos entre matrizes
+ * incluídos — eles aconteceram dentro da hora que o cliente comprou. A duração por matriz segue
+ * em cada `cut`, mas serve a métrica, não a cobrança.
+ */
+export interface ReservationMatrizes {
+  reservationId: string;
+  matrizes: ReservationMatriz[];
+  startedAt: string | null;
+  endedAt: string | null;
+  /** `null` enquanto alguma matriz corre — aí a tela conta a partir de `startedAt`. */
+  totalDurationSeconds: number | null;
+  allPointed: boolean;
 }
 
 export interface FabricHistory {

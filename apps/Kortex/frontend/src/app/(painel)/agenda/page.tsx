@@ -26,7 +26,7 @@ import financeService from 'src/services/financeService';
 import { apiErrorMessage } from 'src/services/api';
 import { BankAccount } from 'src/types/finance';
 import { BusinessHour, Machine, formatCents } from 'src/types/account';
-import { PreOrder } from 'src/types/preOrder';
+import { PreOrder, fabricSummary } from 'src/types/preOrder';
 import {
   PAYMENT_METHOD_LABELS,
   PaymentMethod,
@@ -708,7 +708,7 @@ export default function AgendaPage() {
             >
               {preOrders.map((preOrder) => (
                 <MenuItem key={preOrder.id} value={preOrder.id}>
-                  {preOrder.customer.name} · {preOrder.estimatedHours}h · {preOrder.fabric.name}
+                  {preOrder.customer.name} · {preOrder.estimatedHours}h · {fabricSummary(preOrder)}
                 </MenuItem>
               ))}
             </TextField>

@@ -16,6 +16,7 @@ import {
   CutDto,
   CutWithWarningsDto,
   FabricHistoryDto,
+  ReservationMatrizesDto,
   RunningCutDto,
 } from '../../../../contexts/cut/application/dto/cut.dto';
 import { LAYOUT_TYPES } from '../../../../shared/domain/value-objects/layout-type';
@@ -28,6 +29,17 @@ const trim = ({ value }: { value: unknown }): unknown =>
   typeof value === 'string' ? value.trim() : value;
 
 export class StartCutRequestDto {
+  /**
+   * Qual matriz **declarada** este apontamento executa (§4.10).
+   *
+   * Opcional pelo caso comum: pedido de uma matriz só, o Modelista aperta começar e pronto.
+   * Omitido, o backend pega a primeira matriz declarada ainda sem apontamento — e recusa quando
+   * todas já foram apontadas, porque a quantidade de contagens é a que o pedido declara.
+   */
+  @IsOptional()
+  @IsUUID('4')
+  preOrderItemId?: string | null;
+
   @IsOptional()
   @IsString()
   @MaxLength(120)
@@ -99,6 +111,18 @@ export class CutController {
     return this.cuts.listByReservation(user.accountId, reservationId);
   }
 
+  /**
+   * As matrizes declaradas desta reserva, com o apontamento de cada uma e o tempo **total** do
+   * pedido — do primeiro start ao último stop (§4.10).
+   */
+  @Get('matrizes')
+  async matrizes(
+    @CurrentUser() user: AuthTokenPayload,
+    @Param('reservationId') reservationId: string,
+  ): Promise<ReservationMatrizesDto> {
+    return this.cuts.reservationMatrizes(user.accountId, reservationId);
+  }
+
   /** START — primeiro toque. Recusa com 403 em reserva não paga (regra 2.4). */
   @Post()
   @HttpCode(201)
@@ -107,7 +131,10 @@ export class CutController {
     @Param('reservationId') reservationId: string,
     @Body() dto: StartCutRequestDto,
   ): Promise<CutDto> {
-    return this.cuts.start(user.accountId, reservationId, dto.markerName);
+    return this.cuts.start(user.accountId, reservationId, {
+      preOrderItemId: dto.preOrderItemId,
+      markerName: dto.markerName,
+    });
   }
 
   /** O Modelista encerra a reserva. Depois disso, matriz não é mais editável. */

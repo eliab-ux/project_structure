@@ -1,14 +1,30 @@
 import api from 'src/services/api';
-import { Cut, FabricHistory, RunningCut } from 'src/types/cut';
+import { Cut, FabricHistory, ReservationMatrizes, RunningCut } from 'src/types/cut';
 
 async function listByReservation(reservationId: string): Promise<Cut[]> {
   const response = await api.get<Cut[]>(`/reservations/${reservationId}/cuts`);
   return response.data;
 }
 
-/** START — o primeiro toque. */
-async function start(reservationId: string, markerName?: string | null): Promise<Cut> {
-  const response = await api.post<Cut>(`/reservations/${reservationId}/cuts`, { markerName });
+/** As matrizes declaradas da reserva, com o apontamento de cada uma e o tempo total do pedido. */
+async function reservationMatrizes(reservationId: string): Promise<ReservationMatrizes> {
+  const response = await api.get<ReservationMatrizes>(
+    `/reservations/${reservationId}/cuts/matrizes`,
+  );
+  return response.data;
+}
+
+/**
+ * START — o primeiro toque, numa matriz **declarada** no pedido.
+ *
+ * `preOrderItemId` pode ficar de fora quando o pedido tem uma matriz só: o backend pega a
+ * primeira ainda sem apontamento e recusa quando todas já foram apontadas.
+ */
+async function start(
+  reservationId: string,
+  payload: { preOrderItemId?: string | null; markerName?: string | null } = {},
+): Promise<Cut> {
+  const response = await api.post<Cut>(`/reservations/${reservationId}/cuts`, payload);
   return response.data;
 }
 
@@ -57,6 +73,7 @@ async function runningCut(): Promise<RunningCut | null> {
 const cutService = {
   runningCut,
   listByReservation,
+  reservationMatrizes,
   start,
   stop,
   completeReservation,

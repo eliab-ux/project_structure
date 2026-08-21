@@ -32,21 +32,49 @@ export interface FabricRef extends NamedRef {
   layerThicknessCm: number | null;
 }
 
-export interface PreOrder {
+/**
+ * Uma matriz declarada no pedido.
+ *
+ * Tecido e produto ficam **aqui**: matriz 1 tecido X calça, matriz 2 tecido Y camiseta é o caso
+ * real do cliente, e um par de campos no topo não teria onde pôr o segundo.
+ */
+export interface PreOrderMatriz {
   id: string;
-  status: PreOrderStatus;
-  customer: NamedRef;
+  sequence: number;
   fabric: FabricRef;
   productType: NamedRef;
-  createdBy: NamedRef;
   estimatedPieces: number;
   metersPerPiece: number | null;
   rolls: number | null;
   estimatedLayers: number | null;
   estimatedLayoutType: LayoutType | null;
+}
+
+export interface PreOrder {
+  id: string;
+  status: PreOrderStatus;
+  customer: NamedRef;
+  createdBy: NamedRef;
+  /** Sempre ao menos uma. É este número que limita os apontamentos na reserva. */
+  matrizes: PreOrderMatriz[];
+  /** Do pedido inteiro — o cliente compra um bloco de máquina, não uma hora por matriz. */
   estimatedHours: number;
   notes: string | null;
   createdAt: string;
+}
+
+/** Soma das peças de todas as matrizes — o volume do pedido, para as listas. */
+export function totalPieces(preOrder: PreOrder): number {
+  return preOrder.matrizes.reduce((total, matriz) => total + matriz.estimatedPieces, 0);
+}
+
+/** 'Malha' ou 'Malha +1' — o resumo de tecidos que cabe numa célula de tabela. */
+export function fabricSummary(preOrder: PreOrder): string {
+  const [primeira, ...resto] = preOrder.matrizes;
+  if (!primeira) {
+    return '—';
+  }
+  return resto.length > 0 ? `${primeira.fabric.name} +${resto.length}` : primeira.fabric.name;
 }
 
 export interface WaitingListEntry {

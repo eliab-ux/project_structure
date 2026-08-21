@@ -29,7 +29,9 @@ export class MikroOrmCutRepository implements CutRepositoryPort {
   async listByReservation(accountId: AccountId, reservationId: ReservationId): Promise<Cut[]> {
     const rows = await this.repo.find(
       { accountId: accountId.value, reservationId: reservationId.value },
-      { orderBy: { sequence: 'ASC' } },
+      // Por início, e não por sequência: a ordem da matriz mora no `pre_order_item`, e ordenar por
+      // uma coluna que este SELECT não tem custaria um join só para desempatar.
+      { orderBy: { startedAt: 'ASC' } },
     );
     return rows.map((row) => this.mapper.toDomain(row));
   }

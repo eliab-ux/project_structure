@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -13,16 +12,19 @@ import MenuItem from '@mui/material/MenuItem';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import { useSnackbar } from 'notistack';
 import { RequireAuth } from 'src/components/RequireAuth';
 import preOrderService, { CustomerForModelista } from 'src/services/preOrderService';
 import catalogService from 'src/services/catalogService';
 import { apiErrorMessage } from 'src/services/api';
+import {
+  MatrizFormValue,
+  MatrizList,
+  emptyMatriz,
+  matrizPreenchida,
+} from 'src/components/MatrizList';
 import { Fabric, ProductType } from 'src/types/customer';
-import { LAYOUT_TYPE_LABELS, LayoutType } from 'src/types/preOrder';
 import { numericSx } from 'src/theme/theme';
 
 /** Alvo de toque do app do Modelista: ele opera de pé, ao lado da máquina (spec §8). */
@@ -30,29 +32,16 @@ const TOUCH = { minHeight: 56 };
 
 interface Form {
   customerId: string;
-  fabricId: string;
-  productTypeId: string;
-  estimatedPieces: string;
-  metersPerPiece: string;
-  rolls: string;
-  estimatedLayers: string;
-  estimatedLayoutType: LayoutType | '';
+  /** Ao menos uma. Cada uma vira exatamente um apontamento na reserva (§4.10). */
+  matrizes: MatrizFormValue[];
+  /** Do pedido inteiro — o cliente compra um bloco de máquina, não uma hora por matriz. */
   estimatedHours: number;
   notes: string;
 }
 
-const EMPTY: Form = {
-  customerId: '',
-  fabricId: '',
-  productTypeId: '',
-  estimatedPieces: '',
-  metersPerPiece: '',
-  rolls: '',
-  estimatedLayers: '',
-  estimatedLayoutType: '',
-  estimatedHours: 1,
-  notes: '',
-};
+function emptyForm(): Form {
+  return { customerId: '', matrizes: [emptyMatriz()], estimatedHours: 1, notes: '' };
+}
 
 /**
  * Criar pré-pedido em UMA tela (DoD da Fase 3).
@@ -69,7 +58,7 @@ function NewPreOrderScreen() {
   const [customers, setCustomers] = useState<CustomerForModelista[]>([]);
   const [fabrics, setFabrics] = useState<Fabric[]>([]);
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
-  const [form, setForm] = useState<Form>(EMPTY);
+  const [form, setForm] = useState<Form>(emptyForm);
 
   const load = useCallback(async () => {
     try {
@@ -98,35 +87,22 @@ function NewPreOrderScreen() {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
-  const selectedFabric = fabrics.find((fabric) => fabric.id === form.fabricId);
-
-  /**
-   * Aviso, não bloqueio: se o enfesto estimado passar da altura máxima do tecido, a tela avisa e
-   * deixa seguir. Mesma regra do apontamento na Fase 5 — quem está na máquina sabe mais que o
-   * cadastro.
-   *
-   * `camadas × espessura` dá centímetros, e é isso que se compara com a altura. **Sem espessura
-   * cadastrada não há aviso**: o `* 10` que estava aqui presumia 1 mm por camada para qualquer
-   * material, e um palpite escondido numa constante é pior que silêncio.
-   */
-  const layersWarning =
-    selectedFabric?.layerThicknessCm && form.estimatedLayers
-      ? Number(form.estimatedLayers) * selectedFabric.layerThicknessCm >
-        selectedFabric.maxLayerHeightCm
-      : false;
-
   async function submit() {
     setSaving(true);
     try {
       await preOrderService.createPreOrder({
         customerId: form.customerId,
-        fabricId: form.fabricId,
-        productTypeId: form.productTypeId,
-        estimatedPieces: Number(form.estimatedPieces),
-        metersPerPiece: form.metersPerPiece ? Number(form.metersPerPiece.replace(',', '.')) : null,
-        rolls: form.rolls ? Number(form.rolls) : null,
-        estimatedLayers: form.estimatedLayers ? Number(form.estimatedLayers) : null,
-        estimatedLayoutType: form.estimatedLayoutType || null,
+        matrizes: form.matrizes.map((matriz) => ({
+          fabricId: matriz.fabricId,
+          productTypeId: matriz.productTypeId,
+          estimatedPieces: Number(matriz.estimatedPieces),
+          metersPerPiece: matriz.metersPerPiece
+            ? Number(matriz.metersPerPiece.replace(',', '.'))
+            : null,
+          rolls: matriz.rolls ? Number(matriz.rolls) : null,
+          estimatedLayers: matriz.estimatedLayers ? Number(matriz.estimatedLayers) : null,
+          estimatedLayoutType: matriz.estimatedLayoutType || null,
+        })),
         estimatedHours: form.estimatedHours,
         notes: form.notes.trim() || null,
       });
@@ -141,7 +117,7 @@ function NewPreOrderScreen() {
     }
   }
 
-  const ready = form.customerId && form.fabricId && form.productTypeId && form.estimatedPieces;
+  const ready = Boolean(form.customerId) && form.matrizes.every(matrizPreenchida);
 
   if (loading) {
     return (
@@ -183,104 +159,17 @@ function NewPreOrderScreen() {
               ))}
             </TextField>
 
-            <TextField
-              select
-              label="Tecido"
-              fullWidth
-              value={form.fabricId}
-              onChange={(e) => set('fabricId', e.target.value)}
-              helperText={
-                selectedFabric
-                  ? `Altura máxima de enfesto: ${selectedFabric.maxLayerHeightCm.toFixed(2).replace('.', ',')} cm` +
-                    // Só mostra o teto de camadas quando ele é calculável; sem espessura, a tela
-                    // não inventa um número.
-                    (selectedFabric.layerThicknessCm
-                      ? ` · cabem ~${Math.floor(selectedFabric.maxLayerHeightCm / selectedFabric.layerThicknessCm)} camadas`
-                      : '')
-                  : 'A altura máxima do tecido é o que limita as camadas.'
-              }
-            >
-              {fabrics.map((fabric) => (
-                <MenuItem key={fabric.id} value={fabric.id} sx={TOUCH}>
-                  {fabric.name}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <TextField
-              select
-              label="Produto"
-              fullWidth
-              value={form.productTypeId}
-              onChange={(e) => set('productTypeId', e.target.value)}
-            >
-              {productTypes.map((type) => (
-                <MenuItem key={type.id} value={type.id} sx={TOUCH}>
-                  {type.name}
-                </MenuItem>
-              ))}
-            </TextField>
-
             <Divider />
 
-            <Stack direction="row" spacing={2}>
-              <TextField
-                label="Peças"
-                fullWidth
-                inputProps={{ inputMode: 'numeric' }}
-                value={form.estimatedPieces}
-                onChange={(e) => set('estimatedPieces', e.target.value.replace(/\D/g, ''))}
-              />
-              <TextField
-                label="Rolos"
-                fullWidth
-                inputProps={{ inputMode: 'numeric' }}
-                value={form.rolls}
-                onChange={(e) => set('rolls', e.target.value.replace(/\D/g, ''))}
-              />
-            </Stack>
-
-            <Stack direction="row" spacing={2}>
-              <TextField
-                label="Metros por peça"
-                fullWidth
-                inputProps={{ inputMode: 'decimal' }}
-                value={form.metersPerPiece}
-                onChange={(e) => set('metersPerPiece', e.target.value)}
-              />
-              <TextField
-                label="Camadas"
-                fullWidth
-                inputProps={{ inputMode: 'numeric' }}
-                value={form.estimatedLayers}
-                onChange={(e) => set('estimatedLayers', e.target.value.replace(/\D/g, ''))}
-              />
-            </Stack>
-
-            {layersWarning && (
-              <Alert severity="warning">
-                As camadas passam da altura máxima do tecido. Só um aviso — quem está na máquina
-                decide.
-              </Alert>
-            )}
-
-            <Box>
-              <Typography variant="overline" component="p" sx={{ mb: 1 }}>
-                Tipo de enfesto
-              </Typography>
-              <ToggleButtonGroup
-                exclusive
-                fullWidth
-                value={form.estimatedLayoutType}
-                onChange={(_e, value) => set('estimatedLayoutType', (value as LayoutType) ?? '')}
-              >
-                {(Object.keys(LAYOUT_TYPE_LABELS) as LayoutType[]).map((type) => (
-                  <ToggleButton key={type} value={type} sx={TOUCH}>
-                    {LAYOUT_TYPE_LABELS[type]}
-                  </ToggleButton>
-                ))}
-              </ToggleButtonGroup>
-            </Box>
+            {/* Uma matriz é o caso comum; o cliente que traz dois materiais na mesma reserva
+                declara as duas aqui, e o app dele terá exatamente duas contagens. */}
+            <MatrizList
+              variant="touch"
+              matrizes={form.matrizes}
+              fabrics={fabrics}
+              productTypes={productTypes}
+              onChange={(matrizes) => set('matrizes', matrizes)}
+            />
 
             <Divider />
 

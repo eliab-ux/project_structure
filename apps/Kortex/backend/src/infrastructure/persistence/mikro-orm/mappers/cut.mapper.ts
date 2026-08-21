@@ -5,6 +5,7 @@ import { AccountId } from '../../../../contexts/account/domain/value-objects/acc
 import { FabricId } from '../../../../contexts/catalog/domain/value-objects/fabric-id.vo';
 import { ProductTypeId } from '../../../../contexts/catalog/domain/value-objects/product-type-id.vo';
 import { ReservationId } from '../../../../contexts/schedule/domain/value-objects/reservation-id.vo';
+import { PreOrderItemId } from '../../../../contexts/pre-order/domain/value-objects/pre-order-item-id.vo';
 import { LayoutType } from '../../../../shared/domain/value-objects/layout-type';
 import { CutOrmEntity } from '../entities/cut-orm.entity';
 
@@ -15,7 +16,7 @@ export class CutMapper {
       id: CutId.from(orm.id),
       accountId: AccountId.from(orm.accountId),
       reservationId: ReservationId.from(orm.reservationId),
-      sequence: orm.sequence,
+      preOrderItemId: PreOrderItemId.from(orm.preOrderItemId),
       markerName: orm.markerName,
       startedAt: orm.startedAt,
       endedAt: orm.endedAt,
@@ -33,7 +34,7 @@ export class CutMapper {
     target.id = domain.id.value;
     target.accountId = domain.accountId.value;
     target.reservationId = domain.reservationId.value;
-    target.sequence = domain.sequence;
+    target.preOrderItemId = domain.preOrderItemId.value;
     target.markerName = domain.markerName;
     target.startedAt = domain.startedAt;
     target.endedAt = domain.endedAt;

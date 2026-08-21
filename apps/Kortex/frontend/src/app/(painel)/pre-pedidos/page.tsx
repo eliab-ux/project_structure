@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -24,6 +24,12 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import { useSnackbar } from 'notistack';
 import { PageHeader } from 'src/components/PageHeader';
+import {
+  MatrizFormValue,
+  MatrizList,
+  emptyMatriz,
+  matrizPreenchida,
+} from 'src/components/MatrizList';
 import preOrderService from 'src/services/preOrderService';
 import customerService from 'src/services/customerService';
 import catalogService from 'src/services/catalogService';
@@ -34,8 +40,14 @@ import {
   LAYOUT_TYPE_LABELS,
   PRE_ORDER_STATUS_LABELS,
   PreOrder,
+  fabricSummary,
   formatDateTime,
+  totalPieces,
 } from 'src/types/preOrder';
+import Collapse from '@mui/material/Collapse';
+import IconButton from '@mui/material/IconButton';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import { numericSx } from 'src/theme/theme';
 
 /**
@@ -64,19 +76,23 @@ export default function PreOrdersPage() {
   const [customers, setCustomers] = useState<CustomerListItem[]>([]);
   const [fabrics, setFabrics] = useState<Fabric[]>([]);
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
-  /** Mediana medida para o tecido escolhido. `null` = sem histórico, e aí o backend recusa. */
-  const [historico, setHistorico] = useState<{
-    samples: number;
-    medianHours: number | null;
-  } | null>(null);
-  const [form, setForm] = useState({
-    customerId: '',
-    fabricId: '',
-    productTypeId: '',
-    estimatedPieces: '',
-    estimatedHours: 1,
-    notes: '',
-  });
+  /**
+   * Mediana medida **por tecido escolhido**, indexada pelo id.
+   *
+   * Por tecido e não um só: a regra 6.1 vale para cada matriz, e um pedido com dois materiais
+   * pode ter um deles estreante. Guardar um histórico único mostraria o do último tecido clicado
+   * ao lado de todos — e o aviso apareceria na matriz errada.
+   */
+  const [historicos, setHistoricos] = useState<
+    Record<string, { samples: number; medianHours: number | null }>
+  >({});
+  const [expandido, setExpandido] = useState<string | null>(null);
+  const [form, setForm] = useState<{
+    customerId: string;
+    matrizes: MatrizFormValue[];
+    estimatedHours: number;
+    notes: string;
+  }>({ customerId: '', matrizes: [emptyMatriz()], estimatedHours: 1, notes: '' });
 
   const load = useCallback(async () => {
     try {
@@ -99,15 +115,8 @@ export default function PreOrdersPage() {
   }, [load]);
 
   async function abrirNovo() {
-    setForm({
-      customerId: '',
-      fabricId: '',
-      productTypeId: '',
-      estimatedPieces: '',
-      estimatedHours: 1,
-      notes: '',
-    });
-    setHistorico(null);
+    setForm({ customerId: '', matrizes: [emptyMatriz()], estimatedHours: 1, notes: '' });
+    setHistoricos({});
     setNovoAberto(true);
 
     try {
@@ -136,7 +145,6 @@ export default function PreOrdersPage() {
    */
   async function carregarHistorico(fabricId: string, pieces: number | null) {
     if (!fabricId) {
-      setHistorico(null);
       return;
     }
     try {
@@ -145,15 +153,31 @@ export default function PreOrdersPage() {
         dados.medianDurationSeconds !== null
           ? Math.round((dados.medianDurationSeconds / 3600) * 10) / 10
           : null;
-      setHistorico({ samples: dados.samples, medianHours });
-
-      // Sugere as horas a partir do medido, arredondando para CIMA: hora de máquina é vendida
-      // inteira, e faltar tempo é pior que sobrar.
-      if (medianHours && medianHours > 0) {
-        setForm((atual) => ({ ...atual, estimatedHours: Math.max(1, Math.ceil(medianHours)) }));
-      }
+      setHistoricos((atual) => ({ ...atual, [fabricId]: { samples: dados.samples, medianHours } }));
     } catch {
-      setHistorico(null);
+      setHistoricos((atual) => {
+        const copia = { ...atual };
+        delete copia[fabricId];
+        return copia;
+      });
+    }
+  }
+
+  /**
+   * Sugere as horas do pedido somando a mediana de cada matriz declarada.
+   *
+   * Soma e não média: as matrizes são cortadas em sequência na mesma máquina, então o bloco que o
+   * cliente precisa comprar é o total. Arredonda para CIMA porque a hora de máquina é vendida
+   * inteira e faltar tempo é pior que sobrar — e continua sendo **sugestão**: o campo fica
+   * editável.
+   */
+  function sugerirHoras(matrizes: MatrizFormValue[]) {
+    const total = matrizes.reduce(
+      (soma, matriz) => soma + (historicos[matriz.fabricId]?.medianHours ?? 0),
+      0,
+    );
+    if (total > 0) {
+      setForm((atual) => ({ ...atual, estimatedHours: Math.max(1, Math.ceil(total)) }));
     }
   }
 
@@ -161,9 +185,12 @@ export default function PreOrdersPage() {
     try {
       await preOrderService.createPreOrder({
         customerId: form.customerId,
-        fabricId: form.fabricId,
-        productTypeId: form.productTypeId,
-        estimatedPieces: Number(form.estimatedPieces),
+        matrizes: form.matrizes.map((matriz) => ({
+          fabricId: matriz.fabricId,
+          productTypeId: matriz.productTypeId,
+          estimatedPieces: Number(matriz.estimatedPieces),
+          rolls: matriz.rolls ? Number(matriz.rolls) : null,
+        })),
         estimatedHours: form.estimatedHours,
         notes: form.notes.trim() || null,
       });
@@ -177,9 +204,8 @@ export default function PreOrdersPage() {
     }
   }
 
-  const prontoParaSalvar = Boolean(
-    form.customerId && form.fabricId && form.productTypeId && Number(form.estimatedPieces) > 0,
-  );
+  const prontoParaSalvar =
+    Boolean(form.customerId) && form.matrizes.every(matrizPreenchida) && form.matrizes.length > 0;
 
   return (
     <>
@@ -221,63 +247,112 @@ export default function PreOrdersPage() {
           <Table size="small">
             <TableHead>
               <TableRow>
+                <TableCell sx={{ width: 44 }} />
                 <TableCell>Cliente</TableCell>
-                <TableCell>Tecido / produto</TableCell>
+                <TableCell>Tecido</TableCell>
+                <TableCell align="right">Matrizes</TableCell>
                 <TableCell align="right">Peças</TableCell>
-                <TableCell align="right">Camadas</TableCell>
-                <TableCell>Enfesto</TableCell>
                 <TableCell align="right">Horas</TableCell>
                 <TableCell>Avaliado por</TableCell>
                 <TableCell>Situação</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {preOrders.map((preOrder) => (
-                <TableRow key={preOrder.id}>
-                  <TableCell sx={{ fontWeight: 600 }}>
-                    {preOrder.customer.name}
-                    {preOrder.notes && (
-                      <Typography variant="body2" color="text.secondary">
-                        {preOrder.notes}
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {preOrder.fabric.name}
-                    <Typography variant="body2" color="text.secondary">
-                      {preOrder.productType.name}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right" sx={numericSx}>
-                    {preOrder.estimatedPieces}
-                  </TableCell>
-                  <TableCell align="right" sx={numericSx}>
-                    {preOrder.estimatedLayers ?? '—'}
-                  </TableCell>
-                  <TableCell>
-                    {preOrder.estimatedLayoutType
-                      ? LAYOUT_TYPE_LABELS[preOrder.estimatedLayoutType]
-                      : '—'}
-                  </TableCell>
-                  <TableCell align="right" sx={{ ...numericSx, fontWeight: 600 }}>
-                    {preOrder.estimatedHours}h
-                  </TableCell>
-                  <TableCell>
-                    {preOrder.createdBy.name}
-                    <Typography variant="body2" color="text.secondary" sx={numericSx}>
-                      {formatDateTime(preOrder.createdAt)}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      size="small"
-                      variant={preOrder.status === 'open' ? 'filled' : 'outlined'}
-                      color={preOrder.status === 'open' ? 'info' : 'default'}
-                      label={PRE_ORDER_STATUS_LABELS[preOrder.status]}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
+              {preOrders.map((preOrder) => {
+                const aberto = expandido === preOrder.id;
+                return (
+                  /* Fragment e não duas linhas soltas: a linha de detalhe pertence à de cima, e
+                     separá-las faria o React perder o par ao reordenar a lista. */
+                  <Fragment key={preOrder.id}>
+                    <TableRow>
+                      <TableCell sx={{ pr: 0 }}>
+                        <IconButton
+                          size="small"
+                          aria-label={aberto ? 'Ocultar matrizes' : 'Ver matrizes'}
+                          onClick={() => setExpandido(aberto ? null : preOrder.id)}
+                        >
+                          {aberto ? (
+                            <KeyboardArrowDownIcon fontSize="small" />
+                          ) : (
+                            <KeyboardArrowRightIcon fontSize="small" />
+                          )}
+                        </IconButton>
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>
+                        {preOrder.customer.name}
+                        {preOrder.notes && (
+                          <Typography variant="body2" color="text.secondary">
+                            {preOrder.notes}
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>{fabricSummary(preOrder)}</TableCell>
+                      <TableCell align="right" sx={numericSx}>
+                        {preOrder.matrizes.length}
+                      </TableCell>
+                      <TableCell align="right" sx={numericSx}>
+                        {totalPieces(preOrder)}
+                      </TableCell>
+                      <TableCell align="right" sx={{ ...numericSx, fontWeight: 600 }}>
+                        {preOrder.estimatedHours}h
+                      </TableCell>
+                      <TableCell>
+                        {preOrder.createdBy.name}
+                        <Typography variant="body2" color="text.secondary" sx={numericSx}>
+                          {formatDateTime(preOrder.createdAt)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          size="small"
+                          variant={preOrder.status === 'open' ? 'filled' : 'outlined'}
+                          color={preOrder.status === 'open' ? 'info' : 'default'}
+                          label={PRE_ORDER_STATUS_LABELS[preOrder.status]}
+                        />
+                      </TableCell>
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell colSpan={8} sx={{ py: 0, border: 0 }}>
+                        <Collapse in={aberto} unmountOnExit>
+                          <Table size="small" sx={{ my: 1 }}>
+                            <TableHead>
+                              <TableRow>
+                                <TableCell>Matriz</TableCell>
+                                <TableCell>Tecido</TableCell>
+                                <TableCell>Produto</TableCell>
+                                <TableCell align="right">Peças</TableCell>
+                                <TableCell align="right">Camadas</TableCell>
+                                <TableCell>Enfesto</TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {preOrder.matrizes.map((matriz) => (
+                                <TableRow key={matriz.id}>
+                                  <TableCell sx={numericSx}>{matriz.sequence}</TableCell>
+                                  <TableCell>{matriz.fabric.name}</TableCell>
+                                  <TableCell>{matriz.productType.name}</TableCell>
+                                  <TableCell align="right" sx={numericSx}>
+                                    {matriz.estimatedPieces}
+                                  </TableCell>
+                                  <TableCell align="right" sx={numericSx}>
+                                    {matriz.estimatedLayers ?? '—'}
+                                  </TableCell>
+                                  <TableCell>
+                                    {matriz.estimatedLayoutType
+                                      ? LAYOUT_TYPE_LABELS[matriz.estimatedLayoutType]
+                                      : '—'}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </Collapse>
+                      </TableCell>
+                    </TableRow>
+                  </Fragment>
+                );
+              })}
             </TableBody>
           </Table>
 
@@ -312,90 +387,58 @@ export default function PreOrdersPage() {
               ))}
             </TextField>
 
-            <TextField
-              select
-              label="Tecido"
-              fullWidth
-              required
-              value={form.fabricId}
-              onChange={(event) => {
-                setForm({ ...form, fabricId: event.target.value });
+            {/* O histórico é a razão de este formulário existir aqui — por isso ele aparece
+                dentro de cada matriz, logo abaixo do tecido escolhido, e não num rodapé. A regra
+                6.1 vale POR MATRIZ: basta um tecido estreante para o pedido ser recusado. */}
+            <MatrizList
+              matrizes={form.matrizes}
+              fabrics={fabrics}
+              productTypes={productTypes}
+              onChange={(matrizes) => {
+                setForm({ ...form, matrizes });
+                sugerirHoras(matrizes);
+              }}
+              onMatrizChanged={(matriz) =>
                 void carregarHistorico(
-                  event.target.value,
-                  form.estimatedPieces ? Number(form.estimatedPieces) : null,
+                  matriz.fabricId,
+                  matriz.estimatedPieces ? Number(matriz.estimatedPieces) : null,
+                )
+              }
+              renderExtra={(matriz) => {
+                const historico = matriz.fabricId ? historicos[matriz.fabricId] : undefined;
+                if (!historico) {
+                  return null;
+                }
+                if (historico.samples === 0) {
+                  return (
+                    <Alert severity="warning">
+                      Este tecido ainda não tem corte concluído. A primeira estimativa é do
+                      Modelista — a partir do segundo corte você abre o pedido por aqui.
+                    </Alert>
+                  );
+                }
+                return (
+                  <Alert severity="success">
+                    {historico.samples} corte{historico.samples > 1 ? 's' : ''} registrado
+                    {historico.samples > 1 ? 's' : ''} com este tecido
+                    {historico.medianHours
+                      ? ` · mediana de ${historico.medianHours.toFixed(1).replace('.', ',')}h por matriz`
+                      : ''}
+                    .
+                  </Alert>
                 );
               }}
-            >
-              {fabrics.map((fabric) => (
-                <MenuItem key={fabric.id} value={fabric.id}>
-                  {fabric.name}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            {/* O histórico é a razão de este formulário existir aqui — então ele fica na frente,
-                não escondido num rodapé. */}
-            {form.fabricId && historico && historico.samples === 0 && (
-              <Alert severity="warning">
-                Este tecido ainda não tem corte concluído. A primeira estimativa é do Modelista — a
-                partir do segundo corte você abre o pedido por aqui.
-              </Alert>
-            )}
-            {historico && historico.samples > 0 && (
-              <Alert severity="success">
-                {historico.samples} corte{historico.samples > 1 ? 's' : ''} registrado
-                {historico.samples > 1 ? 's' : ''} com este tecido
-                {historico.medianHours
-                  ? ` · mediana de ${historico.medianHours.toFixed(1).replace('.', ',')}h por matriz`
-                  : ''}
-                .
-              </Alert>
-            )}
+            />
 
             <TextField
-              select
-              label="Tipo de produto"
-              fullWidth
-              required
-              value={form.productTypeId}
-              onChange={(event) => setForm({ ...form, productTypeId: event.target.value })}
-            >
-              {productTypes.map((type) => (
-                <MenuItem key={type.id} value={type.id}>
-                  {type.name}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <Stack direction="row" spacing={2}>
-              <TextField
-                label="Peças estimadas"
-                type="number"
-                fullWidth
-                required
-                inputProps={{ min: 1 }}
-                value={form.estimatedPieces}
-                onChange={(event) => setForm({ ...form, estimatedPieces: event.target.value })}
-                onBlur={() =>
-                  void carregarHistorico(
-                    form.fabricId,
-                    form.estimatedPieces ? Number(form.estimatedPieces) : null,
-                  )
-                }
-                helperText="O histórico é recortado por volume parecido."
-              />
-              <TextField
-                label="Horas"
-                type="number"
-                sx={{ minWidth: 130 }}
-                inputProps={{ min: 1, max: 24 }}
-                value={form.estimatedHours}
-                onChange={(event) =>
-                  setForm({ ...form, estimatedHours: Number(event.target.value) })
-                }
-                helperText="Hora cheia"
-              />
-            </Stack>
+              label="Horas do pedido"
+              type="number"
+              sx={{ maxWidth: 200 }}
+              inputProps={{ min: 1, max: 24 }}
+              value={form.estimatedHours}
+              onChange={(event) => setForm({ ...form, estimatedHours: Number(event.target.value) })}
+              helperText="Hora cheia, do pedido inteiro"
+            />
 
             <TextField
               label="Observação"

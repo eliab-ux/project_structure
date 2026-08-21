@@ -30,9 +30,7 @@ describe('Agenda, reserva e pagamento (e2e)', () => {
       token: tokens.modelista,
       payload: {
         customerId,
-        fabricId,
-        productTypeId,
-        estimatedPieces: 160,
+        matrizes: [{ fabricId, productTypeId, estimatedPieces: 160 }],
         estimatedHours: 3,
       },
     });

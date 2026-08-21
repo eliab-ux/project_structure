@@ -13,6 +13,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+import Divider from '@mui/material/Divider';
 import LinearProgress from '@mui/material/LinearProgress';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
@@ -25,7 +26,7 @@ import { RequireAuth } from 'src/components/RequireAuth';
 import cutService from 'src/services/cutService';
 import scheduleService from 'src/services/scheduleService';
 import { apiErrorMessage } from 'src/services/api';
-import { Cut, clock, shortDuration } from 'src/types/cut';
+import { ReservationMatriz, ReservationMatrizes, clock, shortDuration } from 'src/types/cut';
 import { LAYOUT_TYPE_LABELS, LayoutType } from 'src/types/preOrder';
 import { ReservationForModelista, hhmm } from 'src/types/schedule';
 import { numericSx } from 'src/theme/theme';
@@ -33,19 +34,26 @@ import { numericSx } from 'src/theme/theme';
 const TOUCH = { minHeight: 56 };
 
 /**
- * Matriz em andamento — a tela que o Modelista usa de pé, ao lado da máquina.
+ * Matrizes da reserva — a tela que o Modelista usa de pé, ao lado da máquina.
  *
- * **Dois cronômetros simultâneos** (spec §8):
+ * **A tela é dirigida pelo PEDIDO.** As matrizes que aparecem são as que o pedido declarou: matriz
+ * 1 tecido X calça, matriz 2 tecido Y camiseta. Cada uma tem exatamente uma contagem, e não há
+ * botão para criar uma matriz que ninguém pediu — se o trabalho na mesa é maior do que o pedido
+ * descreve, quem corrige é o pedido.
  *
- * - **Corrido**: `now − cut.started_at` da matriz atual. Sobe sempre, é o número em destaque, e é
- *   o que alimenta o apontamento.
- * - **Restante**: `reservation.ends_at − now` da **reserva inteira**. Desce, secundário. É com ele
- *   que ele decide se cabe mais uma matriz antes de acabar a hora comprada.
+ * **Três relógios** (spec §8):
+ *
+ * - **Total do pedido** — do primeiro start ao último stop. É o número em destaque porque é o que
+ *   vale no fim: ele inclui os intervalos entre uma matriz e outra, que aconteceram dentro da hora
+ *   que o cliente comprou.
+ * - **Matriz atual** — `now − cut.started_at` da matriz em andamento. Serve à métrica por tecido,
+ *   não à cobrança.
+ * - **Restante da reserva** — `reservation.ends_at − now`. Desce. É com ele que ele decide se cabe
+ *   a próxima matriz antes de acabar a hora comprada.
  *
  * Quando o restante chega a zero ele **não zera nem some**: vira excedente, ganha sinal e cor de
- * alerta, e conta para cima. O corrido continua subindo normalmente. **Nada trava, nada
- * interrompe, nenhum aviso bloqueante** — o excedente é só informação, não altera cobrança
- * (regra 6.4).
+ * alerta, e conta para cima. **Nada trava, nada interrompe** — o excedente é só informação, não
+ * altera cobrança (regra 6.4).
  */
 function MatrizScreen() {
   const params = useParams<{ reservationId: string }>();
@@ -54,7 +62,7 @@ function MatrizScreen() {
 
   const [loading, setLoading] = useState(true);
   const [reservation, setReservation] = useState<ReservationForModelista | null>(null);
-  const [cuts, setCuts] = useState<Cut[]>([]);
+  const [dados, setDados] = useState<ReservationMatrizes | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [stopOpen, setStopOpen] = useState(false);
   const [stopForm, setStopForm] = useState({
@@ -67,14 +75,14 @@ function MatrizScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [queue, loadedCuts] = await Promise.all([
+      const [queue, matrizes] = await Promise.all([
         scheduleService.modelistaQueue(),
-        cutService.listByReservation(reservationId),
+        cutService.reservationMatrizes(reservationId),
       ]);
       setReservation(queue.find((item) => item.id === reservationId) ?? null);
-      setCuts(loadedCuts);
+      setDados(matrizes);
     } catch (error) {
-      enqueueSnackbar(apiErrorMessage(error, 'Não foi possível carregar a matriz.'), {
+      enqueueSnackbar(apiErrorMessage(error, 'Não foi possível carregar as matrizes.'), {
         variant: 'error',
       });
     } finally {
@@ -86,7 +94,7 @@ function MatrizScreen() {
     void load();
   }, [load]);
 
-  /** Um tick por segundo move os dois relógios. Não há polling ao servidor — só o relógio local. */
+  /** Um tick por segundo move os três relógios. Não há polling ao servidor — só o relógio local. */
   useEffect(() => {
     timer.current = setInterval(() => setNow(Date.now()), 1000);
     return () => {
@@ -96,11 +104,27 @@ function MatrizScreen() {
     };
   }, []);
 
-  const running = cuts.find((cut) => cut.isRunning) ?? null;
-  const finished = cuts.filter((cut) => !cut.isRunning);
+  const matrizes = useMemo(() => dados?.matrizes ?? [], [dados]);
+  const emAndamento = matrizes.find((matriz) => matriz.cut?.isRunning) ?? null;
+  const proxima = matrizes.find((matriz) => matriz.cut === null) ?? null;
+  const apontadas = matrizes.filter((matriz) => matriz.cut && !matriz.cut.isRunning);
 
-  const elapsedSeconds = running
-    ? Math.floor((now - new Date(running.startedAt).getTime()) / 1000)
+  const matrizSeconds = emAndamento?.cut
+    ? Math.floor((now - new Date(emAndamento.cut.startedAt).getTime()) / 1000)
+    : 0;
+
+  /**
+   * O tempo que vale: do primeiro start até agora, ou até o último stop quando tudo parou.
+   *
+   * Não é a soma das matrizes — a soma deixaria de fora o intervalo entre uma e outra, e esse
+   * intervalo aconteceu dentro do bloco de máquina que o cliente comprou.
+   */
+  const totalSeconds = dados?.startedAt
+    ? Math.floor(
+        ((dados.endedAt ? new Date(dados.endedAt).getTime() : now) -
+          new Date(dados.startedAt).getTime()) /
+          1000,
+      )
     : 0;
 
   /** Negativo = excedente. É o sinal que a UI mostra com `+` e em cor de alerta. */
@@ -120,12 +144,15 @@ function MatrizScreen() {
     return Math.max(0, Math.min(100, ((now - start) / (end - start)) * 100));
   }, [reservation, now]);
 
-  const totalPiecesSoFar = finished.reduce((sum, cut) => sum + (cut.totalPieces ?? 0), 0);
+  const totalPiecesSoFar = apontadas.reduce(
+    (sum, matriz) => sum + (matriz.cut?.totalPieces ?? 0),
+    0,
+  );
 
-  async function startCut() {
+  async function startCut(matriz: ReservationMatriz) {
     setBusy(true);
     try {
-      await cutService.start(reservationId);
+      await cutService.start(reservationId, { preOrderItemId: matriz.preOrderItemId });
       await load();
     } catch (error) {
       enqueueSnackbar(apiErrorMessage(error, 'Não foi possível iniciar a matriz.'), {
@@ -137,12 +164,12 @@ function MatrizScreen() {
   }
 
   async function stopCut() {
-    if (!running) {
+    if (!emAndamento?.cut) {
       return;
     }
     setBusy(true);
     try {
-      const result = await cutService.stop(running.id, {
+      const result = await cutService.stop(emAndamento.cut.id, {
         layers: Number(stopForm.layers),
         nestedPieces: Number(stopForm.nestedPieces),
         layoutType: stopForm.layoutType,
@@ -226,36 +253,47 @@ function MatrizScreen() {
           {reservation.customer.name}
         </Typography>
 
-        {/* ==== Os dois cronômetros ==== */}
+        {/* ==== Os três relógios ==== */}
         <Paper variant="outlined" sx={{ p: 3, mt: 2.5, textAlign: 'center' }}>
           <Typography variant="overline" component="p" color="text.secondary">
-            {running ? `Matriz ${running.sequence} — corrido` : 'Nenhuma matriz em andamento'}
+            {dados?.startedAt ? 'Tempo total do pedido' : 'O pedido ainda não começou'}
           </Typography>
           <Typography
             component="p"
             aria-live="polite"
             sx={{ ...numericSx, fontSize: 56, fontWeight: 600, lineHeight: 1.05 }}
           >
-            {clock(running ? elapsedSeconds : 0)}
+            {clock(totalSeconds)}
           </Typography>
 
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="overline" component="p" color="text.secondary">
-              {overtime ? 'Excedente da reserva' : 'Restante da reserva'}
-            </Typography>
-            <Typography
-              component="p"
-              sx={{
-                ...numericSx,
-                fontSize: 24,
-                fontWeight: 600,
-                // O excedente ganha cor de alerta. Não trava nada — é informação.
-                color: overtime ? 'error.main' : 'text.secondary',
-              }}
-            >
-              {clock(remainingSeconds)}
-            </Typography>
-          </Box>
+          <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="overline" component="p" color="text.secondary">
+                {emAndamento ? `Matriz ${emAndamento.sequence}` : 'Nenhuma matriz rodando'}
+              </Typography>
+              <Typography component="p" sx={{ ...numericSx, fontSize: 24, fontWeight: 600 }}>
+                {clock(matrizSeconds)}
+              </Typography>
+            </Box>
+
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="overline" component="p" color="text.secondary">
+                {overtime ? 'Excedente' : 'Restante'}
+              </Typography>
+              <Typography
+                component="p"
+                sx={{
+                  ...numericSx,
+                  fontSize: 24,
+                  fontWeight: 600,
+                  // O excedente ganha cor de alerta. Não trava nada — é informação.
+                  color: overtime ? 'error.main' : 'text.secondary',
+                }}
+              >
+                {clock(remainingSeconds)}
+              </Typography>
+            </Box>
+          </Stack>
 
           <LinearProgress
             variant="determinate"
@@ -272,10 +310,10 @@ function MatrizScreen() {
           </Alert>
         )}
 
-        {/* ==== Os dois toques ==== */}
+        {/* ==== O toque principal ==== */}
         {!isCompleted && (
           <Stack spacing={1.5} sx={{ mt: 2.5 }}>
-            {running ? (
+            {emAndamento && (
               <Button
                 fullWidth
                 sx={{ ...TOUCH, minHeight: 72, fontSize: 20 }}
@@ -285,18 +323,27 @@ function MatrizScreen() {
               >
                 Parar — a máquina desligou
               </Button>
-            ) : (
+            )}
+
+            {!emAndamento && proxima && (
               <Button
                 fullWidth
                 sx={{ ...TOUCH, minHeight: 72, fontSize: 20 }}
                 disabled={busy}
-                onClick={startCut}
+                onClick={() => startCut(proxima)}
               >
-                Começar matriz {cuts.length + 1}
+                Começar matriz {proxima.sequence}
               </Button>
             )}
 
-            {!running && cuts.length > 0 && (
+            {!emAndamento && !proxima && (
+              <Alert severity="info">
+                Todas as {matrizes.length} matrizes deste pedido foram apontadas. Se falta cortar
+                algo, o pedido precisa declarar a matriz — fale com o Administrativo.
+              </Alert>
+            )}
+
+            {!emAndamento && apontadas.length > 0 && (
               <Button
                 variant="outlined"
                 fullWidth
@@ -316,41 +363,81 @@ function MatrizScreen() {
           </Alert>
         )}
 
-        {/* ==== Matrizes já apontadas ==== */}
+        {/* ==== As matrizes declaradas no pedido ==== */}
         <Typography variant="h4" component="h2" sx={{ mt: 4, mb: 1.5 }}>
-          Matrizes apontadas ({finished.length}) · {totalPiecesSoFar} peças
+          Matrizes do pedido ({apontadas.length}/{matrizes.length}) · {totalPiecesSoFar} peças
         </Typography>
 
         <Stack spacing={1.5}>
-          {finished.map((cut) => (
-            <Paper key={cut.id} variant="outlined" sx={{ p: 2 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
-                <Box>
-                  <Typography variant="h4" component="h3">
-                    Matriz {cut.sequence}
-                    {cut.markerName ? ` · ${cut.markerName}` : ''}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={numericSx}>
-                    {cut.layers} camadas × {cut.nestedPieces} encaixadas
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {cut.fabric.name}
-                    {cut.layoutType ? ` · ${LAYOUT_TYPE_LABELS[cut.layoutType]}` : ''}
-                  </Typography>
-                </Box>
-                <Stack spacing={0.5} alignItems="flex-end">
-                  <Typography sx={{ ...numericSx, fontSize: 22, fontWeight: 600 }}>
-                    {cut.totalPieces}
-                  </Typography>
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={shortDuration(cut.durationSeconds)}
-                  />
+          {matrizes.map((matriz) => {
+            const cut = matriz.cut;
+            const rodando = Boolean(cut?.isRunning);
+
+            return (
+              <Paper
+                key={matriz.preOrderItemId}
+                variant="outlined"
+                sx={{ p: 2, borderColor: rodando ? 'info.main' : undefined }}
+              >
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="flex-start"
+                  gap={1}
+                >
+                  <Box>
+                    <Typography variant="h4" component="h3">
+                      Matriz {matriz.sequence}
+                      {cut?.markerName ? ` · ${cut.markerName}` : ''}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {matriz.fabric.name} · {matriz.productType.name}
+                    </Typography>
+                    {cut && !rodando ? (
+                      <Typography variant="body2" color="text.secondary" sx={numericSx}>
+                        {cut.layers} camadas × {cut.nestedPieces} encaixadas
+                        {cut.layoutType ? ` · ${LAYOUT_TYPE_LABELS[cut.layoutType]}` : ''}
+                      </Typography>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary" sx={numericSx}>
+                        {matriz.estimatedPieces} peças estimadas
+                        {matriz.estimatedLayers ? ` · ${matriz.estimatedLayers} camadas` : ''}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  <Stack spacing={0.75} alignItems="flex-end">
+                    {cut && !rodando && (
+                      <>
+                        <Typography sx={{ ...numericSx, fontSize: 22, fontWeight: 600 }}>
+                          {cut.totalPieces}
+                        </Typography>
+                        <Chip
+                          size="small"
+                          variant="outlined"
+                          label={shortDuration(cut.durationSeconds)}
+                        />
+                      </>
+                    )}
+                    {rodando && <Chip size="small" color="info" label="Em andamento" />}
+                    {!cut && !isCompleted && !emAndamento && matriz !== proxima && (
+                      /* Fora de ordem é permitido: o Modelista escolhe qual material sobe na mesa
+                         primeiro. O que ele não pode é apontar uma matriz que o pedido não tem. */
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        disabled={busy}
+                        onClick={() => startCut(matriz)}
+                      >
+                        Começar
+                      </Button>
+                    )}
+                    {!cut && <Chip size="small" variant="outlined" label="Aguardando" />}
+                  </Stack>
                 </Stack>
-              </Stack>
-            </Paper>
-          ))}
+              </Paper>
+            );
+          })}
         </Stack>
 
         <Button
@@ -366,7 +453,7 @@ function MatrizScreen() {
 
       {/* ==== Stop: confirmação de camadas e peças encaixadas ==== */}
       <Dialog open={stopOpen} onClose={() => setStopOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle>Encerrar matriz {running?.sequence}</DialogTitle>
+        <DialogTitle>Encerrar matriz {emAndamento?.sequence}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Confirme o que realmente saiu. O total de peças é calculado — você não digita.
@@ -403,6 +490,8 @@ function MatrizScreen() {
                   : '—'}
               </Typography>
             </Paper>
+
+            <Divider />
 
             <Box>
               <Typography variant="overline" component="p" sx={{ mb: 1 }}>

@@ -29,8 +29,8 @@ import {
 import { FabricNotFoundException } from '../../../catalog/domain/exceptions/catalog.exceptions';
 import { LayoutType } from '../../../../shared/domain/value-objects/layout-type';
 
-export interface PreOrderInput {
-  customerId: string;
+/** Uma matriz declarada, como chega da tela. */
+export interface MatrizInputDto {
   fabricId: string;
   productTypeId: string;
   estimatedPieces: number;
@@ -38,6 +38,12 @@ export interface PreOrderInput {
   rolls?: number | null;
   estimatedLayers?: number | null;
   estimatedLayoutType?: string | null;
+}
+
+export interface PreOrderInput {
+  customerId: string;
+  /** Ao menos uma. O domínio recusa pedido sem matriz — não descreve trabalho nenhum. */
+  matrizes: MatrizInputDto[];
   estimatedHours: number;
   notes?: string | null;
 }
@@ -90,23 +96,19 @@ export class PreOrderUseCases {
     input: PreOrderInput,
   ): Promise<PreOrderDto> {
     const account = AccountId.from(accountId);
-    const fabricId = FabricId.from(input.fabricId);
 
+    // A regra 6.1 vale POR MATRIZ: basta um tecido estreante para o Administrativo ser barrado.
+    // Verificar só a primeira deixaria o segundo material entrar sem estimativa que o sustente.
     if (actorRole === 'admin') {
-      const fabric = await this.fabricRepository.findById(account, fabricId);
-      if (!fabric) {
-        throw new FabricNotFoundException();
-      }
-      if ((await this.cutHistory.countFinished(account, fabricId)) === 0) {
-        throw new NoCutHistoryForAdminException(fabric.name);
+      for (const matriz of input.matrizes) {
+        await this.assertHistoryForAdmin(account, FabricId.from(matriz.fabricId));
       }
     }
 
     const preOrder = PreOrder.create({
       accountId: account,
       customerId: CustomerId.from(input.customerId),
-      fabricId,
-      productTypeId: ProductTypeId.from(input.productTypeId),
+      matrizes: toMatrizes(input),
       createdByUserId: UserId.from(createdByUserId),
       estimate: toEstimate(input),
     });
@@ -135,8 +137,7 @@ export class PreOrderUseCases {
     preOrder.update({
       actorRole,
       customerId: CustomerId.from(input.customerId),
-      fabricId: FabricId.from(input.fabricId),
-      productTypeId: ProductTypeId.from(input.productTypeId),
+      matrizes: toMatrizes(input),
       estimate: toEstimate(input),
     });
 
@@ -158,6 +159,22 @@ export class PreOrderUseCases {
     return (await this.toDtos(account, [saved]))[0];
   }
 
+  /**
+   * O Administrativo só abre pedido para tecido com corte concluído (regra 6.1).
+   *
+   * A primeira estimativa de um tecido é conhecimento de quem está na máquina; da segunda em
+   * diante ela está no sistema.
+   */
+  private async assertHistoryForAdmin(accountId: AccountId, fabricId: FabricId): Promise<void> {
+    const fabric = await this.fabricRepository.findById(accountId, fabricId);
+    if (!fabric) {
+      throw new FabricNotFoundException();
+    }
+    if ((await this.cutHistory.countFinished(accountId, fabricId)) === 0) {
+      throw new NoCutHistoryForAdminException(fabric.name);
+    }
+  }
+
   private async toDtos(accountId: AccountId, preOrders: PreOrder[]): Promise<PreOrderDto[]> {
     if (preOrders.length === 0) {
       return [];
@@ -168,9 +185,11 @@ export class PreOrderUseCases {
     return preOrders.map((preOrder) =>
       PreOrderDto.fromDomain(preOrder, {
         customer: refOrPlaceholder(refs.customers, preOrder.customerId.value),
-        fabric: fabricRefOrPlaceholder(refs.fabrics, preOrder.fabricId.value),
-        productType: refOrPlaceholder(refs.productTypes, preOrder.productTypeId.value),
         createdBy: refOrPlaceholder(refs.users, preOrder.createdByUserId.value),
+        // Funções e não valores: as matrizes de um pedido podem ter tecidos diferentes, e o mapa
+        // já veio carregado de uma vez pelo `ReferenceResolver`.
+        fabricOf: (fabricId) => fabricRefOrPlaceholder(refs.fabrics, fabricId),
+        productTypeOf: (productTypeId) => refOrPlaceholder(refs.productTypes, productTypeId),
       }),
     );
   }
@@ -178,12 +197,21 @@ export class PreOrderUseCases {
 
 function toEstimate(input: PreOrderInput) {
   return {
-    estimatedPieces: input.estimatedPieces,
-    metersPerPiece: input.metersPerPiece ?? null,
-    rolls: input.rolls ?? null,
-    estimatedLayers: input.estimatedLayers ?? null,
-    estimatedLayoutType: (input.estimatedLayoutType as LayoutType | null | undefined) ?? null,
     estimatedHours: input.estimatedHours,
     notes: input.notes ?? null,
   };
+}
+
+function toMatrizes(input: PreOrderInput) {
+  return input.matrizes.map((matriz) => ({
+    fabricId: FabricId.from(matriz.fabricId),
+    productTypeId: ProductTypeId.from(matriz.productTypeId),
+    estimate: {
+      estimatedPieces: matriz.estimatedPieces,
+      metersPerPiece: matriz.metersPerPiece ?? null,
+      rolls: matriz.rolls ?? null,
+      estimatedLayers: matriz.estimatedLayers ?? null,
+      estimatedLayoutType: (matriz.estimatedLayoutType as LayoutType | null | undefined) ?? null,
+    },
+  }));
 }

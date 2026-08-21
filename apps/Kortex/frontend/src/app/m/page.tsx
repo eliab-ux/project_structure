@@ -12,7 +12,13 @@ import Typography from '@mui/material/Typography';
 import { RequireAuth } from 'src/components/RequireAuth';
 import { useAuth } from 'src/contexts/AuthContext';
 import preOrderService from 'src/services/preOrderService';
-import { PRE_ORDER_STATUS_LABELS, PreOrder, formatDateTime } from 'src/types/preOrder';
+import {
+  PRE_ORDER_STATUS_LABELS,
+  PreOrder,
+  fabricSummary,
+  formatDateTime,
+  totalPieces,
+} from 'src/types/preOrder';
 import { numericSx } from 'src/theme/theme';
 
 /** Alvo de toque ≥ 56 px: o Modelista opera de pé, ao lado da máquina (spec §8). */
@@ -89,8 +95,8 @@ function ModelistaHome() {
                       {preOrder.customer.name}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={numericSx}>
-                      {preOrder.fabric.name} · {preOrder.productType.name} ·{' '}
-                      {preOrder.estimatedPieces} peças
+                      {fabricSummary(preOrder)} · {totalPieces(preOrder)} peças
+                      {preOrder.matrizes.length > 1 && ` · ${preOrder.matrizes.length} matrizes`}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={numericSx}>
                       {formatDateTime(preOrder.createdAt)}

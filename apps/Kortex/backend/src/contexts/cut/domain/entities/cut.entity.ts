@@ -5,6 +5,7 @@ import { AccountId } from '../../../account/domain/value-objects/account-id.vo';
 import { FabricId } from '../../../catalog/domain/value-objects/fabric-id.vo';
 import { ProductTypeId } from '../../../catalog/domain/value-objects/product-type-id.vo';
 import { ReservationId } from '../../../schedule/domain/value-objects/reservation-id.vo';
+import { PreOrderItemId } from '../../../pre-order/domain/value-objects/pre-order-item-id.vo';
 import { CutId } from '../value-objects/cut-id.vo';
 import { CutAlreadyEndedException, CutNotEndedException } from '../exceptions/cut.exceptions';
 
@@ -19,7 +20,12 @@ interface StopData {
 }
 
 /**
- * Uma matriz apontada (spec §4.10). N matrizes por reserva.
+ * O apontamento de uma matriz **declarada** (spec §4.10).
+ *
+ * O corte não nasce por vontade de quem está na máquina: ele executa um `pre_order_item` que o
+ * pedido já declarou — matriz 1 tecido X calça, matriz 2 tecido Y camiseta. Um apontamento por
+ * matriz declarada, garantido por índice único no banco: pedido de uma matriz tem uma contagem, e
+ * não existe apontar matriz que ninguém pediu.
  *
  * **Dois toques, um tempo só**: `start` quando começa o manejo do tecido (plotter imprimindo,
  * enfesto começando) e `stop` quando a máquina de corte desliga. Não existe — e não deve existir —
@@ -38,7 +44,7 @@ export class Cut extends AggregateRoot {
     private readonly _id: CutId,
     private readonly _accountId: AccountId,
     private readonly _reservationId: ReservationId,
-    private readonly _sequence: number,
+    private readonly _preOrderItemId: PreOrderItemId,
     private _markerName: string | null,
     private readonly _startedAt: Date,
     private _endedAt: Date | null,
@@ -56,28 +62,24 @@ export class Cut extends AggregateRoot {
   /**
    * START — o primeiro toque.
    *
-   * Tecido e produto vêm herdados do pré-pedido; podem ser corrigidos no stop, porque o Modelista
-   * pode descobrir na máquina que o material é outro.
+   * Tecido e produto vêm herdados da matriz declarada; podem ser corrigidos no stop, porque o
+   * Modelista pode descobrir na máquina que o material é outro.
    */
   static start(input: {
     accountId: AccountId;
     reservationId: ReservationId;
-    sequence: number;
+    preOrderItemId: PreOrderItemId;
     fabricId: FabricId;
     productTypeId: ProductTypeId;
     markerName?: string | null;
     at?: Date;
   }): Cut {
-    if (!Number.isInteger(input.sequence) || input.sequence < 1) {
-      throw new InvalidValueException('A sequência da matriz começa em 1.');
-    }
-
     const startedAt = input.at ?? new Date();
     return new Cut(
       CutId.create(),
       input.accountId,
       input.reservationId,
-      input.sequence,
+      input.preOrderItemId,
       Cut.normalizeMarker(input.markerName),
       startedAt,
       null,
@@ -95,7 +97,7 @@ export class Cut extends AggregateRoot {
     id: CutId;
     accountId: AccountId;
     reservationId: ReservationId;
-    sequence: number;
+    preOrderItemId: PreOrderItemId;
     markerName: string | null;
     startedAt: Date;
     endedAt: Date | null;
@@ -111,7 +113,7 @@ export class Cut extends AggregateRoot {
       input.id,
       input.accountId,
       input.reservationId,
-      input.sequence,
+      input.preOrderItemId,
       input.markerName,
       input.startedAt,
       input.endedAt,
@@ -248,8 +250,9 @@ export class Cut extends AggregateRoot {
     return this._reservationId;
   }
 
-  get sequence(): number {
-    return this._sequence;
+  /** A matriz declarada que este apontamento executa. Única — há índice único garantindo. */
+  get preOrderItemId(): PreOrderItemId {
+    return this._preOrderItemId;
   }
 
   get markerName(): string | null {

@@ -1,4 +1,5 @@
 import { PreOrder } from '../../../src/contexts/pre-order/domain/entities/pre-order.entity';
+import { MatrizEstimate } from '../../../src/contexts/pre-order/domain/entities/pre-order-item.entity';
 import { AccountId } from '../../../src/contexts/account/domain/value-objects/account-id.vo';
 import { CustomerId } from '../../../src/contexts/customer/domain/value-objects/customer-id.vo';
 import { FabricId } from '../../../src/contexts/catalog/domain/value-objects/fabric-id.vo';
@@ -8,33 +9,44 @@ import { InvalidValueException } from '../../../src/shared/domain/exceptions/inv
 import {
   ForbiddenHoursChangeException,
   PreOrderNotEditableException,
+  PreOrderWithoutMatrizException,
 } from '../../../src/contexts/pre-order/domain/exceptions/pre-order.exceptions';
 
 const accountId = AccountId.create();
 const customerId = CustomerId.create();
 const fabricId = FabricId.create();
+const outroTecido = FabricId.create();
 const productTypeId = ProductTypeId.create();
+const outroProduto = ProductTypeId.create();
 const modelistaId = UserId.create();
 
-function baseEstimate(overrides: Partial<Parameters<typeof PreOrder.create>[0]['estimate']> = {}) {
+function matrizEstimate(overrides: Partial<MatrizEstimate> = {}): MatrizEstimate {
   return {
     estimatedPieces: 160,
     metersPerPiece: 1.35,
     rolls: 3,
     estimatedLayers: 20,
-    estimatedLayoutType: 'zigzag' as const,
-    estimatedHours: 3,
-    notes: null,
+    estimatedLayoutType: 'zigzag',
     ...overrides,
   };
 }
 
-function build(estimate = baseEstimate()): PreOrder {
+function matriz(overrides: Partial<MatrizEstimate> = {}) {
+  return { fabricId, productTypeId, estimate: matrizEstimate(overrides) };
+}
+
+function baseEstimate(overrides: Partial<{ estimatedHours: number; notes: string | null }> = {}) {
+  return { estimatedHours: 3, notes: null, ...overrides };
+}
+
+function build(
+  estimate = baseEstimate(),
+  matrizes: Parameters<typeof PreOrder.create>[0]['matrizes'] = [matriz()],
+): PreOrder {
   return PreOrder.create({
     accountId,
     customerId,
-    fabricId,
-    productTypeId,
+    matrizes,
     createdByUserId: modelistaId,
     estimate,
   });
@@ -53,30 +65,84 @@ describe('PreOrder', () => {
     expect(() => build(baseEstimate({ estimatedHours: 1 })).status).not.toThrow();
   });
 
-  it('recusa peças, rolos ou camadas não positivos', () => {
-    expect(() => build(baseEstimate({ estimatedPieces: 0 }))).toThrow(InvalidValueException);
-    expect(() => build(baseEstimate({ rolls: 0 }))).toThrow(InvalidValueException);
-    expect(() => build(baseEstimate({ estimatedLayers: -1 }))).toThrow(InvalidValueException);
+  /**
+   * As horas são do PEDIDO, não da matriz: o cliente compra um bloco de máquina. Se cada matriz
+   * tivesse a sua hora, o tempo entre uma e outra — que aconteceu dentro do bloco comprado —
+   * ficaria fora da conta.
+   */
+  it('as horas são uma só, com uma ou com três matrizes', () => {
+    const preOrder = build(baseEstimate({ estimatedHours: 4 }), [
+      matriz(),
+      { fabricId: outroTecido, productTypeId: outroProduto, estimate: matrizEstimate() },
+      matriz({ estimatedPieces: 40 }),
+    ]);
+
+    expect(preOrder.estimate.estimatedHours).toBe(4);
+    expect(preOrder.items).toHaveLength(3);
   });
 
-  it('aceita os campos opcionais nulos — nem toda avaliação tem metragem e rolos', () => {
-    const preOrder = build(
-      baseEstimate({
-        metersPerPiece: null,
-        rolls: null,
-        estimatedLayers: null,
-        estimatedLayoutType: null,
-      }),
-    );
-    expect(preOrder.estimate.metersPerPiece).toBeNull();
-    expect(preOrder.estimate.estimatedLayoutType).toBeNull();
+  describe('as matrizes declaradas (§4.7.1)', () => {
+    it('numera na ordem de chegada, começando em 1', () => {
+      const preOrder = build(baseEstimate(), [
+        matriz(),
+        { fabricId: outroTecido, productTypeId: outroProduto, estimate: matrizEstimate() },
+      ]);
+
+      expect(preOrder.items.map((item) => item.sequence)).toEqual([1, 2]);
+      expect(preOrder.items[1].fabricId.value).toBe(outroTecido.value);
+      expect(preOrder.items[1].productTypeId.value).toBe(outroProduto.value);
+    });
+
+    it('cada matriz tem o SEU tecido e o SEU produto — é o caso real do cliente', () => {
+      const preOrder = build(baseEstimate(), [
+        matriz(),
+        { fabricId: outroTecido, productTypeId: outroProduto, estimate: matrizEstimate() },
+      ]);
+
+      const tecidos = preOrder.items.map((item) => item.fabricId.value);
+      expect(new Set(tecidos).size).toBe(2);
+    });
+
+    it('recusa pedido sem matriz nenhuma — não descreve trabalho algum', () => {
+      expect(() => build(baseEstimate(), [])).toThrow(PreOrderWithoutMatrizException);
+    });
+
+    it('recusa peças, rolos ou camadas não positivos na matriz', () => {
+      expect(() => build(baseEstimate(), [matriz({ estimatedPieces: 0 })])).toThrow(
+        InvalidValueException,
+      );
+      expect(() => build(baseEstimate(), [matriz({ rolls: 0 })])).toThrow(InvalidValueException);
+      expect(() => build(baseEstimate(), [matriz({ estimatedLayers: -1 })])).toThrow(
+        InvalidValueException,
+      );
+    });
+
+    it('aceita os campos opcionais nulos — nem toda avaliação tem metragem e rolos', () => {
+      const preOrder = build(baseEstimate(), [
+        matriz({
+          metersPerPiece: null,
+          rolls: null,
+          estimatedLayers: null,
+          estimatedLayoutType: null,
+        }),
+      ]);
+
+      expect(preOrder.items[0].estimate.metersPerPiece).toBeNull();
+      expect(preOrder.items[0].estimate.estimatedLayoutType).toBeNull();
+    });
+
+    it('encontra a matriz pelo id — é por ela que o apontamento entra', () => {
+      const preOrder = build(baseEstimate(), [matriz(), matriz({ estimatedPieces: 40 })]);
+      const segunda = preOrder.items[1];
+
+      expect(preOrder.findItem(segunda.id)?.sequence).toBe(2);
+    });
   });
 
   describe('quem pode mexer nas horas (§4.7)', () => {
     const alteracao = {
       customerId,
-      fabricId,
-      productTypeId,
+      matrizes: [matriz()],
       estimate: baseEstimate({ estimatedHours: 5 }),
     };
 
@@ -106,12 +172,26 @@ describe('PreOrder', () => {
       preOrder.update({
         actorRole: 'owner',
         customerId,
-        fabricId,
-        productTypeId,
+        matrizes: [matriz({ estimatedPieces: 200 })],
         // Mesmas horas: não é alteração, então não esbarra na regra.
-        estimate: baseEstimate({ estimatedPieces: 200 }),
+        estimate: baseEstimate(),
       });
-      expect(preOrder.estimate.estimatedPieces).toBe(200);
+      expect(preOrder.items[0].estimate.estimatedPieces).toBe(200);
+    });
+
+    it('editar troca as matrizes por inteiro e renumera', () => {
+      const preOrder = build();
+      preOrder.update({
+        actorRole: 'modelista',
+        customerId,
+        matrizes: [
+          matriz(),
+          { fabricId: outroTecido, productTypeId: outroProduto, estimate: matrizEstimate() },
+        ],
+        estimate: baseEstimate(),
+      });
+
+      expect(preOrder.items.map((item) => item.sequence)).toEqual([1, 2]);
     });
   });
 
@@ -125,8 +205,7 @@ describe('PreOrder', () => {
         preOrder.update({
           actorRole: 'modelista',
           customerId,
-          fabricId,
-          productTypeId,
+          matrizes: [matriz()],
           estimate: baseEstimate(),
         }),
       ).toThrow(PreOrderNotEditableException);

@@ -34,6 +34,42 @@ export class CutAlreadyRunningException extends DomainException {
 }
 
 /**
+ * Pediram para apontar uma matriz que este pedido não declara. Vira 400.
+ *
+ * O apontamento executa uma matriz declarada e só isso (§4.10). Um id que não está no pedido é
+ * ou tela desatualizada, ou reserva trocada — e nos dois casos a resposta certa é recusar, não
+ * criar uma matriz que ninguém pediu.
+ */
+export class MatrizNotDeclaredException extends DomainException {
+  constructor() {
+    super('Esta matriz não faz parte do pedido desta reserva.');
+  }
+}
+
+/** A matriz declarada já tem apontamento. Vira 400 — o índice único diria o mesmo, em 500. */
+export class MatrizAlreadyPointedException extends DomainException {
+  constructor(sequence: number) {
+    super(`A matriz ${sequence} já foi apontada. Cada matriz do pedido é apontada uma única vez.`);
+  }
+}
+
+/**
+ * Todas as matrizes declaradas já foram apontadas. Vira 400.
+ *
+ * É a regra que o dono pediu em uma frase: **só a quantidade de matriz que tem no pedido**. Se o
+ * trabalho na mesa é maior do que o pedido descreve, quem corrige é o pedido — não o cronômetro.
+ */
+export class AllMatrizesPointedException extends DomainException {
+  constructor(declared: number) {
+    super(
+      `Este pedido declara ${declared} ${declared === 1 ? 'matriz' : 'matrizes'} e ` +
+        `${declared === 1 ? 'ela já foi apontada' : 'todas já foram apontadas'}. ` +
+        'Para apontar outra, inclua a matriz no pedido.',
+    );
+  }
+}
+
+/**
  * Vira 403.
  *
  * Só existe matriz em reserva `confirmed` ou `in_progress` (§4.10) — e o motivo é a regra 2.4:

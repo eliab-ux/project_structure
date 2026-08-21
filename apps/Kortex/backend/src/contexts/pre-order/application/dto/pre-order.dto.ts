@@ -13,6 +13,19 @@ export interface FabricRef extends NamedRef {
   layerThicknessCm: number | null;
 }
 
+/** Uma matriz declarada, como a tela a mostra. */
+export class PreOrderItemDto {
+  id!: string;
+  sequence!: number;
+  fabric!: FabricRef;
+  productType!: NamedRef;
+  estimatedPieces!: number;
+  metersPerPiece!: number | null;
+  rolls!: number | null;
+  estimatedLayers!: number | null;
+  estimatedLayoutType!: LayoutType | null;
+}
+
 /**
  * Pré-pedido como as duas telas o consomem — a do Modelista e a do Administrativo.
  *
@@ -24,15 +37,17 @@ export class PreOrderDto {
   id!: string;
   status!: PreOrderStatus;
   customer!: NamedRef;
-  fabric!: FabricRef;
-  productType!: NamedRef;
   createdBy!: NamedRef;
 
-  estimatedPieces!: number;
-  metersPerPiece!: number | null;
-  rolls!: number | null;
-  estimatedLayers!: number | null;
-  estimatedLayoutType!: LayoutType | null;
+  /**
+   * As matrizes declaradas, em ordem. Sempre ao menos uma (§4.7.1).
+   *
+   * Tecido e produto vivem aqui, e não no pedido: o mesmo cliente traz materiais diferentes na
+   * mesma reserva, e um par de campos no topo não teria onde pôr o segundo.
+   */
+  matrizes!: PreOrderItemDto[];
+
+  /** Do pedido inteiro — o cliente compra um bloco de máquina, não uma hora por matriz. */
   estimatedHours!: number;
   notes!: string | null;
 
@@ -40,24 +55,36 @@ export class PreOrderDto {
 
   static fromDomain(
     preOrder: PreOrder,
-    refs: { customer: NamedRef; fabric: FabricRef; productType: NamedRef; createdBy: NamedRef },
+    refs: {
+      customer: NamedRef;
+      createdBy: NamedRef;
+      /** Resolvidos uma vez por página pelo `ReferenceResolver` — nunca uma consulta por matriz. */
+      fabricOf: (fabricId: string) => FabricRef;
+      productTypeOf: (productTypeId: string) => NamedRef;
+    },
   ): PreOrderDto {
     const dto = new PreOrderDto();
     dto.id = preOrder.id.value;
     dto.status = preOrder.status;
     dto.customer = refs.customer;
-    dto.fabric = refs.fabric;
-    dto.productType = refs.productType;
     dto.createdBy = refs.createdBy;
 
-    const estimate = preOrder.estimate;
-    dto.estimatedPieces = estimate.estimatedPieces;
-    dto.metersPerPiece = estimate.metersPerPiece;
-    dto.rolls = estimate.rolls;
-    dto.estimatedLayers = estimate.estimatedLayers;
-    dto.estimatedLayoutType = estimate.estimatedLayoutType;
-    dto.estimatedHours = estimate.estimatedHours;
-    dto.notes = estimate.notes;
+    dto.matrizes = preOrder.items.map((item) => {
+      const matriz = new PreOrderItemDto();
+      matriz.id = item.id.value;
+      matriz.sequence = item.sequence;
+      matriz.fabric = refs.fabricOf(item.fabricId.value);
+      matriz.productType = refs.productTypeOf(item.productTypeId.value);
+      matriz.estimatedPieces = item.estimate.estimatedPieces;
+      matriz.metersPerPiece = item.estimate.metersPerPiece;
+      matriz.rolls = item.estimate.rolls;
+      matriz.estimatedLayers = item.estimate.estimatedLayers;
+      matriz.estimatedLayoutType = item.estimate.estimatedLayoutType;
+      return matriz;
+    });
+
+    dto.estimatedHours = preOrder.estimate.estimatedHours;
+    dto.notes = preOrder.estimate.notes;
 
     dto.createdAt = preOrder.createdAt.toISOString();
     return dto;

@@ -47,3 +47,16 @@ export class NoCutHistoryForAdminException extends DomainException {
     );
   }
 }
+
+/**
+ * Pedido sem nenhuma matriz declarada. Vira 400.
+ *
+ * Não é validação de formulário: um pedido sem matriz não descreve trabalho nenhum, não tem tecido
+ * para estimar e não teria o que o Modelista apontar. Reservar um bloco de máquina para isso seria
+ * vender hora sem serviço.
+ */
+export class PreOrderWithoutMatrizException extends DomainException {
+  constructor() {
+    super('O pedido precisa de pelo menos uma matriz — tecido e produto.');
+  }
+}

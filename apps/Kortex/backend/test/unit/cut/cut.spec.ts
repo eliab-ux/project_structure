@@ -4,6 +4,7 @@ import { AccountId } from '../../../src/contexts/account/domain/value-objects/ac
 import { ReservationId } from '../../../src/contexts/schedule/domain/value-objects/reservation-id.vo';
 import { FabricId } from '../../../src/contexts/catalog/domain/value-objects/fabric-id.vo';
 import { ProductTypeId } from '../../../src/contexts/catalog/domain/value-objects/product-type-id.vo';
+import { PreOrderItemId } from '../../../src/contexts/pre-order/domain/value-objects/pre-order-item-id.vo';
 import { InvalidValueException } from '../../../src/shared/domain/exceptions/invalid-value.exception';
 import { CutAlreadyEndedException } from '../../../src/contexts/cut/domain/exceptions/cut.exceptions';
 
@@ -11,9 +12,17 @@ const accountId = AccountId.create();
 const reservationId = ReservationId.create();
 const fabricId = FabricId.create();
 const productTypeId = ProductTypeId.create();
+const preOrderItemId = PreOrderItemId.create();
 
-function start(at = new Date('2026-09-07T13:00:00.000Z'), sequence = 1): Cut {
-  return Cut.start({ accountId, reservationId, sequence, fabricId, productTypeId, at });
+function start(at = new Date('2026-09-07T13:00:00.000Z'), itemId = preOrderItemId): Cut {
+  return Cut.start({
+    accountId,
+    reservationId,
+    preOrderItemId: itemId,
+    fabricId,
+    productTypeId,
+    at,
+  });
 }
 
 function stopped(layers = 14, nestedPieces = 12): Cut {
@@ -90,9 +99,17 @@ describe('Cut — dois toques, um tempo só', () => {
     ).toThrow(CutAlreadyEndedException);
   });
 
-  it('a sequência começa em 1', () => {
-    expect(() => start(new Date(), 0)).toThrow(InvalidValueException);
-    expect(() => start(new Date(), 2).sequence).not.toThrow();
+  /**
+   * O corte aponta uma matriz **declarada** — ele não se numera sozinho (§4.10).
+   *
+   * A ordem mora no `pre_order_item`; numerar duas vezes a mesma coisa é convidar as duas
+   * numerações a divergirem.
+   */
+  it('aponta a matriz declarada e não guarda numeração própria', () => {
+    const cut = start();
+
+    expect(cut.preOrderItemId.value).toBe(preOrderItemId.value);
+    expect(Object.getOwnPropertyNames(Cut.prototype)).not.toContain('sequence');
   });
 });
 
@@ -198,6 +215,8 @@ describe('CutDto', () => {
       layerThicknessCm: 0.05,
     },
     productType: { id: productTypeId.value, name: 'Camiseta' },
+    // A ordem vem do pedido, resolvida pelo use case — o corte não a carrega.
+    sequence: 1,
   };
 
   it('não expõe os campos reservados ao import do Audaces', () => {

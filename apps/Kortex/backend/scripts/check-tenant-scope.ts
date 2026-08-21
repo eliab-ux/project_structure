@@ -236,6 +236,18 @@ function analyze(file: string, rawSource: string): Finding[] {
         continue;
       }
 
+      /**
+       * `array.find((x) => ...)` não é consulta — e acusá-lo seria pior que não acusar nada.
+       *
+       * O `Array.prototype.find` tem o mesmo nome do `find` do MikroORM, e um repositório
+       * legitimamente usa os dois. Ferramenta de segurança que aponta o dedo para código correto
+       * treina quem lê a ignorá-la; a distinção é segura porque o MikroORM **nunca** recebe
+       * callback como primeiro argumento — ele recebe o objeto de filtro.
+       */
+      if (/^\s*(\(?\s*[A-Za-z_$][\w$]*\s*(:[^)]*)?\)?\s*=>|function\b)/.test(args)) {
+        continue;
+      }
+
       // `accountId:` no objeto de filtro do MikroORM, ou `account_id =` / `account_id in` no
       // SQL cru. As duas formas contam como escopo declarado.
       const scoped = scopeKeys.some((scopeKey) =>

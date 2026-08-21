@@ -1,6 +1,7 @@
 import { Cut } from '../../domain/entities/cut.entity';
 import { LayoutType } from '../../../../shared/domain/value-objects/layout-type';
-import { NamedRef } from '../../../pre-order/application/dto/pre-order.dto';
+import { FabricRef, NamedRef } from '../../../pre-order/application/dto/pre-order.dto';
+import { PreOrderItem } from '../../../pre-order/domain/entities/pre-order-item.entity';
 import { FabricHistory } from '../ports/output/cut-repository.port';
 
 /**
@@ -10,6 +11,9 @@ import { FabricHistory } from '../ports/output/cut-repository.port';
 export class CutDto {
   id!: string;
   reservationId!: string;
+  /** A matriz declarada que este apontamento executa (§4.10). */
+  preOrderItemId!: string;
+  /** Ordem da matriz **no pedido** — vem do `pre_order_item`, não do corte. */
   sequence!: number;
   markerName!: string | null;
   startedAt!: string;
@@ -24,11 +28,15 @@ export class CutDto {
   productType!: NamedRef;
   isRunning!: boolean;
 
-  static fromDomain(cut: Cut, refs: { fabric: NamedRef; productType: NamedRef }): CutDto {
+  static fromDomain(
+    cut: Cut,
+    refs: { fabric: NamedRef; productType: NamedRef; sequence: number },
+  ): CutDto {
     const dto = new CutDto();
     dto.id = cut.id.value;
     dto.reservationId = cut.reservationId.value;
-    dto.sequence = cut.sequence;
+    dto.preOrderItemId = cut.preOrderItemId.value;
+    dto.sequence = refs.sequence;
     dto.markerName = cut.markerName;
     dto.startedAt = cut.startedAt.toISOString();
     dto.endedAt = cut.endedAt?.toISOString() ?? null;
@@ -41,6 +49,92 @@ export class CutDto {
     dto.productType = refs.productType;
     dto.isRunning = cut.isRunning;
     // machine_cut_* não são mapeados: ficam nulos até a fase 7 e não têm o que mostrar.
+    return dto;
+  }
+}
+
+/**
+ * Uma matriz declarada, com o apontamento dela se já houver — a linha da tela do Modelista.
+ *
+ * A tela é dirigida pelo **pedido**, não pelos cortes: as matrizes aparecem todas, apontadas ou
+ * não, e o botão de começar só existe nas que ainda não têm `cut`. É assim que a regra "só a
+ * quantidade de matriz que tem no pedido" fica visível antes de virar erro.
+ */
+export class ReservationMatrizDto {
+  preOrderItemId!: string;
+  sequence!: number;
+  fabric!: FabricRef;
+  productType!: NamedRef;
+  estimatedPieces!: number;
+  estimatedLayers!: number | null;
+  /** `null` enquanto ninguém deu start nesta matriz. */
+  cut!: CutDto | null;
+}
+
+/**
+ * A tela de matrizes de uma reserva.
+ *
+ * **O tempo que vale é o do pedido** (§4.10): do primeiro start ao último stop, intervalos entre
+ * matrizes incluídos — eles aconteceram dentro da hora que o cliente comprou. A duração por matriz
+ * segue em cada `cut`, mas serve a métrica, não a cobrança: somar as matrizes daria um número
+ * menor que o tempo realmente ocupado na máquina.
+ */
+export class ReservationMatrizesDto {
+  reservationId!: string;
+  matrizes!: ReservationMatrizDto[];
+  /** Primeiro start do pedido, ou `null` se nada começou. */
+  startedAt!: string | null;
+  /** Último stop, ou `null` enquanto alguma matriz corre — aí o total ainda está aberto. */
+  endedAt!: string | null;
+  /**
+   * Do primeiro start ao último stop. Enquanto houver matriz correndo vem `null`: a tela conta
+   * a partir de `startedAt`, para o número andar sem recarregar a página.
+   */
+  totalDurationSeconds!: number | null;
+  /** Todas as matrizes declaradas já foram apontadas — não há mais o que começar. */
+  allPointed!: boolean;
+
+  static create(
+    reservationId: string,
+    items: PreOrderItem[],
+    cuts: CutDto[],
+    refs: { fabricOf: (fabricId: string) => FabricRef; productTypeOf: (id: string) => NamedRef },
+  ): ReservationMatrizesDto {
+    const porItem = new Map(cuts.map((cut) => [cut.preOrderItemId, cut]));
+
+    const dto = new ReservationMatrizesDto();
+    dto.reservationId = reservationId;
+    dto.matrizes = items.map((item) => {
+      const linha = new ReservationMatrizDto();
+      linha.preOrderItemId = item.id.value;
+      linha.sequence = item.sequence;
+      linha.fabric = refs.fabricOf(item.fabricId.value);
+      linha.productType = refs.productTypeOf(item.productTypeId.value);
+      linha.estimatedPieces = item.estimate.estimatedPieces;
+      linha.estimatedLayers = item.estimate.estimatedLayers;
+      linha.cut = porItem.get(item.id.value) ?? null;
+      return linha;
+    });
+
+    const iniciados = cuts.map((cut) => Date.parse(cut.startedAt));
+    dto.startedAt = iniciados.length > 0 ? new Date(Math.min(...iniciados)).toISOString() : null;
+
+    const emAndamento = cuts.some((cut) => cut.endedAt === null);
+    const encerrados = cuts
+      .map((cut) => cut.endedAt)
+      .filter((value): value is string => value !== null)
+      .map((value) => Date.parse(value));
+
+    dto.endedAt =
+      !emAndamento && encerrados.length > 0
+        ? new Date(Math.max(...encerrados)).toISOString()
+        : null;
+    dto.totalDurationSeconds =
+      dto.startedAt && dto.endedAt
+        ? Math.round((Date.parse(dto.endedAt) - Date.parse(dto.startedAt)) / 1000)
+        : null;
+
+    dto.allPointed = items.length > 0 && cuts.length >= items.length;
     return dto;
   }
 }
@@ -77,11 +171,11 @@ export class RunningCutDto {
   markerName!: string | null;
   startedAt!: string;
 
-  static fromDomain(cut: Cut): RunningCutDto {
+  static fromDomain(cut: Cut, sequence: number): RunningCutDto {
     const dto = new RunningCutDto();
     dto.cutId = cut.id.value;
     dto.reservationId = cut.reservationId.value;
-    dto.sequence = cut.sequence;
+    dto.sequence = sequence;
     dto.markerName = cut.markerName;
     dto.startedAt = cut.startedAt.toISOString();
     return dto;

@@ -1,6 +1,5 @@
 import { AggregateRoot } from '@gitspread/domain-primitives';
 import { InvalidValueException } from '../../../../shared/domain/exceptions/invalid-value.exception';
-import { LayoutType, assertLayoutType } from '../../../../shared/domain/value-objects/layout-type';
 import { AccountId } from '../../../account/domain/value-objects/account-id.vo';
 import { CustomerId } from '../../../customer/domain/value-objects/customer-id.vo';
 import { FabricId } from '../../../catalog/domain/value-objects/fabric-id.vo';
@@ -8,9 +7,12 @@ import { ProductTypeId } from '../../../catalog/domain/value-objects/product-typ
 import { UserId } from '../../../user/domain/value-objects/user-id.vo';
 import { UserRole } from '../../../user/domain/value-objects/user-role.vo';
 import { PreOrderId } from '../value-objects/pre-order-id.vo';
+import { PreOrderItemId } from '../value-objects/pre-order-item-id.vo';
+import { MatrizEstimate, PreOrderItem } from './pre-order-item.entity';
 import {
   ForbiddenHoursChangeException,
   PreOrderNotEditableException,
+  PreOrderWithoutMatrizException,
 } from '../exceptions/pre-order.exceptions';
 
 export const PRE_ORDER_STATUSES = ['open', 'reserved', 'discarded'] as const;
@@ -25,14 +27,22 @@ export const PRE_ORDER_STATUS_LABELS: Record<PreOrderStatus, string> = {
 /** Teto de sanidade: uma reserva de 24h já é o dia inteiro em qualquer operação real. */
 const MAX_HOURS = 24;
 
+/**
+ * O que o pedido estima como um todo.
+ *
+ * Quantidade, metragem e camadas saíram daqui: são **de cada matriz** (§4.7.1). As horas ficam,
+ * porque são do pedido inteiro — o cliente compra um bloco de máquina, não uma hora por matriz.
+ */
 export interface PreOrderEstimate {
-  estimatedPieces: number;
-  metersPerPiece: number | null;
-  rolls: number | null;
-  estimatedLayers: number | null;
-  estimatedLayoutType: LayoutType | null;
   estimatedHours: number;
   notes: string | null;
+}
+
+/** O que se informa ao declarar uma matriz no pedido. */
+export interface MatrizInput {
+  fabricId: FabricId;
+  productTypeId: ProductTypeId;
+  estimate: MatrizEstimate;
 }
 
 /**
@@ -42,16 +52,19 @@ export interface PreOrderEstimate {
  * tecido, metragem e quantidade e diz quantas horas reservar, Administrativo reserva e cobra. O
  * Administrativo recebe as horas **prontas** e não as edita.
  *
- * O tecido é FK e não texto livre (§4.5): é a altura máxima dele que sustenta a estimativa de
- * camadas, e um "malha" digitado à mão não teria altura nenhuma.
+ * **O pedido DECLARA as matrizes** (§4.7.1). O mesmo cliente traz materiais diferentes na mesma
+ * reserva — tecido X para calça, tecido Y para camiseta —, e cada matriz declarada é apontada uma
+ * única vez pelo Modelista. Não existe apontar matriz que o pedido não previu.
+ *
+ * Pedido sem matriz não descreve trabalho nenhum, então o construtor recusa: é invariante do
+ * agregado, não validação de formulário.
  */
 export class PreOrder extends AggregateRoot {
   private constructor(
     private readonly _id: PreOrderId,
     private readonly _accountId: AccountId,
     private _customerId: CustomerId,
-    private _fabricId: FabricId,
-    private _productTypeId: ProductTypeId,
+    private _items: PreOrderItem[],
     private readonly _createdByUserId: UserId,
     private _estimate: PreOrderEstimate,
     private _status: PreOrderStatus,
@@ -64,8 +77,7 @@ export class PreOrder extends AggregateRoot {
   static create(input: {
     accountId: AccountId;
     customerId: CustomerId;
-    fabricId: FabricId;
-    productTypeId: ProductTypeId;
+    matrizes: MatrizInput[];
     createdByUserId: UserId;
     estimate: PreOrderEstimate;
   }): PreOrder {
@@ -74,8 +86,7 @@ export class PreOrder extends AggregateRoot {
       PreOrderId.create(),
       input.accountId,
       input.customerId,
-      input.fabricId,
-      input.productTypeId,
+      PreOrder.buildItems(input.accountId, input.matrizes),
       input.createdByUserId,
       PreOrder.assertEstimate(input.estimate),
       'open',
@@ -88,8 +99,7 @@ export class PreOrder extends AggregateRoot {
     id: PreOrderId;
     accountId: AccountId;
     customerId: CustomerId;
-    fabricId: FabricId;
-    productTypeId: ProductTypeId;
+    items: PreOrderItem[];
     createdByUserId: UserId;
     estimate: PreOrderEstimate;
     status: PreOrderStatus;
@@ -100,8 +110,9 @@ export class PreOrder extends AggregateRoot {
       input.id,
       input.accountId,
       input.customerId,
-      input.fabricId,
-      input.productTypeId,
+      // Reconstrução não valida: o dado já passou pela regra quando foi gravado, e recusar aqui
+      // deixaria um pedido antigo inacessível em vez de corrigível.
+      [...input.items].sort((a, b) => a.sequence - b.sequence),
       input.createdByUserId,
       input.estimate,
       input.status,
@@ -118,8 +129,7 @@ export class PreOrder extends AggregateRoot {
   update(input: {
     actorRole: UserRole;
     customerId: CustomerId;
-    fabricId: FabricId;
-    productTypeId: ProductTypeId;
+    matrizes: MatrizInput[];
     estimate: PreOrderEstimate;
   }): void {
     this.assertEditable();
@@ -133,10 +143,35 @@ export class PreOrder extends AggregateRoot {
     }
 
     this._customerId = input.customerId;
-    this._fabricId = input.fabricId;
-    this._productTypeId = input.productTypeId;
+    // As matrizes são substituídas por inteiro, e não casadas uma a uma pelo id: o pedido ainda
+    // está `open`, então nenhuma foi apontada, e não há execução para preservar. Casar por id
+    // aqui só criaria a ilusão de continuidade sobre linhas que ninguém usou.
+    this._items = PreOrder.buildItems(this._accountId, input.matrizes);
     this._estimate = estimate;
     this.touch();
+  }
+
+  /** A matriz declarada com este id, ou `undefined`. É por ela que o apontamento entra. */
+  findItem(itemId: PreOrderItemId): PreOrderItem | undefined {
+    return this._items.find((item) => item.id.value === itemId.value);
+  }
+
+  private static buildItems(accountId: AccountId, matrizes: MatrizInput[]): PreOrderItem[] {
+    if (matrizes.length === 0) {
+      throw new PreOrderWithoutMatrizException();
+    }
+
+    // A ordem é a de chegada: a tela lista as matrizes na sequência em que foram declaradas, e é
+    // essa mesma sequência que o Modelista vê ao apontar.
+    return matrizes.map((matriz, index) =>
+      PreOrderItem.create({
+        accountId,
+        sequence: index + 1,
+        fabricId: matriz.fabricId,
+        productTypeId: matriz.productTypeId,
+        estimate: matriz.estimate,
+      }),
+    );
   }
 
   /** Chamado pela Fase 4 quando o Administrativo transforma o pré-pedido em reserva. */
@@ -169,18 +204,6 @@ export class PreOrder extends AggregateRoot {
     if (estimate.estimatedHours > MAX_HOURS) {
       throw new InvalidValueException(`As horas estimadas não podem passar de ${MAX_HOURS}.`);
     }
-    if (!Number.isInteger(estimate.estimatedPieces) || estimate.estimatedPieces < 1) {
-      throw new InvalidValueException('A quantidade de peças deve ser um inteiro positivo.');
-    }
-    PreOrder.assertOptionalPositiveInt(estimate.rolls, 'A quantidade de rolos');
-    PreOrder.assertOptionalPositiveInt(estimate.estimatedLayers, 'A quantidade de camadas');
-
-    if (estimate.metersPerPiece !== null && !(estimate.metersPerPiece > 0)) {
-      throw new InvalidValueException('A metragem por peça deve ser maior que zero.');
-    }
-    if (estimate.estimatedLayoutType !== null) {
-      assertLayoutType(estimate.estimatedLayoutType);
-    }
 
     return {
       ...estimate,
@@ -188,13 +211,8 @@ export class PreOrder extends AggregateRoot {
     };
   }
 
-  private static assertOptionalPositiveInt(value: number | null, label: string): void {
-    if (value === null) {
-      return;
-    }
-    if (!Number.isInteger(value) || value < 1) {
-      throw new InvalidValueException(`${label} deve ser um inteiro positivo.`);
-    }
+  get items(): PreOrderItem[] {
+    return this._items;
   }
 
   get id(): PreOrderId {
@@ -207,14 +225,6 @@ export class PreOrder extends AggregateRoot {
 
   get customerId(): CustomerId {
     return this._customerId;
-  }
-
-  get fabricId(): FabricId {
-    return this._fabricId;
-  }
-
-  get productTypeId(): ProductTypeId {
-    return this._productTypeId;
   }
 
   get createdByUserId(): UserId {

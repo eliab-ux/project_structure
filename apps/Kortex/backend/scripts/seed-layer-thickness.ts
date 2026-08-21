@@ -43,7 +43,7 @@ import { AppModule } from '../src/app.module';
 import {
   FABRIC_REPOSITORY,
   FabricRepositoryPort,
-} from '../src/contexts/catalog/application/ports/output/fabric-repository.port';
+} from '../src/contexts/catalog/application/ports/output/catalog-repository.port';
 import { AccountId } from '../src/contexts/account/domain/value-objects/account-id.vo';
 
 function arg(name: string): string | undefined {

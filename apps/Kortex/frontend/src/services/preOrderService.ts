@@ -2,8 +2,7 @@ import api from 'src/services/api';
 import { PreOrder, SlotNotice, WaitingListEntry } from 'src/types/preOrder';
 import { CustomerListItem } from 'src/types/customer';
 
-export interface PreOrderPayload {
-  customerId: string;
+export interface MatrizPayload {
   fabricId: string;
   productTypeId: string;
   estimatedPieces: number;
@@ -11,6 +10,12 @@ export interface PreOrderPayload {
   rolls?: number | null;
   estimatedLayers?: number | null;
   estimatedLayoutType?: string | null;
+}
+
+export interface PreOrderPayload {
+  customerId: string;
+  /** Ao menos uma — o backend recusa pedido sem matriz. */
+  matrizes: MatrizPayload[];
   estimatedHours: number;
   notes?: string | null;
 }

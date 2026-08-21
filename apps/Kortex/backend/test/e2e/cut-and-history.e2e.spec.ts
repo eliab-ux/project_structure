@@ -22,14 +22,27 @@ describe('Apontamento e histórico por tecido (e2e)', () => {
       payload: { email, password: TEST_PASSWORD },
     });
 
-  /** Cria pré-pedido + reserva num horário livre. `pagar: false` deixa em pré-reserva. */
-  async function novaReserva(pagar = true): Promise<string> {
+  /**
+   * Cria pré-pedido + reserva num horário livre. `pagar: false` deixa em pré-reserva.
+   *
+   * `matrizes` é quantas o pedido **declara** — e é esse número que limita quantos apontamentos a
+   * reserva aceita (§4.10). O padrão é 1, o caso comum.
+   */
+  async function novaReserva(pagar = true, matrizes = 1): Promise<string> {
     const preOrderId = (
       await ctx.inject({
         method: 'POST',
         url: '/api/pre-orders',
         token: tokens.modelista,
-        payload: { customerId, fabricId, productTypeId, estimatedPieces: 160, estimatedHours: 1 },
+        payload: {
+          customerId,
+          matrizes: Array.from({ length: matrizes }, () => ({
+            fabricId,
+            productTypeId,
+            estimatedPieces: 160,
+          })),
+          estimatedHours: 1,
+        },
       })
     ).body.id;
 
@@ -175,7 +188,8 @@ describe('Apontamento e histórico por tecido (e2e)', () => {
     let cutId: string;
 
     beforeAll(async () => {
-      reservaId = await novaReserva();
+      // Duas matrizes declaradas: tecido X calça, tecido Y camiseta é o caso real do cliente.
+      reservaId = await novaReserva(true, 2);
       cutId = (
         await ctx.inject({
           method: 'POST',
@@ -232,13 +246,15 @@ describe('Apontamento e histórico por tecido (e2e)', () => {
       expect(response.statusCode).toBe(400);
     });
 
-    it('uma reserva tem N matrizes, mas uma de cada vez', async () => {
+    it('as matrizes declaradas são apontadas uma de cada vez', async () => {
       const segunda = await ctx.inject({
         method: 'POST',
         url: `/api/reservations/${reservaId}/cuts`,
         token: tokens.modelista,
         payload: { markerName: 'Matriz 2' },
       });
+      expect(segunda.statusCode).toBe(201);
+      // A ordem vem do pedido: é a matriz 2 declarada, não uma contagem do cronômetro.
       expect(segunda.body.sequence).toBe(2);
 
       const terceira = await ctx.inject({
@@ -249,6 +265,66 @@ describe('Apontamento e histórico por tecido (e2e)', () => {
       });
       expect(terceira.statusCode).toBe(400);
       expect(terceira.body.message).toMatch(/ainda está em andamento/);
+    });
+
+    /**
+     * A regra em uma frase do dono: **só a quantidade de matriz que tem no pedido**.
+     *
+     * Pedido de uma matriz tem uma contagem. Se o trabalho na mesa é maior do que o pedido
+     * descreve, quem corrige é o pedido — não o cronômetro.
+     */
+    it('não aponta mais matriz do que o pedido declara', async () => {
+      const umaSo = await novaReserva();
+
+      const primeira = await ctx.inject({
+        method: 'POST',
+        url: `/api/reservations/${umaSo}/cuts`,
+        token: tokens.modelista,
+        payload: {},
+      });
+      expect(primeira.statusCode).toBe(201);
+
+      await ctx.inject({
+        method: 'PATCH',
+        url: `/api/cuts/${primeira.body.id}/stop`,
+        token: tokens.modelista,
+        payload: { layers: 10, nestedPieces: 10, layoutType: 'zigzag' },
+      });
+
+      const segunda = await ctx.inject({
+        method: 'POST',
+        url: `/api/reservations/${umaSo}/cuts`,
+        token: tokens.modelista,
+        payload: {},
+      });
+
+      expect(segunda.statusCode).toBe(400);
+      expect(segunda.body.message).toMatch(/declara 1 matriz/);
+      expect(segunda.body.message).toMatch(/inclua a matriz no pedido/i);
+    });
+
+    it('recusa apontar uma matriz que é de outro pedido', async () => {
+      // Duas reservas novas: a de destino sem nada rodando, para o erro ser o do pedido errado e
+      // não o de "já tem matriz em andamento" — que é verificado antes.
+      const destino = await novaReserva();
+      const alheia = await novaReserva();
+
+      const matrizes = await ctx.inject({
+        method: 'GET',
+        url: `/api/reservations/${alheia}/cuts/matrizes`,
+        token: tokens.modelista,
+      });
+      const idDeOutroPedido = matrizes.body.matrizes[0].preOrderItemId;
+
+      const response = await ctx.inject({
+        method: 'POST',
+        url: `/api/reservations/${destino}/cuts`,
+        token: tokens.modelista,
+        payload: { preOrderItemId: idDeOutroPedido },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toMatch(/não faz parte do pedido/);
     });
 
     it('enfesto acima da altura máxima = AVISO, e a matriz é gravada', async () => {
@@ -407,19 +483,40 @@ describe('Apontamento e histórico por tecido (e2e)', () => {
         const connection = ctx.orm.em.getConnection();
         const reservaId = await novaReserva();
 
+        /**
+         * Um apontamento por matriz declarada — a massa de teste respeita a mesma regra da tela.
+         *
+         * O índice `cut_one_per_pre_order_item` impede 5.000 cortes pendurados numa matriz só, e
+         * é justamente o que se quer: a massa de performance tem a forma do dado real, senão o
+         * número que ela mede não descreve consulta nenhuma que vá rodar em produção.
+         */
+        await connection.execute(
+          `insert into "pre_order_item"
+             (id, account_id, pre_order_id, sequence, fabric_id, product_type_id,
+              estimated_pieces, created_at, updated_at)
+           select gen_random_uuid(), ?, r.pre_order_id, g, ?, ?, 100, now(), now()
+             from "reservation" r, generate_series(1000, 6000) as g
+            where r.id = ? and r.account_id = ?`,
+          [conta.accountId, fabricId, productTypeId, reservaId, conta.accountId],
+        );
+
         await connection.execute(
           `insert into "cut"
-             (account_id, reservation_id, sequence, started_at, ended_at,
+             (account_id, reservation_id, pre_order_item_id, started_at, ended_at,
               layers, nested_pieces, total_pieces, layout_type, fabric_id, product_type_id,
               created_at, updated_at)
-           select ?, ?, g, now() - (g || ' minutes')::interval,
-                  now() - (g || ' minutes')::interval + ((40 + (g % 40)) || ' minutes')::interval,
-                  10 + (g % 20), 8 + (g % 10),
-                  (10 + (g % 20)) * (8 + (g % 10)),
-                  case when g % 2 = 0 then 'zigzag' else 'sheet_by_sheet' end,
+           select ?, ?, i.id,
+                  now() - (i.sequence || ' minutes')::interval,
+                  now() - (i.sequence || ' minutes')::interval
+                       + ((40 + (i.sequence % 40)) || ' minutes')::interval,
+                  10 + (i.sequence % 20), 8 + (i.sequence % 10),
+                  (10 + (i.sequence % 20)) * (8 + (i.sequence % 10)),
+                  case when i.sequence % 2 = 0 then 'zigzag' else 'sheet_by_sheet' end,
                   ?, ?, now(), now()
-             from generate_series(1000, 6000) as g`,
-          [conta.accountId, reservaId, fabricId, productTypeId],
+             from "pre_order_item" i
+             join "reservation" r on r.pre_order_id = i.pre_order_id
+            where r.id = ? and i.account_id = ? and i.sequence >= 1000`,
+          [conta.accountId, reservaId, fabricId, productTypeId, reservaId, conta.accountId],
         );
       });
 
@@ -499,9 +596,7 @@ describe('Apontamento e histórico por tecido (e2e)', () => {
         token: tokens.admin,
         payload: {
           customerId,
-          fabricId: semHistorico.id,
-          productTypeId,
-          estimatedPieces: 100,
+          matrizes: [{ fabricId: semHistorico.id, productTypeId, estimatedPieces: 100 }],
           estimatedHours: 2,
         },
       });
@@ -520,9 +615,7 @@ describe('Apontamento e histórico por tecido (e2e)', () => {
         token: tokens.admin,
         payload: {
           customerId,
-          fabricId,
-          productTypeId,
-          estimatedPieces: 120,
+          matrizes: [{ fabricId, productTypeId, estimatedPieces: 120 }],
           estimatedHours: 2,
         },
       });
@@ -547,9 +640,7 @@ describe('Apontamento e histórico por tecido (e2e)', () => {
         token: tokens.modelista,
         payload: {
           customerId,
-          fabricId: estreante.id,
-          productTypeId,
-          estimatedPieces: 100,
+          matrizes: [{ fabricId: estreante.id, productTypeId, estimatedPieces: 100 }],
           estimatedHours: 2,
         },
       });
@@ -583,9 +674,7 @@ describe('Apontamento e histórico por tecido (e2e)', () => {
         token: tokens.admin,
         payload: {
           customerId,
-          fabricId: emAberto.id,
-          productTypeId,
-          estimatedPieces: 100,
+          matrizes: [{ fabricId: emAberto.id, productTypeId, estimatedPieces: 100 }],
           estimatedHours: 2,
         },
       });

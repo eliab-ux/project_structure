@@ -58,7 +58,7 @@ Bravo.
 | 2.2  | Venda em **hora cheia**                                              | Início alinhado em `:00`, duração inteira em horas                |
 | 2.3  | Cobrança sobre **hora reservada**, não sobre tempo real              | Gastou menos, paga igual. Sem devolução                           |
 | 2.4  | **Pagamento antecipado é catraca**                                   | Reserva não paga **não existe** para o Modelista                  |
-| 2.5  | Uma reserva pode ter **N matrizes**                                  | `reservation` 1:N `cut`                                           |
+| 2.5  | O **pedido declara** as matrizes; cada uma é apontada uma vez         | `pre_order` 1:N `pre_order_item` 1:1 `cut`                        |
 | 2.6  | Tempo começa no **manejo do tecido** (plotter/enfesto), não no corte | Um único intervalo por matriz                                     |
 | 2.7  | Tempo encerra quando a **máquina de corte desliga**                  | Retirada da esteira é do cliente, não conta                       |
 | 2.8  | **Segregação de função** Modelista × Administrativo                  | Ver seção 5. Motivo declarado: evitar caixa dois                  |
@@ -265,23 +265,41 @@ corte do tecido.
 `name` (camisa, camiseta, pijama, scrub, maiô, calça, jaleco, avental cirúrgico, macacão…).
 Cadastro simples; alimenta o relatório mensal ("tipos de produtos cortados").
 
-### 4.7 `pre_order` — pré-pedido (criado pelo **Modelista**)
+### 4.7 `pre_order` — o pedido
 
-| Campo                          | Regra                                               |
-| ------------------------------ | --------------------------------------------------- |
-| `customer_id`                  | FK obrigatória — cliente já cadastrado              |
-| `fabric_id`, `product_type_id` | FK obrigatórias                                     |
-| `estimated_pieces`             | int — peças que o cliente quer cortar               |
-| `meters_per_piece`             | numeric nullable                                    |
-| `rolls`                        | int nullable                                        |
-| `estimated_layers`             | int nullable — estimativa, corrigida no apontamento |
-| `estimated_layout_type`        | enum `sheet_by_sheet                                | zigzag` nullable |
-| `estimated_hours`              | int NOT NULL, ≥ 1 — **definido pelo Modelista**     |
-| `notes`                        | recado para o administrativo                        |
-| `status`                       | enum `open                                          | reserved         | discarded` |
+| Campo             | Regra                                           |
+| ----------------- | ----------------------------------------------- |
+| `customer_id`     | FK obrigatória — cliente já cadastrado          |
+| `estimated_hours` | int NOT NULL, ≥ 1 — **definido pelo Modelista** |
+| `notes`           | recado para o administrativo                    |
+| `status`          | enum `open                                      | reserved | discarded` |
 
 **Invariante:** `estimated_hours` só pode ser alterado por usuário de papel `modelista`.
-O Administrativo **não edita esse campo** (regra 2.8).
+O Administrativo **não edita esse campo** (regra 2.8). As horas são do **pedido inteiro**,
+não de cada matriz.
+
+### 4.7.1 `pre_order_item` — as matrizes declaradas
+
+O pedido **declara de antemão** quais matrizes serão cortadas. Cada uma tem o seu tecido e o
+seu produto, porque o mesmo cliente traz materiais diferentes na mesma reserva.
+
+| Campo                   | Regra                                                       |
+| ----------------------- | ----------------------------------------------------------- |
+| `pre_order_id`          | FK                                                          |
+| `sequence`              | int — 1, 2, 3… dentro do pedido                             |
+| `fabric_id`             | FK obrigatória                                              |
+| `product_type_id`       | FK obrigatória                                              |
+| `estimated_pieces`      | int — peças que o cliente quer cortar **nesta matriz**      |
+| `meters_per_piece`      | numeric nullable                                            |
+| `rolls`                 | int nullable                                                |
+| `estimated_layers`      | int nullable — estimativa, corrigida no apontamento         |
+| `estimated_layout_type` | enum `sheet_by_sheet                                        | zigzag` nullable |
+
+**Um pedido tem no mínimo uma matriz.** Pedido sem matriz não descreve trabalho nenhum e não
+pode virar reserva.
+
+> Exemplo real: matriz 1 — tecido X, calça; matriz 2 — tecido Y, camiseta. Duas matrizes, um
+> pedido, uma reserva.
 
 ### 4.8 `schedule_entry` — compromisso na agenda
 
@@ -341,12 +359,16 @@ todas as informações num espaço menor.
 | `payment_method`                   | enum `pix \| cash \| transfer` nullable — **só estas três formas**     |
 | `no_show_at`, `no_show_resolution` | enum nullable `rescheduled                                             | written_off` |
 
-### 4.10 `cut` — a matriz apontada (N por reserva)
+### 4.10 `cut` — o apontamento de uma matriz declarada
+
+**Uma matriz declarada, um apontamento.** O `cut` não nasce por vontade do Modelista: ele é o
+registro de execução de um `pre_order_item` que o pedido já declarou. Não existe apontar
+matriz que ninguém pediu, e não existe apontar a mesma duas vezes.
 
 | Campo                          | Regra                                                                                 |
 | ------------------------------ | ------------------------------------------------------------------------------------- |
 | `reservation_id`               | FK                                                                                    |
-| `sequence`                     | int — 1, 2, 3… dentro da reserva                                                      |
+| `pre_order_item_id`            | FK **única** — a matriz declarada que este apontamento executa                        |
 | `marker_name`                  | text nullable — identificação da matriz                                               |
 | `started_at`                   | timestamptz — **start**: começou a manejar o tecido (plotter imprimindo, enfesto)     |
 | `ended_at`                     | timestamptz nullable — **stop**: máquina de corte desligou                            |
@@ -356,14 +378,24 @@ todas as informações num espaço menor.
 | `nested_pieces`                | int — peças encaixadas confirmadas no stop                                            |
 | `total_pieces`                 | int **derivado** = `layers × nested_pieces`                                           |
 | `layout_type`                  | enum `sheet_by_sheet                                                                  | zigzag` |
-| `fabric_id`, `product_type_id` | herdados do pré-pedido, editáveis no stop                                             |
+| `fabric_id`, `product_type_id` | herdados da matriz declarada, editáveis no stop                                       |
+
+> `sequence` saiu: a ordem é a da matriz declarada (`pre_order_item.sequence`). Numerar duas
+> vezes a mesma coisa é convidar as duas numerações a divergirem.
 
 **Invariantes:**
 
 - `total_pieces` **nunca** é digitado — sempre calculado. Verificado na planilha real do
   cliente em 9 linhas (ex.: 12 encaixadas × 14 camadas = 168 peças).
-- `duration = ended_at − started_at` — **um só tempo**, do manejo do tecido até a máquina
-  desligar. É o que o cliente compra.
+- `duration = ended_at − started_at` — **um só tempo por matriz**, do manejo do tecido até a
+  máquina desligar.
+- **O tempo que vale é o do PEDIDO**, não o da matriz: do primeiro `started_at` ao último
+  `ended_at` da reserva. Ele inclui os intervalos entre uma matriz e outra — e inclui de
+  propósito, porque esse intervalo aconteceu dentro da hora que o cliente comprou. A duração
+  por matriz existe para **métrica**, não para cobrança.
+- **Consequência para o histórico por tecido:** o tempo por matriz continua exato, então a
+  mediana de minutos por 100 peças continua válida por tecido. O que NÃO se pode fazer é
+  somar as matrizes e chamar de tempo do pedido, nem ratear o tempo do pedido entre elas.
 - **Não crie botão intermediário** de "começou o corte". A separação enfesto × corte que o
   relatório mensal do governo pede virá do relatório nativo da máquina Audaces, não de toque
   manual — decisão do dono: não vale o trabalho de apontar à mão o que a máquina já mede.
@@ -728,8 +760,8 @@ dos cortes anteriores — consumido na tela de pré-pedido (fase 3) como parâme
 
 - **`/m/*` — app do Modelista.** Mobile-first, instalável como **PWA** (manifest +
   service worker). Alvo de toque ≥ 56 px, uma decisão por tela, nenhuma digitação além de
-  números. Telas: fila do dia, avaliar/criar pré-pedido, agenda (leitura), matriz em
-  andamento com os dois toques, fila de espera (leitura).
+  números. Telas: fila do dia, avaliar/criar pré-pedido (declarando as matrizes), agenda
+  (leitura), matrizes da reserva com os dois toques, fila de espera (leitura).
 - **`/*` — painel do Administrativo.** Desktop. Agenda em grade horas × dias, cadastros,
   reserva, pagamento, fila de espera, pendências (pagamento em risco, confirmar amanhã,
   no-show a resolver).
@@ -743,23 +775,35 @@ dos cortes anteriores — consumido na tela de pré-pedido (fase 3) como parâme
 a ação em fila local (IndexedDB) com timestamp do dispositivo e sincronize quando voltar.
 O timestamp que vale é o do momento da ação, não o da sincronização.
 
-**Cronômetros da tela de matriz em andamento — os dois, simultâneos:**
+**A tela de matrizes é dirigida pelo PEDIDO.** Ela lista as matrizes que o pedido declarou
+(§4.7.1) — apontadas ou não — e não existe botão para criar matriz. Cada matriz declarada
+rende exatamente um apontamento; quando todas foram apontadas, o lugar de acrescentar
+trabalho é o pedido, não o cronômetro.
 
-| Relógio      | Base                                               | Comportamento                                                        |
-| ------------ | -------------------------------------------------- | -------------------------------------------------------------------- |
-| **Corrido**  | `now − cut.started_at` da matriz atual             | Sobe sempre. É o número em destaque — é o que alimenta o apontamento |
-| **Restante** | `reservation.ends_at − now` da **reserva inteira** | Desce. Secundário, menor                                             |
+**Cronômetros da tela de matriz — os três, simultâneos:**
 
+| Relógio                | Base                                               | Comportamento                                                       |
+| ---------------------- | -------------------------------------------------- | ------------------------------------------------------------------- |
+| **Total do pedido**    | primeiro `started_at` → último `ended_at` (ou agora) | Sobe. É o número em **destaque** — é o que vale no fim              |
+| **Matriz atual**       | `now − cut.started_at` da matriz em andamento      | Sobe. Secundário: alimenta a métrica por tecido, não a cobrança      |
+| **Restante**           | `reservation.ends_at − now` da **reserva inteira** | Desce. Secundário                                                    |
+
+- O **total do pedido** é o número em destaque porque é o que importa no fim: ele inclui os
+  intervalos entre uma matriz e outra, e esses intervalos aconteceram dentro do bloco de
+  máquina que o cliente comprou. **Não é a soma das matrizes** — somá-las deixaria os
+  intervalos de fora.
+- O tempo **por matriz** continua exato e continua sendo gravado: é dele que sai a mediana de
+  minutos por 100 peças por tecido. Serve a **métrica**, não a cobrança.
 - O restante é da **reserva**, não da matriz: é com ele que o Modelista decide se cabe mais
   uma matriz antes de acabar a hora comprada.
 - Quando o restante chega a zero, ele **não zera nem some** — vira **excedente** e passa a
   contar para cima, com sinal e em cor de alerta (`+00:18:42`). A barra de horas passa do
   fim e ganha faixa de excedente.
-- O corrido continua subindo normalmente durante o excedente. Nada trava, nada interrompe,
-  nenhum aviso bloqueante.
+- Os outros dois continuam subindo normalmente durante o excedente. Nada trava, nada
+  interrompe, nenhum aviso bloqueante.
 - O excedente é **só informação**: não altera cobrança (regra 6.4), não gera pendência
   financeira nesta fase. Serve ao histórico, para a próxima estimativa sair melhor.
-- Ambos os relógios usam `font-variant-numeric: tabular-nums`, senão o número treme a cada
+- Os três relógios usam `font-variant-numeric: tabular-nums`, senão o número treme a cada
   segundo.
 
 ### FASE 6 — Financeiro de caixa e mini DRE

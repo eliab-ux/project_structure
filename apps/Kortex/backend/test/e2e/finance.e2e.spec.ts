@@ -48,7 +48,11 @@ describe('Caixa e mini DRE (e2e)', () => {
       method: 'POST',
       url: '/api/pre-orders',
       token: tokens.modelista,
-      payload: { customerId, fabricId, productTypeId, estimatedPieces: 160, estimatedHours: 2 },
+      payload: {
+        customerId,
+        matrizes: [{ fabricId, productTypeId, estimatedPieces: 160 }],
+        estimatedHours: 2,
+      },
     });
     return response.body.id;
   }

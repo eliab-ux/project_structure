@@ -18,9 +18,8 @@ describe('Pré-pedido e fila de espera (e2e)', () => {
       payload: { email, password: TEST_PASSWORD },
     });
 
-  function preOrderPayload(overrides: Record<string, unknown> = {}) {
+  function matriz(overrides: Record<string, unknown> = {}) {
     return {
-      customerId,
       fabricId,
       productTypeId,
       estimatedPieces: 160,
@@ -28,6 +27,14 @@ describe('Pré-pedido e fila de espera (e2e)', () => {
       rolls: 3,
       estimatedLayers: 20,
       estimatedLayoutType: 'zigzag',
+      ...overrides,
+    };
+  }
+
+  function preOrderPayload(overrides: Record<string, unknown> = {}) {
+    return {
+      customerId,
+      matrizes: [matriz()],
       estimatedHours: 3,
       notes: 'Cliente quer cortar na quinta.',
       ...overrides,
@@ -100,7 +107,12 @@ describe('Pré-pedido e fila de espera (e2e)', () => {
       expect(response.body).toMatchObject({ status: 'open', estimatedHours: 3 });
       // Os nomes vêm resolvidos: o app do Modelista não faz uma consulta por linha.
       expect(response.body.customer.name).toBe('Malharia São Bento');
-      expect(response.body.fabric).toMatchObject({ name: 'Malha', maxLayerHeightCm: 2.5 });
+      expect(response.body.matrizes).toHaveLength(1);
+      expect(response.body.matrizes[0].fabric).toMatchObject({
+        name: 'Malha',
+        maxLayerHeightCm: 2.5,
+      });
+      expect(response.body.matrizes[0].sequence).toBe(1);
       expect(response.body.createdBy.name).toBe('Usuário modelista');
       preOrderId = response.body.id;
     });
@@ -170,11 +182,11 @@ describe('Pré-pedido e fila de espera (e2e)', () => {
         method: 'PUT',
         url: `/api/pre-orders/${preOrderId}`,
         token: tokens.owner,
-        payload: preOrderPayload({ estimatedPieces: 200 }),
+        payload: preOrderPayload({ matrizes: [matriz({ estimatedPieces: 200 })] }),
       });
 
       expect(response.statusCode).toBe(200);
-      expect(response.body.estimatedPieces).toBe(200);
+      expect(response.body.matrizes[0].estimatedPieces).toBe(200);
     });
 
     it('o Modelista altera as horas', async () => {
@@ -205,7 +217,7 @@ describe('Pré-pedido e fila de espera (e2e)', () => {
         method: 'POST',
         url: '/api/pre-orders',
         token: tokens.modelista,
-        payload: preOrderPayload({ fabricId: 'Malha' }),
+        payload: preOrderPayload({ matrizes: [matriz({ fabricId: 'Malha' })] }),
       });
       expect(response.statusCode).toBe(400);
     });

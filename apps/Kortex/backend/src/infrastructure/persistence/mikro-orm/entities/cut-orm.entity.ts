@@ -2,7 +2,6 @@ import { Entity, Index, PrimaryKey, Property, Unique } from '@mikro-orm/core';
 
 @Entity({ tableName: 'cut' })
 @Index({ name: 'cut_account_id_index', properties: ['accountId'] })
-@Unique({ name: 'cut_reservation_sequence_unique', properties: ['reservationId', 'sequence'] })
 export class CutOrmEntity {
   @PrimaryKey({ type: 'uuid' })
   id!: string;
@@ -13,8 +12,16 @@ export class CutOrmEntity {
   @Property({ fieldName: 'reservation_id', type: 'uuid' })
   reservationId!: string;
 
-  @Property({ type: 'int' })
-  sequence!: number;
+  /**
+   * A matriz declarada que este apontamento executa. **Único** — uma matriz, um apontamento.
+   *
+   * A garantia está no banco (`cut_one_per_pre_order_item`), não só na aplicação: entre o
+   * `select` que não viu apontamento e o `insert` que o cria cabe outra requisição, e dois
+   * celulares abertos na mesma reserva é o cenário normal do chão de fábrica.
+   */
+  @Property({ fieldName: 'pre_order_item_id', type: 'uuid' })
+  @Unique({ name: 'cut_one_per_pre_order_item' })
+  preOrderItemId!: string;
 
   @Property({ fieldName: 'marker_name', length: 120, nullable: true })
   markerName: string | null = null;

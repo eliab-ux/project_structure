@@ -16,7 +16,13 @@ import {
   UNIT_OF_WORK,
   UnitOfWorkPort,
 } from '../../../../infrastructure/persistence/ports/unit-of-work.port';
-import { CutDto, CutWithWarningsDto, FabricHistoryDto, RunningCutDto } from '../dto/cut.dto';
+import {
+  CutDto,
+  CutWithWarningsDto,
+  FabricHistoryDto,
+  ReservationMatrizesDto,
+  RunningCutDto,
+} from '../dto/cut.dto';
 import {
   ReferenceResolver,
   fabricRefOrPlaceholder,
@@ -24,16 +30,22 @@ import {
 } from '../../../pre-order/application/reference-resolver';
 import { Cut } from '../../domain/entities/cut.entity';
 import {
+  AllMatrizesPointedException,
   CutAlreadyRunningException,
   CutNotFoundException,
   ForbiddenCompletedReservationChangeException,
   ForbiddenCutOnUnpaidReservationException,
+  MatrizAlreadyPointedException,
+  MatrizNotDeclaredException,
 } from '../../domain/exceptions/cut.exceptions';
 import { CutId } from '../../domain/value-objects/cut-id.vo';
 import { AccountId } from '../../../account/domain/value-objects/account-id.vo';
 import { FabricId } from '../../../catalog/domain/value-objects/fabric-id.vo';
 import { ProductTypeId } from '../../../catalog/domain/value-objects/product-type-id.vo';
 import { ReservationId } from '../../../schedule/domain/value-objects/reservation-id.vo';
+import { PreOrder } from '../../../pre-order/domain/entities/pre-order.entity';
+import { PreOrderItem } from '../../../pre-order/domain/entities/pre-order-item.entity';
+import { PreOrderItemId } from '../../../pre-order/domain/value-objects/pre-order-item-id.vo';
 import { Reservation } from '../../../schedule/domain/entities/reservation.entity';
 import { ReservationNotFoundException } from '../../../schedule/domain/exceptions/schedule.exceptions';
 import { LayoutType } from '../../../../shared/domain/value-objects/layout-type';
@@ -73,15 +85,19 @@ export class CutUseCases {
   }
 
   /**
-   * START — o primeiro toque.
+   * START — o primeiro toque, numa matriz que o pedido **declarou**.
    *
    * Só existe matriz em reserva paga (§4.10 + regra 2.4): uma `pre_reserved` recusa com 403. E a
    * primeira matriz é o que leva a reserva de `confirmed` para `in_progress` (§4.11).
+   *
+   * `preOrderItemId` é opcional por conveniência do caso comum — pedido de uma matriz só, o
+   * Modelista aperta começar e pronto. Omitido, o sistema pega a primeira matriz declarada ainda
+   * sem apontamento; **nunca** inventa uma nova.
    */
   async start(
     accountId: string,
     reservationId: string,
-    markerName?: string | null,
+    input: { preOrderItemId?: string | null; markerName?: string | null } = {},
   ): Promise<CutDto> {
     const account = AccountId.from(accountId);
     const reservation = await this.loadReservation(account, reservationId);
@@ -93,25 +109,29 @@ export class CutUseCases {
       throw new ForbiddenCutOnUnpaidReservationException();
     }
 
-    const running = await this.cuts.findRunning(account, reservation.id);
-    if (running) {
-      throw new CutAlreadyRunningException(running.sequence);
-    }
-
-    // Tecido e produto vêm do pré-pedido; podem ser corrigidos no stop.
     const preOrder = await this.preOrders.findById(account, reservation.preOrderId);
     if (!preOrder) {
       throw new ReservationNotFoundException();
     }
 
     const existing = await this.cuts.listByReservation(account, reservation.id);
+
+    const running = existing.find((cut) => cut.isRunning);
+    if (running) {
+      throw new CutAlreadyRunningException(this.sequenceOf(preOrder, running.preOrderItemId));
+    }
+
+    const item = this.selectMatriz(preOrder, existing, input.preOrderItemId ?? null);
+
+    // Tecido e produto vêm da matriz declarada; podem ser corrigidos no stop, porque o material
+    // na mesa às vezes não é o que foi declarado.
     const cut = Cut.start({
       accountId: account,
       reservationId: reservation.id,
-      sequence: existing.length + 1,
-      fabricId: preOrder.fabricId,
-      productTypeId: preOrder.productTypeId,
-      markerName,
+      preOrderItemId: item.id,
+      fabricId: item.fabricId,
+      productTypeId: item.productTypeId,
+      markerName: input.markerName,
     });
 
     const saved = await this.unitOfWork.execute(async () => {
@@ -125,10 +145,41 @@ export class CutUseCases {
 
     this.logger.log('Matriz iniciada', {
       reservationId: reservation.id.value,
-      sequence: saved.sequence,
+      sequence: item.sequence,
     });
 
     return (await this.toDtos(account, [saved]))[0];
+  }
+
+  /**
+   * Qual matriz declarada este start executa.
+   *
+   * As três recusas existem para a mesma regra: **só a quantidade de matriz que tem no pedido**.
+   * Se o trabalho na mesa é maior do que o pedido descreve, quem corrige é o pedido.
+   */
+  private selectMatriz(
+    preOrder: PreOrder,
+    existing: Cut[],
+    requestedItemId: string | null,
+  ): PreOrderItem {
+    const apontadas = new Set(existing.map((cut) => cut.preOrderItemId.value));
+
+    if (requestedItemId) {
+      const item = preOrder.findItem(PreOrderItemId.from(requestedItemId));
+      if (!item) {
+        throw new MatrizNotDeclaredException();
+      }
+      if (apontadas.has(item.id.value)) {
+        throw new MatrizAlreadyPointedException(item.sequence);
+      }
+      return item;
+    }
+
+    const proxima = preOrder.items.find((item) => !apontadas.has(item.id.value));
+    if (!proxima) {
+      throw new AllMatrizesPointedException(preOrder.items.length);
+    }
+    return proxima;
   }
 
   /**
@@ -199,7 +250,9 @@ export class CutUseCases {
 
     const running = await this.cuts.findRunning(account, reservation.id);
     if (running) {
-      throw new CutAlreadyRunningException(running.sequence);
+      throw new CutAlreadyRunningException(
+        await this.sequenceOfCut(account, running.preOrderItemId),
+      );
     }
 
     reservation.complete();
@@ -218,8 +271,42 @@ export class CutUseCases {
    * é o caminho para o corte ficar aberto até o dia seguinte, com a duração registrada errada.
    */
   async runningCut(accountId: string): Promise<RunningCutDto | null> {
-    const cut = await this.cuts.findRunningInAccount(AccountId.from(accountId));
-    return cut ? RunningCutDto.fromDomain(cut) : null;
+    const account = AccountId.from(accountId);
+    const cut = await this.cuts.findRunningInAccount(account);
+    if (!cut) {
+      return null;
+    }
+    return RunningCutDto.fromDomain(cut, await this.sequenceOfCut(account, cut.preOrderItemId));
+  }
+
+  /**
+   * A tela de matrizes da reserva: o que o pedido declarou, o que já foi apontado e o tempo total.
+   *
+   * Dirigida pelo **pedido** e não pelos cortes — as matrizes aparecem todas, apontadas ou não. É
+   * o que torna visível, antes de virar erro, que um pedido de uma matriz tem uma contagem só.
+   */
+  async reservationMatrizes(
+    accountId: string,
+    reservationId: string,
+  ): Promise<ReservationMatrizesDto> {
+    const account = AccountId.from(accountId);
+    const reservation = await this.loadReservation(account, reservationId);
+
+    const preOrder = await this.preOrders.findById(account, reservation.preOrderId);
+    if (!preOrder) {
+      throw new ReservationNotFoundException();
+    }
+
+    const cuts = await this.cuts.listByReservation(account, reservation.id);
+    const [dtos, refs] = await Promise.all([
+      this.toDtos(account, cuts),
+      this.references.load(account),
+    ]);
+
+    return ReservationMatrizesDto.create(reservation.id.value, preOrder.items, dtos, {
+      fabricOf: (fabricId) => fabricRefOrPlaceholder(refs.fabrics, fabricId),
+      productTypeOf: (productTypeId) => refOrPlaceholder(refs.productTypes, productTypeId),
+    });
   }
 
   async fabricHistory(
@@ -258,12 +345,34 @@ export class CutUseCases {
       return [];
     }
 
-    const refs = await this.references.load(accountId);
-    return cuts.map((cut) =>
-      CutDto.fromDomain(cut, {
-        fabric: fabricRefOrPlaceholder(refs.fabrics, cut.fabricId.value),
-        productType: refOrPlaceholder(refs.productTypes, cut.productTypeId.value),
-      }),
-    );
+    // A ordem da matriz mora no pedido, não no corte (§4.10) — numerar duas vezes a mesma coisa é
+    // convidar as duas numerações a divergirem. Uma consulta para todas, não uma por corte.
+    const [refs, items] = await Promise.all([
+      this.references.load(accountId),
+      this.preOrders.findItemsByIds(
+        accountId,
+        cuts.map((cut) => cut.preOrderItemId),
+      ),
+    ]);
+    const sequences = new Map(items.map((item) => [item.id.value, item.sequence]));
+
+    return cuts
+      .map((cut) =>
+        CutDto.fromDomain(cut, {
+          fabric: fabricRefOrPlaceholder(refs.fabrics, cut.fabricId.value),
+          productType: refOrPlaceholder(refs.productTypes, cut.productTypeId.value),
+          sequence: sequences.get(cut.preOrderItemId.value) ?? 1,
+        }),
+      )
+      .sort((a, b) => a.sequence - b.sequence);
+  }
+
+  private sequenceOf(preOrder: PreOrder, itemId: PreOrderItemId): number {
+    return preOrder.findItem(itemId)?.sequence ?? 1;
+  }
+
+  private async sequenceOfCut(accountId: AccountId, itemId: PreOrderItemId): Promise<number> {
+    const [item] = await this.preOrders.findItemsByIds(accountId, [itemId]);
+    return item?.sequence ?? 1;
   }
 }
