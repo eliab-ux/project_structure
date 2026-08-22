@@ -19,6 +19,7 @@ import { CompanyModule } from './contexts/company/company.module';
 import { ContactModule } from './contexts/contact/contact.module';
 import { ProductModule } from './contexts/product/product.module';
 import { FieldConfigModule } from './contexts/field-config/field-config.module';
+import { OrderModule } from './contexts/order/order.module';
 import { ModuleModule } from './contexts/module/module.module';
 import { RoleModule } from './contexts/role/role.module';
 import { UserModule } from './contexts/user/user.module';
@@ -48,6 +49,7 @@ import { AuthModule } from './contexts/auth/auth.module';
     ContactModule,
     ProductModule,
     FieldConfigModule,
+    OrderModule,
     ModuleModule,
     RoleModule,
     UserModule,

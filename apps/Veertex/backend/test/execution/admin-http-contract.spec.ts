@@ -490,33 +490,42 @@ describe('Contrato HTTP das telas de administração', () => {
   describe('contactService', () => {
     let createdContactId: string;
 
-    it('GET /contacts/field-catalog — o catálogo com defaultVisible declarado', async () => {
+    it('GET /contacts/field-catalog — catálogo já mesclado com a config da conta (§3.6)', async () => {
       const response = await call('/contacts/field-catalog');
 
       expect(response.status).toBe(200);
+      // A rota agora devolve o config EFETIVO (catálogo + field_config): `visible`/`required` em vez
+      // de `defaultVisible`/`defaultRequired`. Sem config da conta, o efetivo = o default do catálogo.
       const body = response.body as {
-        fields: { field: string; defaultVisible: boolean; rule: string; hint?: string }[];
+        fields: {
+          field: string;
+          visible: boolean;
+          required: boolean;
+          rule: string;
+          hint?: string;
+        }[];
       };
 
-      // Os opcionais do §3.4 nascem OCULTOS — é a decisão (b) de Eliab (14/08/2026), e ela vale por
-      // estar DECLARADA campo a campo, não inferida de uma regra implícita.
+      // Os opcionais do §3.4 nascem OCULTOS — decisão (b) de Eliab (14/08/2026), declarada campo a
+      // campo. Sem field_config da conta, o efetivo repete o default do catálogo.
       const suframa = body.fields.find((f) => f.field === 'suframa');
       expect(suframa?.rule).toBe('optional');
-      expect(suframa?.defaultVisible).toBe(false);
+      expect(suframa?.visible).toBe(false);
 
       const legalName = body.fields.find((f) => f.field === 'legalName');
       expect(legalName?.rule).toBe('base');
-      expect(legalName?.defaultVisible).toBe(true);
+      expect(legalName?.visible).toBe(true);
+      // legalName é obrigatório por domínio — o efetivo continua obrigatório.
+      expect(legalName?.required).toBe(true);
 
       /*
-       * O AVISO DO LIMITE DE CRÉDITO viaja no CONTRATO, e este teste é o que impede alguém de
-       * removê-lo por engano ao mexer no catálogo. O §3.4 diz que o limite bloqueia venda, e os
-       * módulos que bloqueiam não existem — sem o aviso, o número preenchido é promessa que o
-       * sistema não cumpre. Ele some no dia em que o VND aplicar de verdade, e a remoção desta
-       * asserção é o lembrete de que o comportamento mudou.
+       * O AVISO DO LIMITE DE CRÉDITO viaja no CONTRATO. Com o VND existindo, o bloqueio passou a ser
+       * aplicado na CONFIRMAÇÃO do pedido (não no cadastro do contato) — o §2.2 do 02 previa que o
+       * aviso mudaria quando o bloqueio fosse implementado. O texto agora aponta o momento real do
+       * bloqueio; esta asserção prende o novo contrato.
        */
       const creditLimit = body.fields.find((f) => f.field === 'creditLimit');
-      expect(creditLimit?.hint).toContain('NÃO bloqueia venda');
+      expect(creditLimit?.hint).toContain('Vendas');
 
       // Nenhum campo de carteirização — nem aqui, nem no banco. Ver a entidade `Contact`.
       expect(body.fields.some((f) => f.field.toLowerCase().includes('seller'))).toBe(false);

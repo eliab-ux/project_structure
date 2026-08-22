@@ -1,0 +1,149 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  CreateOrderCommand,
+  CreateOrderUseCase,
+} from '../../../../contexts/order/application/use-cases/create-order/create-order.use-case';
+import {
+  UpdateOrderCommand,
+  UpdateOrderUseCase,
+} from '../../../../contexts/order/application/use-cases/update-order/update-order.use-case';
+import {
+  ChangeOrderStatusCommand,
+  ChangeOrderStatusUseCase,
+} from '../../../../contexts/order/application/use-cases/change-order-status/change-order-status.use-case';
+import {
+  GetOrderQuery,
+  GetOrderUseCase,
+} from '../../../../contexts/order/application/use-cases/get-order/get-order.use-case';
+import {
+  ListOrdersQuery,
+  ListOrdersUseCase,
+} from '../../../../contexts/order/application/use-cases/list-orders/list-orders.use-case';
+import { OrderDto } from '../../../../contexts/order/application/dto/order.dto';
+import { OrderOrigin } from '../../../../contexts/order/domain/order-origin';
+import { AuthTokenPayload } from '../../../../contexts/auth/application/ports/output/token-service.port';
+import { MODULES } from '../../../../contexts/module/domain/modules.catalog';
+import { grants, PERMISSIONS } from '../../../../contexts/role/domain/permissions.catalog';
+import { ModuleGuard } from '../../../security/guards/module.guard';
+import { PermissionGuard } from '../../../security/guards/permission.guard';
+import { RequireModule } from '../../../security/decorators/require-module.decorator';
+import { RequirePermission } from '../../../security/decorators/require-permission.decorator';
+import { CurrentUser } from '../../../security/decorators/current-user.decorator';
+import {
+  CreateOrderRequestDto,
+  ListOrdersQueryDto,
+  UpdateOrderRequestDto,
+} from './dto/order-request.dto';
+
+/**
+ * Pedidos — VND (§02).
+ *
+ * `@RequireModule(VND)` no controller (módulo primeiro: "módulo inativo" é mais acionável que
+ * "sem permissão"); a permissão por operação, no método. Desconto tem sub-permissão própria
+ * (`orders.discount.grant`), lida do TOKEN e passada aos use cases — nunca de um campo do corpo.
+ */
+@Controller('orders')
+@UseGuards(ModuleGuard, PermissionGuard)
+@RequireModule(MODULES.VND)
+export class OrderController {
+  constructor(
+    private readonly createOrderUseCase: CreateOrderUseCase,
+    private readonly updateOrderUseCase: UpdateOrderUseCase,
+    private readonly changeOrderStatusUseCase: ChangeOrderStatusUseCase,
+    private readonly getOrderUseCase: GetOrderUseCase,
+    private readonly listOrdersUseCase: ListOrdersUseCase,
+  ) {}
+
+  @Get()
+  @RequirePermission(PERMISSIONS.orders.read)
+  async list(@Query() query: ListOrdersQueryDto): Promise<OrderDto[]> {
+    return this.listOrdersUseCase.execute(
+      new ListOrdersQuery({
+        status: query.status ?? null,
+        companyId: query.companyId ?? null,
+        salesRepId: query.salesRepId ?? null,
+        search: query.search ?? null,
+      }),
+    );
+  }
+
+  @Get(':id')
+  @RequirePermission(PERMISSIONS.orders.read)
+  async get(@Param('id', ParseUUIDPipe) id: string): Promise<OrderDto> {
+    return this.getOrderUseCase.execute(new GetOrderQuery(id));
+  }
+
+  @Post()
+  @RequirePermission(PERMISSIONS.orders.create)
+  async create(
+    @Body() dto: CreateOrderRequestDto,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<OrderDto> {
+    return this.createOrderUseCase.execute(
+      new CreateOrderCommand(actor.accountId, actor.sub, this.canDiscount(actor), {
+        companyId: dto.companyId,
+        contactId: dto.contactId,
+        salesRepId: dto.salesRepId ?? null,
+        origin: dto.origin as OrderOrigin,
+        items: dto.items,
+        discountPercent: dto.discountPercent ?? null,
+        discountValue: dto.discountValue ?? null,
+        notes: dto.notes ?? null,
+        referenceDate: dto.referenceDate ? new Date(dto.referenceDate) : null,
+      }),
+    );
+  }
+
+  @Patch(':id')
+  @RequirePermission(PERMISSIONS.orders.update)
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateOrderRequestDto,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<OrderDto> {
+    return this.updateOrderUseCase.execute(
+      new UpdateOrderCommand(id, this.canDiscount(actor), {
+        origin: dto.origin as OrderOrigin | undefined,
+        salesRepId: dto.salesRepId,
+        items: dto.items,
+        discountPercent: dto.discountPercent,
+        discountValue: dto.discountValue,
+        notes: dto.notes,
+        referenceDate: dto.referenceDate ? new Date(dto.referenceDate) : undefined,
+      }),
+    );
+  }
+
+  @Post(':id/confirm')
+  @RequirePermission(PERMISSIONS.orders.update)
+  async confirm(@Param('id', ParseUUIDPipe) id: string): Promise<OrderDto> {
+    return this.changeOrderStatusUseCase.execute(new ChangeOrderStatusCommand(id, 'confirm'));
+  }
+
+  @Post(':id/complete')
+  @RequirePermission(PERMISSIONS.orders.update)
+  async complete(@Param('id', ParseUUIDPipe) id: string): Promise<OrderDto> {
+    return this.changeOrderStatusUseCase.execute(new ChangeOrderStatusCommand(id, 'complete'));
+  }
+
+  @Post(':id/cancel')
+  @RequirePermission(PERMISSIONS.orders.cancel)
+  async cancel(@Param('id', ParseUUIDPipe) id: string): Promise<OrderDto> {
+    return this.changeOrderStatusUseCase.execute(new ChangeOrderStatusCommand(id, 'cancel'));
+  }
+
+  /** Lê a sub-permissão de desconto do token. `grants` resolve wildcard segmento a segmento. */
+  private canDiscount(actor: AuthTokenPayload): boolean {
+    return grants(actor.permissions ?? [], PERMISSIONS.orders.discountGrant);
+  }
+}

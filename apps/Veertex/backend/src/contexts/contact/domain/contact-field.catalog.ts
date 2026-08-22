@@ -104,7 +104,7 @@ export const CONTACT_FIELD_CATALOG: readonly ContactFieldDefinition[] = [
      * a tela. Por isso o texto viaja no CONTRATO — some no dia em que o VND aplicar de verdade, e a
      * remoção desta linha é o lembrete de que o comportamento mudou.
      */
-    hint: 'Registrado para consulta. Ainda NÃO bloqueia venda — o bloqueio chega com o módulo de Vendas.',
+    hint: 'Registrado para consulta. O bloqueio é aplicado no módulo de Vendas, ao confirmar o pedido.',
   },
   {
     field: 'notes',

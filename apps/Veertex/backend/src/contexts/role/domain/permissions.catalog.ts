@@ -60,6 +60,20 @@ export const PERMISSIONS = {
     read: 'fields.read',
     update: 'fields.update',
   },
+  // Vendas (VND, §02). Separações do §3.5 e §3.8:
+  //  - `discount.grant` é sub-permissão à parte: "a Ana pode vender mas não pode dar desconto";
+  //  - `cancel` é separado de `update` porque cancelar não é editar — é uma transição de situação
+  //    com efeito (e, depois da NF-e, vira operação fiscal). Sem `delete`: pedido não se apaga.
+  orders: {
+    read: 'orders.read',
+    create: 'orders.create',
+    update: 'orders.update',
+    cancel: 'orders.cancel',
+    // Chave plana, valor pontilhado: o catálogo é de um nível só (ALL_PERMISSIONS faz flatMap de
+    // valores string). A sub-permissão granular vive no VALOR ('orders.discount.grant'), que o
+    // `grants()` resolve por wildcard segmento a segmento.
+    discountGrant: 'orders.discount.grant',
+  },
 } as const;
 
 /** Grants everything, present and future. Only the Admin role should hold it. */
