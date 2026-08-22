@@ -39,6 +39,11 @@ export const PERMISSIONS = {
     read: 'contacts.read',
     create: 'contacts.create',
     update: 'contacts.update',
+    // Carteirização (§2.3 do 02): quem TEM esta permissão vê todos os contatos da conta; quem NÃO
+    // a tem fica restrito à própria carteira QUANDO a preferência `contact_carteirizacao` está
+    // ligada. Chave plana, valor pontilhado (o catálogo é de um nível; `grants()` resolve wildcard).
+    // O escopo é resolvido POR REQUEST (nunca no token) — ver ADR-0007.
+    readAll: 'contacts.read.all',
   },
   // Sem `delete`, mesma razão de contatos: nenhuma rota apaga produto nesta fatia. Produto
   // referenciado por venda ou por nota não pode desaparecer — desativar é o que o negócio quer, e é

@@ -36,8 +36,9 @@ export class ContactDto {
   documentType!: string | null;
   stateRegistration!: string | null;
   code!: string | null;
-  /** Ver o `hint` do catálogo de campos: registrado, **não** bloqueia venda nesta fase. */
   creditLimit!: number | null;
+  /** Vendedor vinculado (carteirização, §2.3). `null` = sem carteira. */
+  salesRepId!: string | null;
   notes!: string | null;
   municipalRegistration!: string | null;
   suframa!: string | null;
@@ -65,6 +66,7 @@ export class ContactDto {
     dto.stateRegistration = contact.stateRegistration;
     dto.code = contact.code;
     dto.creditLimit = contact.creditLimit;
+    dto.salesRepId = contact.salesRepId;
     dto.notes = contact.notes;
     dto.municipalRegistration = contact.optional.municipalRegistration;
     dto.suframa = contact.optional.suframa;

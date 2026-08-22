@@ -15,6 +15,8 @@ export interface AccountPreferences {
   allowDuplicateDocument: boolean;
   contactCodeMode: 'manual' | 'sequential';
   productSkuMode: 'manual' | 'sequential';
+  /** Carteirização (§2.3 / ADR-0007): vendedor vê só a própria carteira de contatos. */
+  contactCarteirizacao: boolean;
 }
 
 export interface AuthAccount {

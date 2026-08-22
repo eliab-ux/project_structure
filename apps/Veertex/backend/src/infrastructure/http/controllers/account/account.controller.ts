@@ -73,6 +73,11 @@ export class UpdateAccountPreferencesRequestDto {
   @IsOptional()
   @IsIn(CODE_NUMBERING_MODES as unknown as string[])
   productSkuMode?: string;
+
+  /** Carteirização (§2.3 do 02): liga/desliga a visibilidade de contato por vendedor. */
+  @IsOptional()
+  @IsBoolean()
+  contactCarteirizacao?: boolean;
 }
 
 export class PlanResponseDto {
@@ -152,6 +157,7 @@ export class AccountController {
         allowDuplicateDocument: dto.allowDuplicateDocument,
         contactCodeMode: dto.contactCodeMode as CodeNumberingMode | undefined,
         productSkuMode: dto.productSkuMode as CodeNumberingMode | undefined,
+        contactCarteirizacao: dto.contactCarteirizacao,
       }),
     );
     return AccountResponseDto.from(account);

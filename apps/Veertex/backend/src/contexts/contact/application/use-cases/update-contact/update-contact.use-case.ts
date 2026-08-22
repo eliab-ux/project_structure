@@ -31,6 +31,7 @@ export class UpdateContactCommand {
       stateRegistration?: string | null;
       code?: string | null;
       creditLimit?: number | null;
+      salesRepId?: string | null;
       notes?: string | null;
       municipalRegistration?: string | null;
       suframa?: string | null;

@@ -17,9 +17,10 @@ import { ContactPhoneOrmEntity } from './contact-phone-orm.entity';
  * `document`: contas diferentes podem ter o mesmo cliente, e devem. O default "não permitir
  * duplicado dentro da conta" foi decidido por Eliab (o §3.4 prevê que vire preferência da conta).
  *
- * ⚠️ **Não existe coluna de vendedor vinculado.** Ver o docblock da entidade de domínio: coluna de
- * carteirização sem o filtro que a aplica é a pior configuração possível, porque alguém depois supõe
- * que ela restringe algo — e ela não restringe nada.
+ * **`sales_rep_id` existe a partir de 22/08/2026 (carteirização, §2.3 do 02)** — e existe COM o
+ * filtro que a aplica: a policy de RLS da tabela `contacts` compara `sales_rep_id` com
+ * `app.contact_scope` (resolvido por request, ADR-0007). Não é mais coluna inerte; é o dado que a
+ * policy filtra. Ver o docblock da entidade de domínio.
  */
 @Entity({ tableName: 'contacts' })
 @Unique({ properties: ['accountId', 'document'] })
@@ -64,6 +65,11 @@ export class ContactOrmEntity extends TenantScopedOrmEntity {
 
   @Property({ type: 'text', nullable: true })
   notes!: string | null;
+
+  /** Vendedor vinculado (carteirização, §2.3). A policy de `contacts` filtra por esta coluna. */
+  @Index()
+  @Property({ type: 'uuid', nullable: true, fieldName: 'sales_rep_id' })
+  salesRepId!: string | null;
 
   // ── Opcionais do §3.4: colunas reais nullable, ocultas por default no catálogo de campos ──────
   @Property({ length: 30, nullable: true, fieldName: 'municipal_registration' })

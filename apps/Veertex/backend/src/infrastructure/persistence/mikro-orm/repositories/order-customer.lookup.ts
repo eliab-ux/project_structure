@@ -18,7 +18,7 @@ export class OrderCustomerLookup implements CustomerLookupPort {
     const row = await this.em.findOne(
       ContactOrmEntity,
       { id: contactId },
-      { fields: ['id', 'legalName', 'tradeName', 'types', 'creditLimit', 'active'] },
+      { fields: ['id', 'legalName', 'tradeName', 'types', 'creditLimit', 'salesRepId', 'active'] },
     );
     if (!row) {
       return null;
@@ -27,8 +27,7 @@ export class OrderCustomerLookup implements CustomerLookupPort {
       id: row.id,
       displayName: row.tradeName ?? row.legalName,
       creditLimit: row.creditLimit === null ? null : Number(row.creditLimit),
-      // Carteirização (§2.3) ainda não tem coluna de vendedor vinculado — volta com a fatia dela.
-      salesRepId: null,
+      salesRepId: row.salesRepId,
       isCustomer: (row.types ?? []).includes('customer'),
       active: row.active,
     };

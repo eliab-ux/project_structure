@@ -8,6 +8,8 @@ import {
 import { Reflector } from '@nestjs/core';
 import { EntityManager } from '@mikro-orm/core';
 import { Observable, firstValueFrom, from } from 'rxjs';
+import { ContactScopeService } from '../../security/contact-scope.service';
+import { AuthenticatedRequest } from '../../security/guards/jwt-auth.guard';
 
 export const SKIP_TENANT_TRANSACTION = 'skipTenantTransaction';
 
@@ -37,6 +39,7 @@ export class TenantTransactionInterceptor implements NestInterceptor {
   constructor(
     private readonly em: EntityManager,
     private readonly reflector: Reflector,
+    private readonly contactScope: ContactScopeService,
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
@@ -51,6 +54,17 @@ export class TenantTransactionInterceptor implements NestInterceptor {
 
     // The handler's observable is consumed INSIDE the transaction, so the commit happens only after
     // the response value is produced — a handler that throws rolls the whole request back.
-    return from(this.em.transactional(async () => firstValueFrom(next.handle())));
+    //
+    // `app.account_id` is set by TenantScopeSubscriber the moment the transaction opens (before this
+    // callback runs). We then set `app.contact_scope` for the carteirização policy — per request,
+    // never from a token claim (ADR-0007). Order matters: the account scope must be in place before
+    // ContactScopeService reads the account's preference.
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    return from(
+      this.em.transactional(async (em) => {
+        await this.contactScope.establishForRequest(em, request.user);
+        return firstValueFrom(next.handle());
+      }),
+    );
   }
 }

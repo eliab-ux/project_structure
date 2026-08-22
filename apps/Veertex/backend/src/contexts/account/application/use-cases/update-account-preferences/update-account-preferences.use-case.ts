@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { UseCase } from '@gitspread/shared-kernel';
 import {
   ACCOUNT_REPOSITORY,
@@ -21,6 +21,7 @@ export class UpdateAccountPreferencesCommand {
       allowDuplicateDocument?: boolean;
       contactCodeMode?: CodeNumberingMode;
       productSkuMode?: CodeNumberingMode;
+      contactCarteirizacao?: boolean;
     },
   ) {}
 }
@@ -39,6 +40,8 @@ export class UpdateAccountPreferencesUseCase implements UseCase<
   UpdateAccountPreferencesCommand,
   AccountDto
 > {
+  private readonly logger = new Logger(UpdateAccountPreferencesUseCase.name);
+
   constructor(
     @Inject(ACCOUNT_REPOSITORY) private readonly accounts: AccountRepositoryPort,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
@@ -50,6 +53,18 @@ export class UpdateAccountPreferencesUseCase implements UseCase<
     const account = await this.accounts.findById(AccountId.from(command.accountId));
     if (!account) {
       throw new AccountNotFoundException();
+    }
+
+    // Carteirização muda VISIBILIDADE de dado (§1 do 01A: "exige registro"). Até a trilha de
+    // auditoria existir (item 12 do 01A), o registro mínimo é este log — sem dado sensível.
+    if (
+      command.changes.contactCarteirizacao !== undefined &&
+      command.changes.contactCarteirizacao !== account.preferences.contactCarteirizacao
+    ) {
+      this.logger.log('Preferência de carteirização alterada', {
+        accountId: command.accountId,
+        contactCarteirizacao: command.changes.contactCarteirizacao,
+      });
     }
 
     account.changePreferences(command.changes);

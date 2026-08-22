@@ -15,6 +15,12 @@ export interface AccountPreferencesProps {
   contactCodeMode: CodeNumberingMode;
   /** Numeração do SKU do produto (§3.5). Default **manual**. */
   productSkuMode: CodeNumberingMode;
+  /**
+   * Carteirização (§2.3 do 02): quando LIGADA, um vendedor sem `contacts.read.all` vê só os contatos
+   * da própria carteira. Default **desligada** — ligar muda visibilidade de dado e é decisão da
+   * conta. O filtro é RLS, resolvido por request (ADR-0007), nunca no token.
+   */
+  contactCarteirizacao: boolean;
 }
 
 /**
@@ -45,6 +51,7 @@ export class AccountPreferences extends ValueObject<AccountPreferencesProps> {
     allowDuplicateDocument: false,
     contactCodeMode: 'manual',
     productSkuMode: 'manual',
+    contactCarteirizacao: false,
   };
 
   private constructor(props: AccountPreferencesProps) {
@@ -68,6 +75,8 @@ export class AccountPreferences extends ValueObject<AccountPreferencesProps> {
         partial?.productSkuMode,
         AccountPreferences.DEFAULTS.productSkuMode,
       ),
+      contactCarteirizacao:
+        partial?.contactCarteirizacao ?? AccountPreferences.DEFAULTS.contactCarteirizacao,
     });
   }
 
@@ -84,6 +93,9 @@ export class AccountPreferences extends ValueObject<AccountPreferencesProps> {
   }
   get productSkuMode(): CodeNumberingMode {
     return this.props.productSkuMode;
+  }
+  get contactCarteirizacao(): boolean {
+    return this.props.contactCarteirizacao;
   }
 }
 

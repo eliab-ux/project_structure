@@ -26,6 +26,7 @@ export class AccountMapper {
         allowDuplicateDocument: orm.allowDuplicateDocument,
         contactCodeMode: orm.contactCodeMode as CodeNumberingMode,
         productSkuMode: orm.productSkuMode as CodeNumberingMode,
+        contactCarteirizacao: orm.contactCarteirizacao,
       }),
       createdAt: orm.createdAt,
     });
@@ -46,6 +47,7 @@ export class AccountMapper {
       allowDuplicateDocument: account.preferences.allowDuplicateDocument,
       contactCodeMode: account.preferences.contactCodeMode,
       productSkuMode: account.preferences.productSkuMode,
+      contactCarteirizacao: account.preferences.contactCarteirizacao,
       createdAt: account.createdAt,
       updatedAt: new Date(),
     };

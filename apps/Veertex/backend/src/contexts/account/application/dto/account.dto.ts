@@ -6,12 +6,14 @@ export class AccountPreferencesDto {
   allowDuplicateDocument!: boolean;
   contactCodeMode!: CodeNumberingMode;
   productSkuMode!: CodeNumberingMode;
+  contactCarteirizacao!: boolean;
 
   static fromDomain(account: Account): AccountPreferencesDto {
     const dto = new AccountPreferencesDto();
     dto.allowDuplicateDocument = account.preferences.allowDuplicateDocument;
     dto.contactCodeMode = account.preferences.contactCodeMode;
     dto.productSkuMode = account.preferences.productSkuMode;
+    dto.contactCarteirizacao = account.preferences.contactCarteirizacao;
     return dto;
   }
 }

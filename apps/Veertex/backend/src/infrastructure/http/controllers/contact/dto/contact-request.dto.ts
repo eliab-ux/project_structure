@@ -9,6 +9,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   Matches,
   Max,
   MaxLength,
@@ -117,10 +118,12 @@ export class CreateContactRequestDto {
   @IsOptional() @IsString() @MaxLength(30) @Transform(trimmed) stateRegistration?: string | null;
   @IsOptional() @IsString() @MaxLength(30) @Transform(trimmed) code?: string | null;
 
+  /** Vendedor vinculado (carteirização, §2.3). Id de usuário; a policy de `contacts` filtra por ele. */
+  @IsOptional() @IsUUID() salesRepId?: string | null;
+
   /**
-   * Limite de crédito. **Registrado, não aplicado nesta fase** — a tela diz isso ao operador (ver o
-   * `hint` no catálogo de campos). O teto de 999 milhões evita que um erro de digitação vire um
-   * número que nenhuma tela consegue formatar.
+   * Limite de crédito. Aplicado na CONFIRMAÇÃO do pedido pelo VND. O teto de 999 milhões evita que um
+   * erro de digitação vire um número que nenhuma tela consegue formatar.
    */
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Limite de crédito com no máximo 2 casas.' })
@@ -187,6 +190,8 @@ export class UpdateContactRequestDto {
   @Min(0)
   @Max(999_999_999)
   creditLimit?: number | null;
+
+  @IsOptional() @IsUUID() salesRepId?: string | null;
 
   @IsOptional() @IsString() @MaxLength(2000) @Transform(trimmed) notes?: string | null;
   @IsOptional() @IsString() @MaxLength(30) @Transform(trimmed) municipalRegistration?:

@@ -8,6 +8,7 @@ import { TENANT_SCOPE } from '../../contexts/auth/application/ports/output/tenan
 import { BcryptPasswordHasher } from './bcrypt-password-hasher.service';
 import { JwtTokenService } from './jwt-token.service';
 import { TenantContextService } from './tenant-context.service';
+import { ContactScopeService } from './contact-scope.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PermissionGuard } from './guards/permission.guard';
 import { ModuleGuard } from './guards/module.guard';
@@ -27,6 +28,7 @@ import { ModuleGuard } from './guards/module.guard';
     // protege e o que não protege.
     { provide: LOGIN_THROTTLE, useClass: InMemoryLoginThrottle },
     TenantContextService,
+    ContactScopeService,
     // The auth use cases depend on the PORT; the concrete service is the same instance the guards
     // use, so the scope they establish is the scope the request already carries.
     { provide: TENANT_SCOPE, useExisting: TenantContextService },
@@ -40,6 +42,7 @@ import { ModuleGuard } from './guards/module.guard';
     LOGIN_THROTTLE,
     TENANT_SCOPE,
     TenantContextService,
+    ContactScopeService,
     JwtAuthGuard,
     PermissionGuard,
     ModuleGuard,

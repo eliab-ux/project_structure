@@ -10,6 +10,8 @@ describe('AccountPreferences', () => {
     expect(prefs.allowDuplicateDocument).toBe(false);
     expect(prefs.contactCodeMode).toBe('manual');
     expect(prefs.productSkuMode).toBe('manual');
+    // Carteirização nasce DESLIGADA (§2.3 / ADR-0007) — ligar muda visibilidade de dado.
+    expect(prefs.contactCarteirizacao).toBe(false);
   });
 
   it('create(undefined) e create({}) caem no default — ausência não vira comportamento inferido', () => {

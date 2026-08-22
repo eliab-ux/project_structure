@@ -50,32 +50,22 @@ export interface ContactOptionalFields {
  * O mesmo registro é cliente, fornecedor, transportadora e/ou revendedor. O critério de aceite §7.6
  * é explícito: *"contato com 2 tipos (cliente+fornecedor) funciona nos dois fluxos sem duplicar"*.
  *
- * ## ⚠️ A CARTEIRIZAÇÃO ESTÁ FORA POR INTEIRO — nem a coluna existe
+ * ## CARTEIRIZAÇÃO — voltou INTEIRA com o VND (§2.3 do 02), 22/08/2026
  *
- * Decisão de Eliab, 14/08/2026, e o motivo merece ser lido antes de alguém "só acrescentar o campo":
+ * A decisão de 14/08 foi manter a coluna FORA até existir o filtro que a aplica ("coluna sem filtro é
+ * a pior configuração, porque alguém supõe que ela restringe algo"). Com o VND, o filtro chegou —
+ * então a coluna `sales_rep_id` entra AGORA, junto com os três pedaços que a tornam real:
  *
- * > *Visibilidade de dado neste sistema mora em RLS e guard. Coluna existindo sem o filtro é a pior
- * > configuração, porque alguém depois supõe que ela restringe algo.*
+ *  - **coluna** `sales_rep_id` (este campo);
+ *  - **preferência** da conta `contact_carteirizacao`;
+ *  - **filtro em RLS**, resolvido POR REQUEST (nunca no token — ver ADR-0007): com a preferência
+ *    ligada, um vendedor sem `contacts.read.all` vê só `sales_rep_id = <seu próprio id>`.
  *
- * O §3.4 prevê `vendedor vinculado` e a preferência "contato acessível somente ao vendedor
- * vinculado". Criar agora a coluna `assigned_seller_id` sem o filtro produziria o pior dos três
- * estados possíveis:
+ * A visibilidade mora em RLS + guard, não em `if` de aplicação — o `sales_rep_id` aqui é só o dado; o
+ * filtro é a policy da tabela `contacts`, verificada por teste de isolamento POR ATOR (dois vendedores
+ * na mesma conta, cada um com o seu contato, mais um sem vendedor). Ver ADR-0007.
  *
- * | | O que o sistema faz | O que alguém acredita |
- * |---|---|---|
- * | Sem coluna (escolhido) | todo contato é visível a quem tem `contacts.read` | o mesmo — não há o que supor |
- * | Coluna **com** filtro | vendedor vê só a carteira dele | o mesmo |
- * | Coluna **sem** filtro | todo contato visível a todos | *"tem vendedor vinculado, então está restrito"* — **falso** |
- *
- * A terceira linha é uma falha de segurança que se parece com uma funcionalidade. Ela não é
- * detectável por teste (o teste passaria: o dado está lá), nem por leitura casual do schema (a
- * coluna sugere a regra). Só apareceria quando alguém visse o contato de outro vendedor — e aí a
- * pergunta seria "desde quando?".
- *
- * A carteirização volta INTEIRA — coluna, preferência, filtro no use case a partir do `sub` do
- * token, e teste de isolamento por ator — junto com o módulo que precisa dela (VND/ROT).
- *
- * ## O que mais NÃO está aqui, e por quê
+ * ## O que ainda NÃO está aqui, e por quê
  *
  *  - **tabela de preço**: `Product` não existe; FK para tabela inexistente é pior que ausência;
  *  - **campos de revendedor** (% comissão, rota, representante): o §3.4 remete ao
@@ -96,6 +86,8 @@ export class Contact extends AggregateRoot {
     private _stateRegistration: string | null,
     private _code: string | null,
     private _creditLimit: number | null,
+    /** Vendedor vinculado (carteirização, §2.3 do 02). `null` = sem carteira. Ver ADR-0007. */
+    private _salesRepId: string | null,
     private _notes: string | null,
     private _optional: ContactOptionalFields,
     private _emails: ContactEmailEntry[],
@@ -118,6 +110,7 @@ export class Contact extends AggregateRoot {
     stateRegistration?: string | null;
     code?: string | null;
     creditLimit?: number | null;
+    salesRepId?: string | null;
     notes?: string | null;
     optional?: Partial<ContactOptionalFields>;
     emails?: readonly { email: string; label?: string | null }[];
@@ -141,6 +134,7 @@ export class Contact extends AggregateRoot {
       trimToNull(params.stateRegistration),
       trimToNull(params.code),
       Contact.parseCreditLimit(params.creditLimit ?? null),
+      trimToNull(params.salesRepId ?? null),
       trimToNull(params.notes),
       normalizeOptional(params.optional),
       (params.emails ?? []).map((entry) => ({
@@ -176,6 +170,7 @@ export class Contact extends AggregateRoot {
     stateRegistration: string | null;
     code: string | null;
     creditLimit: number | null;
+    salesRepId: string | null;
     notes: string | null;
     optional: ContactOptionalFields;
     emails: ContactEmailEntry[];
@@ -196,6 +191,7 @@ export class Contact extends AggregateRoot {
       params.stateRegistration,
       params.code,
       params.creditLimit,
+      params.salesRepId,
       params.notes,
       params.optional,
       params.emails,
@@ -261,6 +257,7 @@ export class Contact extends AggregateRoot {
     stateRegistration?: string | null;
     code?: string | null;
     creditLimit?: number | null;
+    salesRepId?: string | null;
     notes?: string | null;
     optional?: Partial<ContactOptionalFields>;
     emails?: readonly { email: string; label?: string | null }[];
@@ -297,6 +294,9 @@ export class Contact extends AggregateRoot {
     }
     if (params.creditLimit !== undefined) {
       this._creditLimit = Contact.parseCreditLimit(params.creditLimit);
+    }
+    if (params.salesRepId !== undefined) {
+      this._salesRepId = trimToNull(params.salesRepId);
     }
     if (params.notes !== undefined) {
       this._notes = trimToNull(params.notes);
@@ -363,6 +363,9 @@ export class Contact extends AggregateRoot {
   }
   get creditLimit(): number | null {
     return this._creditLimit;
+  }
+  get salesRepId(): string | null {
+    return this._salesRepId;
   }
   get notes(): string | null {
     return this._notes;

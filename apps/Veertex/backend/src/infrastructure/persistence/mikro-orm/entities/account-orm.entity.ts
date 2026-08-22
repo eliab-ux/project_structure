@@ -64,6 +64,10 @@ export class AccountOrmEntity {
   @Property({ length: 20, fieldName: 'product_sku_mode' })
   productSkuMode: string = 'manual';
 
+  /** Carteirização (§2.3 do 02): visibilidade de contato por vendedor. Ver ADR-0007. */
+  @Property({ fieldName: 'contact_carteirizacao' })
+  contactCarteirizacao: boolean = false;
+
   @Property({ type: 'timestamptz', fieldName: 'created_at' })
   createdAt: Date = new Date();
 

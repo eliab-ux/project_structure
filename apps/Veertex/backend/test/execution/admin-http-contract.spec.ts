@@ -527,8 +527,11 @@ describe('Contrato HTTP das telas de administração', () => {
       const creditLimit = body.fields.find((f) => f.field === 'creditLimit');
       expect(creditLimit?.hint).toContain('Vendas');
 
-      // Nenhum campo de carteirização — nem aqui, nem no banco. Ver a entidade `Contact`.
-      expect(body.fields.some((f) => f.field.toLowerCase().includes('seller'))).toBe(false);
+      // Carteirização (§2.3 / ADR-0007) EXISTE agora: o campo `salesRepId` está no catálogo, oculto
+      // por default (só interessa a quem liga a carteirização). Ver a entidade `Contact`.
+      const salesRep = body.fields.find((f) => f.field === 'salesRepId');
+      expect(salesRep).toBeDefined();
+      expect(salesRep?.visible).toBe(false);
     });
 
     it('POST /contacts — create() com tipos múltiplos, telefone e endereço', async () => {

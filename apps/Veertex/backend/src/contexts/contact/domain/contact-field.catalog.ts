@@ -113,6 +113,16 @@ export const CONTACT_FIELD_CATALOG: readonly ContactFieldDefinition[] = [
     defaultVisible: true,
     defaultRequired: false,
   },
+  {
+    field: 'salesRepId',
+    label: 'Vendedor vinculado',
+    rule: 'optional',
+    // Oculto por default: só interessa a quem usa carteirização (§2.3). A conta que a liga expõe o
+    // campo pela tela de Personalizar Campos. Ver ADR-0007.
+    defaultVisible: false,
+    defaultRequired: false,
+    hint: 'Define de quem é a carteira. Com a carteirização ligada, o vendedor vê só os contatos dele.',
+  },
 
   // ── Opcionais: colunas reais, ocultas até a conta pedir ───────────────────────────────────────
   {

@@ -40,6 +40,9 @@ export const DEFAULT_ROLES: readonly DefaultRoleDefinition[] = [
       PERMISSIONS.companies.read,
       // Contato é CORE, e a descrição deste papel é literalmente "cadastros do dia a dia".
       PERMISSIONS.contacts.read,
+      // Vê TODOS os contatos, não só uma carteira — o Gestor administra o cadastro (carteirização
+      // §2.3: quem tem `contacts.read.all` não é restrito).
+      PERMISSIONS.contacts.readAll,
       PERMISSIONS.contacts.create,
       PERMISSIONS.contacts.update,
       // Produto também é CORE, e cadastrá-lo é "cadastro do dia a dia" pela mesma leitura.
@@ -59,6 +62,8 @@ export const DEFAULT_ROLES: readonly DefaultRoleDefinition[] = [
       PERMISSIONS.companies.read,
       PERMISSIONS.users.read,
       PERMISSIONS.contacts.read,
+      // Supervisiona a operação inteira — vê todos os contatos (não é restrito à carteira).
+      PERMISSIONS.contacts.readAll,
       PERMISSIONS.contacts.create,
       PERMISSIONS.contacts.update,
       PERMISSIONS.products.read,
@@ -73,15 +78,24 @@ export const DEFAULT_ROLES: readonly DefaultRoleDefinition[] = [
     // cadastro correto é responsabilidade de quem administra, e um cadastro duplicado feito às
     // pressas no caixa é o começo de duas verdades sobre o mesmo cliente.
     // `products.read` pela mesma razão: não se vende o que não se consegue achar na tela.
-    permissions: [PERMISSIONS.companies.read, PERMISSIONS.contacts.read, PERMISSIONS.products.read],
+    // `contacts.read.all`: o balcão atende qualquer cliente — não faz sentido restringir o caixa a
+    // uma carteira.
+    permissions: [
+      PERMISSIONS.companies.read,
+      PERMISSIONS.contacts.read,
+      PERMISSIONS.contacts.readAll,
+      PERMISSIONS.products.read,
+    ],
   },
   {
     code: 'SALES_REP',
     name: 'Representante',
     description: 'Vendedor de rota/consignação. Permissões efetivas chegam com o módulo ROT.',
-    // Só leitura, e ATENÇÃO: sem carteirização, isto significa ver TODOS os contatos da conta, não
-    // só os dele. A carteirização está fora desta fatia por inteiro (ver a entidade `Contact`), e
-    // quando chegar é aqui que o efeito deste papel muda.
+    // O ÚNICO papel padrão SEM `contacts.read.all` — de propósito. Com a preferência
+    // `contact_carteirizacao` LIGADA, este papel passa a ver só os contatos da própria carteira
+    // (sales_rep_id = o id do vendedor). Com ela desligada (default), continua vendo todos, como
+    // antes. É exatamente aqui que a carteirização (§2.3) muda o efeito deste papel. O filtro é RLS,
+    // resolvido por request — ver ADR-0007.
     permissions: [PERMISSIONS.companies.read, PERMISSIONS.contacts.read, PERMISSIONS.products.read],
   },
   {
@@ -98,6 +112,8 @@ export const DEFAULT_ROLES: readonly DefaultRoleDefinition[] = [
       PERMISSIONS.account.read,
       PERMISSIONS.companies.read,
       PERMISSIONS.contacts.read,
+      // Contabilidade olha a conta inteira — não é restrito a carteira nenhuma.
+      PERMISSIONS.contacts.readAll,
       // NCM, CEST e origem vivem no produto: é leitura de insumo fiscal, não de catálogo comercial.
       PERMISSIONS.products.read,
     ],

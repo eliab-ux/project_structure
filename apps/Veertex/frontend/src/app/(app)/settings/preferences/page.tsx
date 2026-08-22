@@ -35,12 +35,19 @@ export default function PreferencesPage() {
   const prefs = account?.preferences;
   const [contactCodeMode, setContactCodeMode] = useState(prefs?.contactCodeMode ?? 'manual');
   const [productSkuMode, setProductSkuMode] = useState(prefs?.productSkuMode ?? 'manual');
+  const [contactCarteirizacao, setContactCarteirizacao] = useState(
+    prefs?.contactCarteirizacao ?? false,
+  );
   const [saving, setSaving] = useState(false);
 
   async function save() {
     setSaving(true);
     try {
-      await accountService.updatePreferences({ contactCodeMode, productSkuMode });
+      await accountService.updatePreferences({
+        contactCodeMode,
+        productSkuMode,
+        contactCarteirizacao,
+      });
       await refreshSession();
       enqueueSnackbar('Preferências salvas.', { variant: 'success' });
     } catch (requestError) {
@@ -101,6 +108,29 @@ export default function PreferencesPage() {
           onChange={setProductSkuMode}
           canEdit={canEdit}
         />
+
+        {/* Carteirização (§2.3 / ADR-0007) — preferência REAL e disponível (diferente das acima). */}
+        <Paper variant="outlined" sx={{ p: 2.5 }}>
+          <Typography variant="body1" sx={{ fontWeight: 600 }}>
+            Carteirização de contatos
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Quando ligada, cada vendedor vê apenas os contatos da própria carteira (o vendedor
+            vinculado ao contato). Quem administra a conta continua vendo todos. O contato sem
+            vendedor vinculado fica visível só para quem não é vendedor.
+          </Typography>
+          <FormControlLabel
+            sx={{ mt: 1 }}
+            control={
+              <Switch
+                checked={contactCarteirizacao}
+                onChange={(event) => setContactCarteirizacao(event.target.checked)}
+                disabled={!canEdit}
+              />
+            }
+            label={contactCarteirizacao ? 'Ligada' : 'Desligada'}
+          />
+        </Paper>
 
         {canEdit ? (
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>

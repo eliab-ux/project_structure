@@ -9,6 +9,13 @@ export const TENANT_FILTER = 'tenant';
  */
 export const TENANT_GUC = 'app.account_id';
 
+/**
+ * A variável de sessão da CARTEIRIZAÇÃO (§2.3 do 02). Transaction-local, resolvida POR REQUEST (nunca
+ * no token — ver ADR-0007). Vazia = ator não restrito (vê todos os contatos da conta); preenchida com
+ * o id do vendedor = restrito à própria carteira. Lida só pela policy de RLS de `contacts`.
+ */
+export const CONTACT_SCOPE_GUC = 'app.contact_scope';
+
 /** Soft-delete filter. Business rows are never physically removed (Visão Geral §3). */
 export const NOT_DELETED_FILTER = 'notDeleted';
 

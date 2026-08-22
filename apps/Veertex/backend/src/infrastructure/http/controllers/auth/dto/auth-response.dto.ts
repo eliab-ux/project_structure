@@ -38,6 +38,7 @@ export class AccountPreferencesResponseDto {
   allowDuplicateDocument!: boolean;
   contactCodeMode!: string;
   productSkuMode!: string;
+  contactCarteirizacao!: boolean;
 }
 
 export class AccountResponseDto {
@@ -61,6 +62,7 @@ export class AccountResponseDto {
       allowDuplicateDocument: account.preferences.allowDuplicateDocument,
       contactCodeMode: account.preferences.contactCodeMode,
       productSkuMode: account.preferences.productSkuMode,
+      contactCarteirizacao: account.preferences.contactCarteirizacao,
     };
     return dto;
   }
