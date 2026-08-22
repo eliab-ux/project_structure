@@ -150,7 +150,19 @@ export class ListOrdersQueryDto {
 
   @IsOptional()
   @IsUUID()
+  contactId?: string;
+
+  @IsOptional()
+  @IsUUID()
   salesRepId?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  from?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  to?: string;
 
   @IsOptional()
   @IsString()

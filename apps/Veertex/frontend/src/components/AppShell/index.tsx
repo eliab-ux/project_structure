@@ -35,22 +35,30 @@ import { MESA } from 'src/constants/routes';
  * que terminaria em 403.
  */
 const ADMIN_NAV = [
-  { href: MESA, label: 'Mesa', permission: null },
-  { href: '/companies', label: 'Empresas', permission: 'companies.read' },
-  { href: '/contacts', label: 'Contatos', permission: 'contacts.read' },
-  { href: '/products', label: 'Produtos', permission: 'products.read' },
-  { href: '/users', label: 'Usuários', permission: 'users.read' },
-  { href: '/roles', label: 'Papéis', permission: 'roles.read' },
+  { href: MESA, label: 'Mesa', permission: null, module: null },
+  { href: '/companies', label: 'Empresas', permission: 'companies.read', module: null },
+  { href: '/contacts', label: 'Contatos', permission: 'contacts.read', module: null },
+  { href: '/products', label: 'Produtos', permission: 'products.read', module: null },
+  // Pedidos é MÓDULO (VND), não CORE: só aparece se o módulo está ativo (plano ∩ conta) E o papel
+  // tem a permissão. `module` some do menu quando o módulo é desligado — o guard já recusaria a rota.
+  { href: '/orders', label: 'Pedidos', permission: 'orders.read', module: 'VND' },
+  { href: '/users', label: 'Usuários', permission: 'users.read', module: null },
+  { href: '/roles', label: 'Papéis', permission: 'roles.read', module: null },
   // Módulos é tela de CONFIGURAÇÃO DA CONTA, não de módulo — por isso entra aqui, fixa, e não no
   // menu derivado de `plano ∩ conta ∩ papel`. Ela é justamente onde esse cruzamento se administra:
   // um menu que sumisse ao desligar módulos tiraria o caminho de voltar a ligá-los.
   // `account.read` e não `account.update`: ver a configuração não é alterá-la (esconder não é
   // proteger — quem só lê continua vendo, com os controles inertes e explicados).
-  { href: '/modules', label: 'Módulos', permission: 'account.read' },
+  { href: '/modules', label: 'Módulos', permission: 'account.read', module: null },
   // Personalizar campos (§3.6) e preferências da conta (§1 do 01A) — configuração da conta, como
   // Módulos. `fields.read`/`account.read`: ver a configuração não é alterá-la.
-  { href: '/settings/fields', label: 'Campos', permission: 'fields.read' },
-  { href: '/settings/preferences', label: 'Preferências', permission: 'account.read' },
+  { href: '/settings/fields', label: 'Campos', permission: 'fields.read', module: null },
+  {
+    href: '/settings/preferences',
+    label: 'Preferências',
+    permission: 'account.read',
+    module: null,
+  },
 ] as const;
 
 /**
@@ -65,7 +73,7 @@ const ADMIN_NAV = [
  * da Mesa.
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, account, role, signOut, can } = useAuth();
+  const { user, account, role, signOut, can, hasModule } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -74,7 +82,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [navAnchorEl, setNavAnchorEl] = useState<HTMLElement | null>(null);
 
   const onMesa = pathname === MESA;
-  const visibleNav = ADMIN_NAV.filter((item) => !item.permission || can(item.permission));
+  const visibleNav = ADMIN_NAV.filter(
+    (item) =>
+      (!item.permission || can(item.permission)) && (!item.module || hasModule(item.module)),
+  );
 
   /**
    * `Esc` volta para a Mesa de qualquer tela (§3).

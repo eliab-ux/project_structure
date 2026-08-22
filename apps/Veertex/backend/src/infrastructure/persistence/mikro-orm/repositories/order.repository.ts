@@ -38,7 +38,16 @@ export class MikroOrmOrderRepository implements OrderRepositoryPort {
       {
         ...(filter.status ? { status: filter.status } : {}),
         ...(filter.companyId ? { companyId: filter.companyId } : {}),
+        ...(filter.contactId ? { contactId: filter.contactId } : {}),
         ...(filter.salesRepId ? { salesRepId: filter.salesRepId } : {}),
+        ...(filter.referenceFrom || filter.referenceTo
+          ? {
+              referenceDate: {
+                ...(filter.referenceFrom ? { $gte: filter.referenceFrom } : {}),
+                ...(filter.referenceTo ? { $lte: filter.referenceTo } : {}),
+              },
+            }
+          : {}),
         ...(termo && /^\d+$/.test(termo) ? { number: Number(termo) } : {}),
       },
       { populate: ['items'], orderBy: { number: 'DESC' } },

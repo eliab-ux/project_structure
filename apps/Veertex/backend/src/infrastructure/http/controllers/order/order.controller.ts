@@ -71,7 +71,10 @@ export class OrderController {
       new ListOrdersQuery({
         status: query.status ?? null,
         companyId: query.companyId ?? null,
+        contactId: query.contactId ?? null,
         salesRepId: query.salesRepId ?? null,
+        referenceFrom: query.from ? new Date(query.from) : null,
+        referenceTo: query.to ? new Date(query.to) : null,
         search: query.search ?? null,
       }),
     );

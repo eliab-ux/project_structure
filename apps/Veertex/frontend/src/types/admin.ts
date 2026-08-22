@@ -178,8 +178,10 @@ export interface Contact {
   documentType: string | null;
   stateRegistration: string | null;
   code: string | null;
-  /** Registrado; NÃO bloqueia venda nesta fase — ver o `hint` do catálogo de campos. */
+  /** Registrado; o bloqueio é aplicado no VND ao confirmar o pedido (§2.2). */
   creditLimit: number | null;
+  /** Vendedor vinculado (carteirização, §2.3 / ADR-0007). `null` = sem carteira. */
+  salesRepId: string | null;
   notes: string | null;
   municipalRegistration: string | null;
   suframa: string | null;
@@ -231,6 +233,7 @@ export interface CreateContactPayload {
   tradeName?: string | null;
   document?: string | null;
   creditLimit?: number | null;
+  salesRepId?: string | null;
   notes?: string | null;
   emails?: { email: string; label?: string | null }[];
   phones?: { phone: string; label?: string | null; isWhatsapp?: boolean }[];

@@ -34,7 +34,9 @@ import { PageHeader } from 'src/components/PageHeader';
 import { useAuth } from 'src/contexts/AuthContext';
 import { apiErrorMessage } from 'src/services/api';
 import contactService from 'src/services/contactService';
+import userService from 'src/services/userService';
 import {
+  AdminUser,
   Contact,
   ContactFieldDefinition,
   ContactType,
@@ -53,6 +55,7 @@ interface FormState {
   tradeName: string;
   document: string;
   creditLimit: string;
+  salesRepId: string;
   notes: string;
   email: string;
   phone: string;
@@ -65,6 +68,7 @@ const FORM_VAZIO: FormState = {
   tradeName: '',
   document: '',
   creditLimit: '',
+  salesRepId: '',
   notes: '',
   email: '',
   phone: '',
@@ -82,15 +86,17 @@ const FORM_VAZIO: FormState = {
  * número preenchido sem aviso é promessa que o sistema não cumpre. Comentário no código não serve —
  * quem preenche o campo lê a tela.
  *
- * ⚠️ **Não há campo de vendedor vinculado.** A carteirização está fora por inteiro — ver a entidade
- * `Contact` no backend. Um seletor de vendedor aqui sugeriria uma restrição de acesso que não existe.
+ * **Vendedor vinculado (carteirização, §2.3 / ADR-0007):** o campo `salesRepId` aparece quando o
+ * catálogo o marca visível (habilitado em Personalizar Campos). Com a carteirização LIGADA na conta,
+ * a tela avisa o efeito — contato sem vendedor não é visto por representante nenhum.
  */
 export default function ContactsPage() {
-  const { can } = useAuth();
+  const { can, account } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
 
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [catalog, setCatalog] = useState<ContactFieldDefinition[]>([]);
+  const [sellers, setSellers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -121,6 +127,21 @@ export default function ContactsPage() {
     void load();
   }, [load]);
 
+  // Lista de vendedores para o seletor de carteira. Silenciosa: quem não tem `users.read` recebe 403
+  // e o seletor fica sem opções — o campo continua visível, só não há a quem vincular.
+  useEffect(() => {
+    let cancelled = false;
+    userService
+      .list()
+      .then((list) => {
+        if (!cancelled) setSellers(list);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const campo = useMemo(() => {
     const porNome = new Map(catalog.map((definition) => [definition.field, definition]));
     return (nome: string) => porNome.get(nome);
@@ -143,6 +164,7 @@ export default function ContactsPage() {
       tradeName: contact.tradeName ?? '',
       document: contact.document ?? '',
       creditLimit: contact.creditLimit === null ? '' : String(contact.creditLimit),
+      salesRepId: contact.salesRepId ?? '',
       notes: contact.notes ?? '',
       email: contact.emails[0]?.email ?? '',
       phone: contact.phones[0]?.phone ?? '',
@@ -164,6 +186,7 @@ export default function ContactsPage() {
         tradeName: form.tradeName || null,
         document: form.document.replace(/\D/g, '') || null,
         creditLimit: form.creditLimit === '' ? null : Number(form.creditLimit),
+        salesRepId: form.salesRepId || null,
         notes: form.notes || null,
         emails: form.email ? [{ email: form.email }] : [],
         phones: form.phone ? [{ phone: form.phone.replace(/\D/g, '') }] : [],
@@ -393,6 +416,32 @@ export default function ContactsPage() {
                 helperText={campo('creditLimit')?.hint}
                 FormHelperTextProps={{ sx: { color: 'vx.warn' } }}
               />
+            ) : null}
+
+            {visivel('salesRepId') ? (
+              <Box>
+                <TextField
+                  select
+                  fullWidth
+                  label={campo('salesRepId')?.label ?? 'Vendedor vinculado'}
+                  value={form.salesRepId}
+                  onChange={(event) => setForm((c) => ({ ...c, salesRepId: event.target.value }))}
+                  helperText={campo('salesRepId')?.hint}
+                >
+                  <MenuItem value="">Sem vendedor</MenuItem>
+                  {sellers.map((seller) => (
+                    <MenuItem key={seller.id} value={seller.id}>
+                      {seller.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                {account?.preferences?.contactCarteirizacao ? (
+                  <Alert severity="info" role="status" sx={{ mt: 1 }}>
+                    Carteirização ligada: um contato <strong>sem vendedor</strong> não é visto por
+                    nenhum representante — só por quem administra a conta.
+                  </Alert>
+                ) : null}
+              </Box>
             ) : null}
 
             {visivel('notes') ? (

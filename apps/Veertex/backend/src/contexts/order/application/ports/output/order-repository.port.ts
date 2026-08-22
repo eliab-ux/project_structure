@@ -6,8 +6,12 @@ export const ORDER_REPOSITORY = Symbol('ORDER_REPOSITORY');
 export interface ListOrdersFilter {
   status?: string | null;
   companyId?: string | null;
+  contactId?: string | null;
   /** Filtro por vendedor — usado pela carteirização (filtro pelo id do TOKEN, nunca do cliente). */
   salesRepId?: string | null;
+  /** Período por data de referência (§2.7), inclusivo. */
+  referenceFrom?: Date | null;
+  referenceTo?: Date | null;
   search?: string | null;
 }
 
