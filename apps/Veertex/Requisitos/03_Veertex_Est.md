@@ -99,10 +99,15 @@ Mas trava operação real (venda com mercadoria a caminho, divergência de inven
 **DECISÃO: bloquear por padrão, como PREFERÊNCIA da conta** (mesmo padrão das quatro do §1 do 01A).
 Pedido sem saldo é **recusado**, não entra em espera — fila é fatia do `02` (VND), não do EST.
 
-### 3.3 Reserva ⚠️ ABERTA
-Emitir pedido reserva estoque? Por quanto tempo? O que libera — cancelamento, expiração,
-faturamento? **Decidir junto com o `02`**, porque é a fronteira entre os dois módulos e
-uma decisão isolada em qualquer lado produz inconsistência. **Sem resposta até o 02 ser anexado.**
+### 3.3 Reserva — DECIDIDA junto com o §3.9 do 02 (22/08/2026)
+A reserva é um **tipo de movimento no EST** (append-only) que **não altera o saldo físico, reduz o
+DISPONÍVEL**: `disponível = SUM(movimentos) − SUM(reservas ativas)`. O VND emite a reserva na
+transição do pedido para `confirmado`; ela é liberada por **cancelamento**, **expiração**
+(TTL default **72h**) ou **faturamento** (vira baixa). Nenhum dos dois módulos guarda uma segunda
+verdade do saldo — que é o que mantém o §3.1 (derivado) coerente.
+
+**Requisito: a expiração gera EVENTO VISÍVEL** (não é TTL silencioso — o vendedor não pode descobrir
+a liberação só quando o cliente cobra). Ver §3.9 do `02_Veertex_Vnd.md`, onde esta decisão é gêmea.
 
 ### 3.4 Método de custeio
 "Custo médio" no §3.5 sugere média ponderada móvel.
