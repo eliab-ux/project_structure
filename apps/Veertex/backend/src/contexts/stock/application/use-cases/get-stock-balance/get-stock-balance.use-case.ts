@@ -20,6 +20,8 @@ export class GetStockBalanceQuery {
   constructor(
     public readonly companyId: string,
     public readonly productId: string,
+    /** Recorte por localização (§2 do 03A). Ausente = saldo consolidado da empresa. */
+    public readonly locationId?: string | null,
   ) {}
 }
 
@@ -50,6 +52,27 @@ export class GetStockBalanceUseCase implements UseCase<GetStockBalanceQuery, Sto
     // KIT (§2.5): não tem saldo próprio — o disponível é DERIVADO dos componentes.
     if (product.isBundle) {
       return this.bundleBalance(query, product, now);
+    }
+
+    // Recorte por localização (§2 do 03A): saldo físico DAQUELE local. As reservas hoje são por
+    // (empresa, produto), sem dimensão de local — então o disponível por local é o físico do local,
+    // e o desconto de reservas fica no consolidado da empresa (onde a reserva realmente pesa).
+    if (query.locationId) {
+      const atLocation = await this.movements.listByCompanyProductLocation(
+        query.companyId,
+        query.productId,
+        query.locationId,
+      );
+      const locationBalance = computeBalance(atLocation.map((m) => m.toBalanceInput()));
+      return StockBalanceDto.build({
+        companyId: query.companyId,
+        productId: query.productId,
+        productName: product.name,
+        balance: locationBalance,
+        available: locationBalance.quantity,
+        minimumQuantity: product.minimumQuantity,
+        maximumQuantity: product.maximumQuantity,
+      });
     }
 
     const movements = await this.movements.listByCompanyProduct(query.companyId, query.productId);

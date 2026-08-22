@@ -7,6 +7,9 @@ import { STOCK_PRODUCT_LOOKUP } from './application/ports/output/stock-product-l
 import { RegisterMovementUseCase } from './application/use-cases/register-movement/register-movement.use-case';
 import { GetStockBalanceUseCase } from './application/use-cases/get-stock-balance/get-stock-balance.use-case';
 import { ListMovementsUseCase } from './application/use-cases/list-movements/list-movements.use-case';
+import { TransferStockUseCase } from './application/use-cases/transfer-stock/transfer-stock.use-case';
+import { CreateStockLocationUseCase } from './application/use-cases/create-stock-location/create-stock-location.use-case';
+import { ListStockLocationsUseCase } from './application/use-cases/list-stock-locations/list-stock-locations.use-case';
 import { ReserveOrderStockUseCase } from './application/use-cases/reserve-order-stock/reserve-order-stock.use-case';
 import { ReleaseOrderReservationsUseCase } from './application/use-cases/release-order-reservations/release-order-reservations.use-case';
 
@@ -23,6 +26,9 @@ import { ReleaseOrderReservationsUseCase } from './application/use-cases/release
     RegisterMovementUseCase,
     GetStockBalanceUseCase,
     ListMovementsUseCase,
+    TransferStockUseCase,
+    CreateStockLocationUseCase,
+    ListStockLocationsUseCase,
     ReserveOrderStockUseCase,
     ReleaseOrderReservationsUseCase,
   ],
@@ -30,6 +36,9 @@ import { ReleaseOrderReservationsUseCase } from './application/use-cases/release
     RegisterMovementUseCase,
     GetStockBalanceUseCase,
     ListMovementsUseCase,
+    TransferStockUseCase,
+    CreateStockLocationUseCase,
+    ListStockLocationsUseCase,
     ReserveOrderStockUseCase,
     ReleaseOrderReservationsUseCase,
   ],

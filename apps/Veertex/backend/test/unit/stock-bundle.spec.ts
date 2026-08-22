@@ -23,12 +23,14 @@ const EMPRESA = '22222222-2222-4222-8222-222222222222';
 const KIT = '55555555-5555-4555-8555-555555555555';
 const COMP_A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const COMP_B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const LOCAL = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 
 function purchase(productId: string, qty: number): StockMovement {
   return StockMovement.create({
     accountId: CONTA,
     companyId: EMPRESA,
     productId,
+    locationId: LOCAL,
     type: 'purchase_in',
     signedQuantity: qty,
     unitCost: 1,
@@ -42,6 +44,7 @@ describe('Kit — disponível derivado dos componentes (§2.5)', () => {
       if (productId === COMP_B) return [purchase(COMP_B, 6)];
       return [];
     },
+    listByCompanyProductLocation: async () => [],
     findById: async () => null,
     save: async (m) => m,
     list: async () => [],

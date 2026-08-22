@@ -18,6 +18,7 @@ export class StockMovement extends AggregateRoot {
     private readonly _accountId: string,
     private readonly _companyId: string,
     private readonly _productId: string,
+    private readonly _locationId: string,
     private readonly _type: StockMovementType,
     /** Magnitude (>0) para in/out; com sinal para `inventory_adjust`. */
     private readonly _signedQuantity: number,
@@ -35,6 +36,7 @@ export class StockMovement extends AggregateRoot {
     accountId: string;
     companyId: string;
     productId: string;
+    locationId: string;
     type: StockMovementType;
     signedQuantity: number;
     unitCost: number | null;
@@ -48,6 +50,7 @@ export class StockMovement extends AggregateRoot {
       params.accountId,
       params.companyId,
       params.productId,
+      params.locationId,
       params.type,
       params.signedQuantity,
       params.unitCost,
@@ -64,6 +67,7 @@ export class StockMovement extends AggregateRoot {
     accountId: string;
     companyId: string;
     productId: string;
+    locationId: string;
     type: StockMovementType;
     signedQuantity: number;
     unitCost: number | null;
@@ -78,6 +82,7 @@ export class StockMovement extends AggregateRoot {
       params.accountId,
       params.companyId,
       params.productId,
+      params.locationId,
       params.type,
       params.signedQuantity,
       params.unitCost,
@@ -100,6 +105,9 @@ export class StockMovement extends AggregateRoot {
   }
   get productId(): string {
     return this._productId;
+  }
+  get locationId(): string {
+    return this._locationId;
   }
   get type(): StockMovementType {
     return this._type;

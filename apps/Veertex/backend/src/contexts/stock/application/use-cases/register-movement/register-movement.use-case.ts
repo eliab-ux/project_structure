@@ -13,13 +13,23 @@ import {
   STOCK_PRODUCT_LOOKUP,
   StockProductLookupPort,
 } from '../../ports/output/stock-product-lookup.port';
+import {
+  STOCK_LOCATION_REPOSITORY,
+  StockLocationRepositoryPort,
+} from '../../ports/output/stock-location-repository.port';
 import { StockMovement } from '../../../domain/entities/stock-movement.entity';
 import { computeBalance } from '../../../domain/stock-balance';
-import { STOCK_MOVEMENT_TYPE, StockMovementType } from '../../../domain/movement-type';
+import {
+  REGISTERABLE_MOVEMENT_TYPES,
+  STOCK_MOVEMENT_TYPE,
+  StockMovementType,
+} from '../../../domain/movement-type';
 import { StockMovementDto } from '../../dto/stock.dto';
 import {
   InvalidMovementQuantityException,
+  MovementTypeNotRegisterableException,
   NegativeStockNotAllowedException,
+  StockLocationInvalidException,
   StockProductInvalidException,
 } from '../../../domain/exceptions/stock-exceptions';
 
@@ -28,6 +38,7 @@ export class RegisterMovementCommand {
     public readonly accountId: string,
     public readonly companyId: string,
     public readonly productId: string,
+    public readonly locationId: string,
     public readonly type: StockMovementType,
     /** Magnitude (>0) para in/out; COM SINAL para `inventory_adjust` (sobra + / falta −). */
     public readonly quantity: number,
@@ -61,15 +72,29 @@ export class RegisterMovementUseCase implements UseCase<RegisterMovementCommand,
   constructor(
     @Inject(STOCK_MOVEMENT_REPOSITORY) private readonly movements: StockMovementRepositoryPort,
     @Inject(STOCK_PRODUCT_LOOKUP) private readonly products: StockProductLookupPort,
+    @Inject(STOCK_LOCATION_REPOSITORY) private readonly locations: StockLocationRepositoryPort,
     private readonly preferences: AccountPreferencesReader,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
   ) {}
 
   async execute(command: RegisterMovementCommand): Promise<StockMovementDto> {
     return this.uow.execute(async () => {
+      // O registro manual só cria os 6 tipos operacionais; transferência e rota entram por
+      // use cases dedicados (§3.1 do 03A) — nunca pela porta de registro genérico.
+      if (!REGISTERABLE_MOVEMENT_TYPES.includes(command.type)) {
+        throw new MovementTypeNotRegisterableException(command.type);
+      }
+
       const product = await this.products.findById(command.productId);
       if (!product || !product.active) {
         throw new StockProductInvalidException('Produto não encontrado ou inativo.');
+      }
+
+      const location = await this.locations.findById(command.locationId);
+      if (!location || location.companyId !== command.companyId || !location.active) {
+        throw new StockLocationInvalidException(
+          'Localização não encontrada, de outra empresa, ou inativa.',
+        );
       }
 
       const def = STOCK_MOVEMENT_TYPE[command.type];
@@ -81,11 +106,18 @@ export class RegisterMovementUseCase implements UseCase<RegisterMovementCommand,
         throw new InvalidMovementQuantityException();
       }
 
+      // O custo médio é da empresa (§3.4) — soma todas as localizações; o negativo é POR local.
       const existing = await this.movements.listByCompanyProduct(
         command.companyId,
         command.productId,
       );
       const current = computeBalance(existing.map((m) => m.toBalanceInput()));
+      const atLocation = await this.movements.listByCompanyProductLocation(
+        command.companyId,
+        command.productId,
+        command.locationId,
+      );
+      const locationBalance = computeBalance(atLocation.map((m) => m.toBalanceInput()));
 
       const { unitCost, usedFallback } = await this.resolveCost(command, current.averageCost);
 
@@ -97,11 +129,13 @@ export class RegisterMovementUseCase implements UseCase<RegisterMovementCommand,
             ? Math.abs(signedQuantity)
             : signedQuantity;
 
-      if (current.quantity + delta < 0) {
+      // O negativo é aferido NA LOCALIZAÇÃO do movimento — um armazém não pode ficar negativo
+      // ainda que outro local cubra o total da empresa (§2 do 03A).
+      if (locationBalance.quantity + delta < 0) {
         const prefs = await this.preferences.forAccount(command.accountId);
         if (!prefs.stockAllowNegative) {
           throw new NegativeStockNotAllowedException(
-            current.quantity.toString(),
+            locationBalance.quantity.toString(),
             Math.abs(delta).toString(),
           );
         }
@@ -111,6 +145,7 @@ export class RegisterMovementUseCase implements UseCase<RegisterMovementCommand,
         accountId: command.accountId,
         companyId: command.companyId,
         productId: command.productId,
+        locationId: command.locationId,
         type: command.type,
         signedQuantity,
         unitCost,
@@ -160,6 +195,11 @@ export class RegisterMovementUseCase implements UseCase<RegisterMovementCommand,
         // Fallback declarado (§3.4): reentra pela média vigente e MARCA que usou fallback.
         return { unitCost: currentAverage, usedFallback: true };
       }
+
+      default:
+        // Transferência e tipos do ROT não chegam aqui — o registro os recusa antes (gate
+        // REGISTERABLE). O default mantém o switch exaustivo e explode se alguém furar o gate.
+        throw new MovementTypeNotRegisterableException(command.type);
     }
   }
 }

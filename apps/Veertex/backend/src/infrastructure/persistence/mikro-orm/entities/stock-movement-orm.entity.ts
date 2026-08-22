@@ -18,6 +18,11 @@ export class StockMovementOrmEntity extends TenantScopedOrmEntity {
   @Property({ type: 'uuid', fieldName: 'product_id' })
   productId!: string;
 
+  /** Localização (§2 do 03A) — NOT NULL. O saldo passa a ter dimensão de local. */
+  @Index()
+  @Property({ type: 'uuid', fieldName: 'location_id' })
+  locationId!: string;
+
   @Property({ length: 30 })
   type!: string;
 

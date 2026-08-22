@@ -11,6 +11,7 @@ export class StockMovementMapper {
       accountId: orm.accountId,
       companyId: orm.companyId,
       productId: orm.productId,
+      locationId: orm.locationId,
       type: orm.type as StockMovementType,
       signedQuantity: Number(orm.signedQuantity),
       unitCost: orm.unitCost === null ? null : Number(orm.unitCost),

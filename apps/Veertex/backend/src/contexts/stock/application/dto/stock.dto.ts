@@ -1,4 +1,5 @@
 import { StockMovement } from '../../domain/entities/stock-movement.entity';
+import { StockLocation } from '../../domain/entities/stock-location.entity';
 import { StockBalance } from '../../domain/stock-balance';
 import { STOCK_MOVEMENT_TYPE } from '../../domain/movement-type';
 
@@ -6,6 +7,7 @@ export class StockMovementDto {
   id!: string;
   companyId!: string;
   productId!: string;
+  locationId!: string;
   type!: string;
   typeLabel!: string;
   signedQuantity!: number;
@@ -21,6 +23,7 @@ export class StockMovementDto {
     dto.id = movement.id;
     dto.companyId = movement.companyId;
     dto.productId = movement.productId;
+    dto.locationId = movement.locationId;
     dto.type = movement.type;
     dto.typeLabel = STOCK_MOVEMENT_TYPE[movement.type].label;
     dto.signedQuantity = movement.signedQuantity;
@@ -68,6 +71,24 @@ export class StockBalanceDto {
     dto.belowMinimum = params.minimumQuantity !== null && params.available < params.minimumQuantity;
     dto.aboveMaximum =
       params.maximumQuantity !== null && params.balance.quantity > params.maximumQuantity;
+    return dto;
+  }
+}
+
+export class StockLocationDto {
+  id!: string;
+  companyId!: string;
+  kind!: string;
+  name!: string;
+  active!: boolean;
+
+  static fromDomain(location: StockLocation): StockLocationDto {
+    const dto = new StockLocationDto();
+    dto.id = location.id;
+    dto.companyId = location.companyId;
+    dto.kind = location.kind;
+    dto.name = location.name;
+    dto.active = location.active;
     return dto;
   }
 }

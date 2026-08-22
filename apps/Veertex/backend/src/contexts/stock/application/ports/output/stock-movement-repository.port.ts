@@ -9,8 +9,15 @@ export interface ListMovementsFilter {
 }
 
 export interface StockMovementRepositoryPort {
-  /** Todos os movimentos de um `(empresa, produto)`, EM ORDEM CRONOLÓGICA — a base do saldo derivado. */
+  /** Movimentos de um `(empresa, produto)` — TODAS as localizações somadas — em ordem cronológica. */
   listByCompanyProduct(companyId: string, productId: string): Promise<StockMovement[]>;
+
+  /** Movimentos de um `(empresa, produto, localização)` — o recorte por local (§2 do 03A). */
+  listByCompanyProductLocation(
+    companyId: string,
+    productId: string,
+    locationId: string,
+  ): Promise<StockMovement[]>;
 
   findById(id: string): Promise<StockMovement | null>;
 

@@ -24,6 +24,27 @@ export class StockProductInvalidException extends DomainException {
   }
 }
 
+/** Localização inexistente, de outra empresa, ou inativa (§2 do 03A). */
+export class StockLocationInvalidException extends DomainException {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+/** Tipo de movimento que o registro manual não cria (transferência/rota — §3.1 do 03A). */
+export class MovementTypeNotRegisterableException extends DomainException {
+  constructor(type: string) {
+    super(`O tipo de movimento "${type}" não é registrado diretamente.`);
+  }
+}
+
+/** Transferência interna precisa de localizações de origem e destino DIFERENTES. */
+export class SameLocationTransferException extends DomainException {
+  constructor() {
+    super('A transferência interna exige localizações de origem e destino diferentes.');
+  }
+}
+
 /** Movimento de origem (venda) não encontrado para uma devolução que o referencia. */
 export class OriginMovementNotFoundException extends DomainException {
   constructor() {

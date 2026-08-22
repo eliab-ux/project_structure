@@ -29,6 +29,19 @@ export class MikroOrmStockMovementRepository implements StockMovementRepositoryP
     return rows.map((row) => this.mapper.toDomain(row));
   }
 
+  async listByCompanyProductLocation(
+    companyId: string,
+    productId: string,
+    locationId: string,
+  ): Promise<StockMovement[]> {
+    const rows = await this.em.find(
+      StockMovementOrmEntity,
+      { companyId, productId, locationId },
+      { orderBy: { occurredAt: 'ASC', createdAt: 'ASC' } },
+    );
+    return rows.map((row) => this.mapper.toDomain(row));
+  }
+
   async findById(id: string): Promise<StockMovement | null> {
     const orm = await this.em.findOne(StockMovementOrmEntity, { id });
     return orm ? this.mapper.toDomain(orm) : null;
@@ -40,6 +53,7 @@ export class MikroOrmStockMovementRepository implements StockMovementRepositoryP
       accountId: movement.accountId,
       companyId: movement.companyId,
       productId: movement.productId,
+      locationId: movement.locationId,
       type: movement.type,
       signedQuantity: movement.signedQuantity.toFixed(3),
       unitCost: movement.unitCost === null ? null : movement.unitCost.toFixed(4),

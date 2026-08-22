@@ -1,5 +1,12 @@
 # 03_Veertex_Est.md — Módulo EST (Estoque)
 
+> 🔁 **COMPLEMENTADO POR `03A_Veertex_Est_Complemento.md` (definitivo, 22/08/2026).** Onde o 03A
+> conflitar com este documento, **vale o 03A**. Em especial: o saldo passou a ter **dimensão de
+> localização** (`(empresa, produto, localização)`), toda empresa tem uma `warehouse` default,
+> `stock_movements.location_id` é `NOT NULL`, existe **transferência interna** como par atômico, e o
+> enum de tipos já reserva os movimentos do ROT. Decisão e desenho em **`ADR-0008_Localizacao_de_Estoque.md`**.
+> A fatia de localizações do 03A é **pré-requisito do ROT** e foi implementada primeiro.
+
 > ⚠️ **LEIA ANTES DE IMPLEMENTAR.** Este documento **não é baselinado** — foi montado a
 > partir das referências a EST no `01_Veertex_Core.md` mais decisões já tomadas em sessão.
 > **§2 (Ancorado)** tem fonte citada. **§3 (⚠️ DECISÃO)** não tem: trazer como pergunta,

@@ -41,6 +41,14 @@ import {
   UserRepositoryPort,
 } from '../../../../user/application/ports/output/user-repository.port';
 import { User } from '../../../../user/domain/entities/user.entity';
+import {
+  STOCK_LOCATION_REPOSITORY,
+  StockLocationRepositoryPort,
+} from '../../../../stock/application/ports/output/stock-location-repository.port';
+import {
+  DEFAULT_WAREHOUSE_NAME,
+  StockLocation,
+} from '../../../../stock/domain/entities/stock-location.entity';
 import { Account } from '../../../domain/entities/account.entity';
 import { AccountDto } from '../../dto/account.dto';
 import {
@@ -83,6 +91,7 @@ export class CreateAccountUseCase implements UseCase<CreateAccountCommand, Creat
     @Inject(COMPANY_REPOSITORY) private readonly companies: CompanyRepositoryPort,
     @Inject(ROLE_REPOSITORY) private readonly roles: RoleRepositoryPort,
     @Inject(USER_REPOSITORY) private readonly users: UserRepositoryPort,
+    @Inject(STOCK_LOCATION_REPOSITORY) private readonly stockLocations: StockLocationRepositoryPort,
     @Inject(PLAN_REPOSITORY) private readonly plans: PlanRepositoryPort,
     @Inject(PASSWORD_HASHER) private readonly hasher: PasswordHasherPort,
     @Inject(ACCOUNT_MODULE_REPOSITORY)
@@ -161,6 +170,15 @@ export class CreateAccountUseCase implements UseCase<CreateAccountCommand, Creat
       await this.roles.saveAll(roles);
       await this.accountModules.saveAll(accountModules);
       const savedCompany = await this.companies.save(company);
+      // Depósito default da primeira empresa (§2 do 03A) — parte do onboarding atômico.
+      await this.stockLocations.save(
+        StockLocation.create({
+          accountId: account.id.value,
+          companyId: savedCompany.id.value,
+          kind: 'warehouse',
+          name: DEFAULT_WAREHOUSE_NAME,
+        }),
+      );
       const savedAdmin = await this.users.save(admin);
 
       this.logger.log('Conta criada', {

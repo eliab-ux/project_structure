@@ -6,6 +6,8 @@ import { StockMovement } from '../../src/contexts/stock/domain/entities/stock-mo
 import { StockMovementType } from '../../src/contexts/stock/domain/movement-type';
 import { StockMovementRepositoryPort } from '../../src/contexts/stock/application/ports/output/stock-movement-repository.port';
 import { StockProductLookupPort } from '../../src/contexts/stock/application/ports/output/stock-product-lookup.port';
+import { StockLocationRepositoryPort } from '../../src/contexts/stock/application/ports/output/stock-location-repository.port';
+import { StockLocation } from '../../src/contexts/stock/domain/entities/stock-location.entity';
 import { AccountPreferencesReader } from '../../src/contexts/account/application/account-preferences.reader';
 import { AccountPreferences } from '../../src/contexts/account/domain/value-objects/account-preferences.vo';
 import { UnitOfWorkPort } from '../../src/infrastructure/persistence/ports/unit-of-work.port';
@@ -14,12 +16,18 @@ import { NegativeStockNotAllowedException } from '../../src/contexts/stock/domai
 const CONTA = '11111111-1111-4111-8111-111111111111';
 const EMPRESA = '22222222-2222-4222-8222-222222222222';
 const PRODUTO = '44444444-4444-4444-8444-444444444444';
+const LOCAL = '55555555-5555-4555-8555-555555555555';
 
 function repoFalso(inicial: StockMovement[] = []) {
   const salvos = [...inicial];
   const repo: StockMovementRepositoryPort = {
     listByCompanyProduct: async (companyId, productId) =>
       salvos.filter((m) => m.companyId === companyId && m.productId === productId),
+    listByCompanyProductLocation: async (companyId, productId, locationId) =>
+      salvos.filter(
+        (m) =>
+          m.companyId === companyId && m.productId === productId && m.locationId === locationId,
+      ),
     findById: async (id) => salvos.find((m) => m.id === id) ?? null,
     save: async (m) => {
       salvos.push(m);
@@ -42,6 +50,22 @@ const produtoFalso: StockProductLookupPort = {
   }),
 };
 
+const localFalso: StockLocationRepositoryPort = {
+  findById: async (id) =>
+    StockLocation.reconstitute({
+      id,
+      accountId: CONTA,
+      companyId: EMPRESA,
+      kind: 'warehouse',
+      name: 'Depósito principal',
+      active: true,
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+    }),
+  listByCompany: async () => [],
+  findDefaultWarehouse: async () => null,
+  save: async (l) => l,
+};
+
 function prefsFalso(stockAllowNegative = false): AccountPreferencesReader {
   return {
     forAccount: async () => AccountPreferences.create({ stockAllowNegative }),
@@ -51,7 +75,7 @@ function prefsFalso(stockAllowNegative = false): AccountPreferencesReader {
 const uowFalso: UnitOfWorkPort = { execute: async (fn) => fn() } as UnitOfWorkPort;
 
 function uc(repo: StockMovementRepositoryPort, prefs = prefsFalso()) {
-  return new RegisterMovementUseCase(repo, produtoFalso, prefs, uowFalso);
+  return new RegisterMovementUseCase(repo, produtoFalso, localFalso, prefs, uowFalso);
 }
 
 function cmd(
@@ -63,6 +87,7 @@ function cmd(
     CONTA,
     EMPRESA,
     PRODUTO,
+    LOCAL,
     type,
     quantity,
     over.unitCost ?? null,

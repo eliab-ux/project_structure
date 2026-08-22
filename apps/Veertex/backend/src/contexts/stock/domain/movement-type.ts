@@ -15,6 +15,15 @@ export const STOCK_MOVEMENT_TYPES = [
   'customer_return',
   'supplier_return',
   'loss',
+  // Transferência interna entre localizações da MESMA empresa (§2 do 03A) — implementada.
+  'transfer_out',
+  'transfer_in',
+  // ⚠️ RESERVADOS para o ROT (§3.1 do 03A): no enum para o tipo não mudar depois, NÃO implementados.
+  // Criá-los pelo registro é recusado (ver REGISTERABLE_MOVEMENT_TYPES).
+  'trip_load',
+  'trip_return',
+  'exchange_in',
+  'exchange_out',
 ] as const;
 
 export type StockMovementType = (typeof STOCK_MOVEMENT_TYPES)[number];
@@ -37,7 +46,27 @@ export const STOCK_MOVEMENT_TYPE: Record<StockMovementType, MovementTypeDefiniti
   customer_return: { label: 'Devolução de cliente', direction: 'in', carriesInputCost: false },
   supplier_return: { label: 'Devolução a fornecedor', direction: 'out', carriesInputCost: false },
   loss: { label: 'Perda', direction: 'out', carriesInputCost: false },
+  transfer_out: { label: 'Transferência (saída)', direction: 'out', carriesInputCost: false },
+  transfer_in: { label: 'Transferência (entrada)', direction: 'in', carriesInputCost: true },
+  trip_load: { label: 'Carga de viagem', direction: 'out', carriesInputCost: false },
+  trip_return: { label: 'Retorno de viagem', direction: 'in', carriesInputCost: false },
+  exchange_in: { label: 'Troca (entrada)', direction: 'in', carriesInputCost: false },
+  exchange_out: { label: 'Troca (saída)', direction: 'out', carriesInputCost: false },
 };
+
+/**
+ * Os tipos que o registro MANUAL aceita. Transferência entra pelo `TransferStock` (par atômico), não
+ * pelo registro solto; os tipos da rota são reservados (chegam com o ROT). Aceitar um reservado no
+ * registro seria a casca que grava um movimento cujo comportamento não existe.
+ */
+export const REGISTERABLE_MOVEMENT_TYPES: readonly StockMovementType[] = [
+  'purchase_in',
+  'sale_out',
+  'inventory_adjust',
+  'customer_return',
+  'supplier_return',
+  'loss',
+];
 
 export function isStockMovementType(value: string): value is StockMovementType {
   return (STOCK_MOVEMENT_TYPES as readonly string[]).includes(value);

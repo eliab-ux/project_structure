@@ -19,6 +19,14 @@ import { StateRegistration } from '../../../domain/value-objects/state-registrat
 import { TaxRegime } from '../../../domain/value-objects/tax-regime.vo';
 import { DuplicateCompanyDocumentException } from '../../../domain/exceptions/company-exceptions';
 import {
+  STOCK_LOCATION_REPOSITORY,
+  StockLocationRepositoryPort,
+} from '../../../../stock/application/ports/output/stock-location-repository.port';
+import {
+  DEFAULT_WAREHOUSE_NAME,
+  StockLocation,
+} from '../../../../stock/domain/entities/stock-location.entity';
+import {
   COMPANY_REPOSITORY,
   CompanyRepositoryPort,
 } from '../../ports/output/company-repository.port';
@@ -37,6 +45,7 @@ export class CreateCompanyUseCase implements UseCase<CreateCompanyCommand, Compa
   constructor(
     @Inject(COMPANY_REPOSITORY) private readonly companies: CompanyRepositoryPort,
     @Inject(ACCOUNT_REPOSITORY) private readonly accounts: AccountRepositoryPort,
+    @Inject(STOCK_LOCATION_REPOSITORY) private readonly stockLocations: StockLocationRepositoryPort,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
   ) {}
 
@@ -82,6 +91,16 @@ export class CreateCompanyUseCase implements UseCase<CreateCompanyCommand, Compa
 
     return this.uow.execute(async () => {
       const saved = await this.companies.save(company);
+      // Toda empresa nasce com o depósito default (§2 do 03A) — o estoque tem dimensão de local
+      // desde o primeiro movimento; sem isto o registro não teria para onde apontar.
+      await this.stockLocations.save(
+        StockLocation.create({
+          accountId: command.accountId,
+          companyId: saved.id.value,
+          kind: 'warehouse',
+          name: DEFAULT_WAREHOUSE_NAME,
+        }),
+      );
       return CompanyDto.fromDomain(saved);
     });
   }
