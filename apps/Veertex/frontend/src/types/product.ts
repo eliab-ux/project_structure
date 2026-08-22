@@ -82,8 +82,13 @@ export interface ProductFieldDefinition {
   label: string;
   group: 'header' | 'characteristics' | 'measures' | 'stock' | 'suppliers' | 'tax';
   rule: 'base' | 'optional';
-  defaultVisible: boolean;
-  defaultRequired: boolean;
+  /** Valor efetivo (catálogo + `field_config` da conta), não o default cru. */
+  visible: boolean;
+  required: boolean;
+  /** Ordem preferida pela conta; `null` = ordem do catálogo. */
+  order?: number | null;
+  /** Obrigatório por regra de domínio — a config não consegue ocultá-lo nem torná-lo opcional. */
+  mandatoryByDomain?: boolean;
   /** Texto de apoio abaixo do campo — é por aqui que chega o aviso de módulo ausente. */
   hint?: string;
 }

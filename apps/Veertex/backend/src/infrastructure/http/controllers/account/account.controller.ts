@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import {
   GetCurrentAccountQuery,
   GetCurrentAccountUseCase,
@@ -10,9 +10,17 @@ import {
   UpdateAccountUseCase,
 } from '../../../../contexts/account/application/use-cases/update-account/update-account.use-case';
 import {
+  UpdateAccountPreferencesCommand,
+  UpdateAccountPreferencesUseCase,
+} from '../../../../contexts/account/application/use-cases/update-account-preferences/update-account-preferences.use-case';
+import {
   RequestAccountCancellationCommand,
   RequestAccountCancellationUseCase,
 } from '../../../../contexts/account/application/use-cases/request-account-cancellation/request-account-cancellation.use-case';
+import {
+  CODE_NUMBERING_MODES,
+  CodeNumberingMode,
+} from '../../../../contexts/account/domain/value-objects/account-preferences.vo';
 import { ListPlansUseCase } from '../../../../contexts/plan/application/use-cases/list-plans/list-plans.use-case';
 import { AuthTokenPayload } from '../../../../contexts/auth/application/ports/output/token-service.port';
 import { PERMISSIONS } from '../../../../contexts/role/domain/permissions.catalog';
@@ -47,6 +55,26 @@ export class RequestCancellationRequestDto {
   requested!: boolean;
 }
 
+/**
+ * Preferências da conta (§1 do 01A). Tudo opcional: o PATCH sobrepõe só o que veio, e o VO de
+ * domínio preenche o resto com o default declarado. Os valores hoje não-implementados
+ * (`sequential`, `allowDuplicateDocument = true`) passam pela validação de shape aqui e são recusados
+ * com motivo no use case — o DTO valida o QUE é possível dizer, o use case, o que é possível FAZER.
+ */
+export class UpdateAccountPreferencesRequestDto {
+  @IsOptional()
+  @IsBoolean()
+  allowDuplicateDocument?: boolean;
+
+  @IsOptional()
+  @IsIn(CODE_NUMBERING_MODES as unknown as string[])
+  contactCodeMode?: string;
+
+  @IsOptional()
+  @IsIn(CODE_NUMBERING_MODES as unknown as string[])
+  productSkuMode?: string;
+}
+
 export class PlanResponseDto {
   id!: string;
   code!: string;
@@ -73,6 +101,7 @@ export class AccountController {
   constructor(
     private readonly getCurrentAccountUseCase: GetCurrentAccountUseCase,
     private readonly updateAccountUseCase: UpdateAccountUseCase,
+    private readonly updateAccountPreferencesUseCase: UpdateAccountPreferencesUseCase,
     private readonly requestCancellationUseCase: RequestAccountCancellationUseCase,
     private readonly listPlansUseCase: ListPlansUseCase,
   ) {}
@@ -104,6 +133,26 @@ export class AccountController {
   ): Promise<AccountResponseDto> {
     const account = await this.updateAccountUseCase.execute(
       new UpdateAccountCommand(user.accountId, dto.name, dto.timezone),
+    );
+    return AccountResponseDto.from(account);
+  }
+
+  /**
+   * The account's preferences (§1 do 01A). `account.update` — a mesma permissão do resto das
+   * configurações da conta: quem edita a conta edita as preferências dela.
+   */
+  @Patch('preferences')
+  @RequirePermission(PERMISSIONS.account.update)
+  async updatePreferences(
+    @Body() dto: UpdateAccountPreferencesRequestDto,
+    @CurrentUser() user: AuthTokenPayload,
+  ): Promise<AccountResponseDto> {
+    const account = await this.updateAccountPreferencesUseCase.execute(
+      new UpdateAccountPreferencesCommand(user.accountId, {
+        allowDuplicateDocument: dto.allowDuplicateDocument,
+        contactCodeMode: dto.contactCodeMode as CodeNumberingMode | undefined,
+        productSkuMode: dto.productSkuMode as CodeNumberingMode | undefined,
+      }),
     );
     return AccountResponseDto.from(account);
   }

@@ -9,6 +9,7 @@ import {
   SupplierLookupPort,
 } from '../../src/contexts/product/application/ports/output/supplier-lookup.port';
 import { UnitOfWorkPort } from '../../src/infrastructure/persistence/ports/unit-of-work.port';
+import { RequiredFieldsChecker } from '../../src/contexts/field-config/application/required-fields.checker';
 import {
   DuplicateProductSkuException,
   ProductNotFoundException,
@@ -66,6 +67,14 @@ const uowFalso: UnitOfWorkPort = {
   execute: async (fn) => fn(),
 } as UnitOfWorkPort;
 
+/**
+ * Checker de obrigatório que não cobra nada — a obrigatoriedade dinâmica tem teste próprio
+ * (`field-config.spec.ts`). Aqui interessa a regra de fornecedor/SKU, não a de campo obrigatório.
+ */
+const checkerFalso = {
+  assertRequiredPresent: async () => undefined,
+} as unknown as RequiredFieldsChecker;
+
 function entrada(overrides: Record<string, unknown> = {}) {
   return { name: 'Chapa de aço 2mm', unit: 'UN', ...overrides } as never;
 }
@@ -73,7 +82,7 @@ function entrada(overrides: Record<string, unknown> = {}) {
 describe('CreateProductUseCase', () => {
   it('cadastra produto simples e devolve o DTO com as finalidades avaliadas', async () => {
     const { repo, salvos } = repositorioFalso();
-    const useCase = new CreateProductUseCase(repo, lookupFalso(), uowFalso);
+    const useCase = new CreateProductUseCase(repo, lookupFalso(), uowFalso, checkerFalso);
 
     const dto = await useCase.execute(new CreateProductCommand(CONTA, [], entrada()));
 
@@ -93,7 +102,7 @@ describe('CreateProductUseCase', () => {
       sku: 'CX-100',
     });
     const { repo } = repositorioFalso([primeiro]);
-    const useCase = new CreateProductUseCase(repo, lookupFalso(), uowFalso);
+    const useCase = new CreateProductUseCase(repo, lookupFalso(), uowFalso, checkerFalso);
 
     await expect(
       useCase.execute(new CreateProductCommand(CONTA, [], entrada({ sku: 'CX-100' }))),
@@ -102,7 +111,7 @@ describe('CreateProductUseCase', () => {
 
   it('RECUSA fornecedor que não é fornecedor, e diz o que fazer', async () => {
     const { repo } = repositorioFalso();
-    const useCase = new CreateProductUseCase(repo, lookupFalso(), uowFalso);
+    const useCase = new CreateProductUseCase(repo, lookupFalso(), uowFalso, checkerFalso);
 
     const promessa = useCase.execute(
       new CreateProductCommand(CONTA, [], entrada({ suppliers: [{ contactId: CLIENTE }] })),
@@ -116,7 +125,7 @@ describe('CreateProductUseCase', () => {
 
   it('recusa fornecedor inexistente sem revelar se ele existe em outra conta', async () => {
     const { repo } = repositorioFalso();
-    const useCase = new CreateProductUseCase(repo, lookupFalso(), uowFalso);
+    const useCase = new CreateProductUseCase(repo, lookupFalso(), uowFalso, checkerFalso);
     const outraConta = '44444444-4444-4444-8444-444444444444';
 
     await expect(
@@ -128,7 +137,7 @@ describe('CreateProductUseCase', () => {
 
   it('aceita fornecedor válido e devolve o nome dele no DTO', async () => {
     const { repo } = repositorioFalso();
-    const useCase = new CreateProductUseCase(repo, lookupFalso(), uowFalso);
+    const useCase = new CreateProductUseCase(repo, lookupFalso(), uowFalso, checkerFalso);
 
     const dto = await useCase.execute(
       new CreateProductCommand(
@@ -148,7 +157,7 @@ describe('CreateProductUseCase', () => {
 describe('UpdateProductUseCase', () => {
   it('não encontra produto de outra conta — mesma resposta de id inexistente', async () => {
     const { repo } = repositorioFalso();
-    const useCase = new UpdateProductUseCase(repo, lookupFalso(), uowFalso);
+    const useCase = new UpdateProductUseCase(repo, lookupFalso(), uowFalso, checkerFalso);
 
     await expect(
       useCase.execute(
@@ -160,7 +169,7 @@ describe('UpdateProductUseCase', () => {
   it('a EDIÇÃO recusa o mesmo vínculo que a criação recusa', async () => {
     const existente = Product.create({ accountId: CONTA, name: 'Chapa base', unit: 'UN' });
     const { repo } = repositorioFalso([existente]);
-    const useCase = new UpdateProductUseCase(repo, lookupFalso(), uowFalso);
+    const useCase = new UpdateProductUseCase(repo, lookupFalso(), uowFalso, checkerFalso);
 
     await expect(
       useCase.execute(
@@ -185,7 +194,7 @@ describe('UpdateProductUseCase', () => {
       tax: { ncm: '73181500' },
     });
     const { repo } = repositorioFalso([existente]);
-    const useCase = new UpdateProductUseCase(repo, lookupFalso(), uowFalso);
+    const useCase = new UpdateProductUseCase(repo, lookupFalso(), uowFalso, checkerFalso);
 
     const dto = await useCase.execute(
       new UpdateProductCommand(existente.id.value, [], { name: 'Chapa de aço' }),
@@ -205,7 +214,7 @@ describe('UpdateProductUseCase', () => {
       basePrice: 99,
     });
     const { repo } = repositorioFalso([existente]);
-    const useCase = new UpdateProductUseCase(repo, lookupFalso(), uowFalso);
+    const useCase = new UpdateProductUseCase(repo, lookupFalso(), uowFalso, checkerFalso);
 
     const dto = await useCase.execute(
       new UpdateProductCommand(existente.id.value, [], { basePrice: null }),
@@ -217,7 +226,7 @@ describe('UpdateProductUseCase', () => {
   it('desativa sem apagar — produto referenciado não pode desaparecer', async () => {
     const existente = Product.create({ accountId: CONTA, name: 'Chapa', unit: 'UN' });
     const { repo } = repositorioFalso([existente]);
-    const useCase = new UpdateProductUseCase(repo, lookupFalso(), uowFalso);
+    const useCase = new UpdateProductUseCase(repo, lookupFalso(), uowFalso, checkerFalso);
 
     const dto = await useCase.execute(
       new UpdateProductCommand(existente.id.value, [], { active: false }),

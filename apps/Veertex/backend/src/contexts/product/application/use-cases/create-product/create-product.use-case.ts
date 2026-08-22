@@ -18,6 +18,7 @@ import {
 } from '../../../domain/exceptions/product-exceptions';
 import { paraDominio, ProductInput } from '../product-input';
 import { validarFornecedores } from '../validar-fornecedores';
+import { RequiredFieldsChecker } from '../../../../field-config/application/required-fields.checker';
 
 export class CreateProductCommand {
   constructor(
@@ -51,10 +52,15 @@ export class CreateProductUseCase implements UseCase<CreateProductCommand, Produ
     @Inject(PRODUCT_REPOSITORY) private readonly products: ProductRepositoryPort,
     @Inject(SUPPLIER_LOOKUP) private readonly suppliers: SupplierLookupPort,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
+    private readonly requiredFields: RequiredFieldsChecker,
   ) {}
 
   async execute(command: CreateProductCommand): Promise<ProductDto> {
     return this.uow.execute(async () => {
+      // Obrigatório dinâmico do §3.6 (§7.5): rejeita o payload sem um campo que a conta marcou
+      // obrigatório. O `ProductInput` é plano e usa os mesmos nomes do catálogo.
+      await this.requiredFields.assertRequiredPresent('product', { ...command.input }, 'create');
+
       const product = Product.create({
         accountId: command.accountId,
         format: command.input.format,

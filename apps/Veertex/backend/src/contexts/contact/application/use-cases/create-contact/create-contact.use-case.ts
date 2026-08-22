@@ -15,6 +15,8 @@ import {
   DuplicateContactCodeException,
   DuplicateContactDocumentException,
 } from '../../../domain/exceptions/contact-exceptions';
+import { RequiredFieldsChecker } from '../../../../field-config/application/required-fields.checker';
+import { AccountPreferencesReader } from '../../../../account/application/account-preferences.reader';
 
 export class CreateContactCommand {
   constructor(
@@ -69,10 +71,18 @@ export class CreateContactUseCase implements UseCase<CreateContactCommand, Conta
   constructor(
     @Inject(CONTACT_REPOSITORY) private readonly contacts: ContactRepositoryPort,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
+    private readonly requiredFields: RequiredFieldsChecker,
+    private readonly preferences: AccountPreferencesReader,
   ) {}
 
   async execute(command: CreateContactCommand): Promise<ContactDto> {
     return this.uow.execute(async () => {
+      // Obrigatório DINÂMICO do §3.6 (§7.5): rejeita o payload sem um campo que a conta marcou
+      // obrigatório, antes de construir. O obrigatório de DOMÍNIO segue sendo garantido pelo VO.
+      await this.requiredFields.assertRequiredPresent('contact', { ...command.input }, 'create');
+
+      const prefs = await this.preferences.forAccount(command.accountId);
+
       const contact = Contact.create({
         accountId: command.accountId,
         types: command.input.types,
@@ -110,8 +120,18 @@ export class CreateContactUseCase implements UseCase<CreateContactCommand, Conta
 
       // Depois de construir: o VO normaliza o documento (tira máscara), e comparar o valor cru com o
       // que está no banco é a única comparação que não depende de como o operador digitou.
+      //
+      // A checagem é CONDICIONAL à preferência da conta (§3.4) — a evolução que a própria
+      // `DuplicateContactDocumentException` antecipava. Default `false` = não permitir (a checagem
+      // roda). O `true` é recusado no `UpdateAccountPreferencesUseCase` por decisão de Eliab
+      // (22/08/2026): o índice único do banco NÃO será relaxado. Por isso, na prática, este gate
+      // sempre roda — a condicional deixa o caminho pronto para o dia em que essa decisão mudar.
       const document = contact.document?.value ?? null;
-      if (document && (await this.contacts.findByDocument(document))) {
+      if (
+        !prefs.allowDuplicateDocument &&
+        document &&
+        (await this.contacts.findByDocument(document))
+      ) {
         throw new DuplicateContactDocumentException(contact.document!.formatted);
       }
       if (contact.code && (await this.contacts.findByCode(contact.code))) {

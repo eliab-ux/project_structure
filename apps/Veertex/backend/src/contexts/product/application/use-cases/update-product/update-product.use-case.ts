@@ -19,6 +19,7 @@ import {
 } from '../../../domain/exceptions/product-exceptions';
 import { paraDominio, ProductInput } from '../product-input';
 import { validarFornecedores } from '../validar-fornecedores';
+import { RequiredFieldsChecker } from '../../../../field-config/application/required-fields.checker';
 
 export class UpdateProductCommand {
   constructor(
@@ -50,6 +51,7 @@ export class UpdateProductUseCase implements UseCase<UpdateProductCommand, Produ
     @Inject(PRODUCT_REPOSITORY) private readonly products: ProductRepositoryPort,
     @Inject(SUPPLIER_LOOKUP) private readonly suppliers: SupplierLookupPort,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
+    private readonly requiredFields: RequiredFieldsChecker,
   ) {}
 
   async execute(command: UpdateProductCommand): Promise<ProductDto> {
@@ -59,6 +61,9 @@ export class UpdateProductUseCase implements UseCase<UpdateProductCommand, Produ
       if (!product) {
         throw new ProductNotFoundException(command.productId);
       }
+
+      // Obrigatório dinâmico, modo `update`: só cobra os campos mencionados no payload.
+      await this.requiredFields.assertRequiredPresent('product', { ...command.input }, 'update');
 
       product.update({ ...paraDominio(command.input), active: command.input.active });
 

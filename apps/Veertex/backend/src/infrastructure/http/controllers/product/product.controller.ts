@@ -26,10 +26,11 @@ import {
   GetProductUseCase,
 } from '../../../../contexts/product/application/use-cases/get-product/get-product.use-case';
 import { ProductDto } from '../../../../contexts/product/application/dto/product.dto';
+import { PRODUCT_FIELD_CATALOG } from '../../../../contexts/product/domain/product-field.catalog';
 import {
-  PRODUCT_FIELD_CATALOG,
-  ProductFieldDefinition,
-} from '../../../../contexts/product/domain/product-field.catalog';
+  GetFieldConfigQuery,
+  GetFieldConfigUseCase,
+} from '../../../../contexts/field-config/application/use-cases/get-field-config/get-field-config.use-case';
 import {
   COMMERCIAL_UNITS,
   CREATABLE_PRODUCT_FORMATS,
@@ -48,6 +49,19 @@ import {
   UpdateProductRequestDto,
 } from './dto/product-request.dto';
 
+/** Um campo do Produto como a conta o vê — catálogo mesclado com `field_config`. */
+interface EffectiveProductFieldResponse {
+  field: string;
+  label: string;
+  group: string | null;
+  rule: 'base' | 'optional';
+  visible: boolean;
+  required: boolean;
+  order: number | null;
+  mandatoryByDomain: boolean;
+  hint?: string;
+}
+
 /**
  * Produtos — §3.5 do CORE.
  *
@@ -64,6 +78,7 @@ export class ProductController {
     private readonly updateProductUseCase: UpdateProductUseCase,
     private readonly listProductsUseCase: ListProductsUseCase,
     private readonly getProductUseCase: GetProductUseCase,
+    private readonly getFieldConfigUseCase: GetFieldConfigUseCase,
   ) {}
 
   @Get()
@@ -94,16 +109,28 @@ export class ProductController {
    */
   @Get('field-catalog')
   @RequirePermission(PERMISSIONS.products.read)
-  fieldCatalog(): {
-    fields: ProductFieldDefinition[];
+  async fieldCatalog(): Promise<{
+    fields: EffectiveProductFieldResponse[];
     units: string[];
     origins: { code: string; label: string }[];
     kinds: { code: string; label: string }[];
     conditions: { code: string; label: string }[];
     creatableFormats: string[];
-  } {
+  }> {
+    const effective = await this.getFieldConfigUseCase.execute(new GetFieldConfigQuery('product'));
+    const ruleByField = new Map(PRODUCT_FIELD_CATALOG.map((def) => [def.field, def.rule]));
     return {
-      fields: [...PRODUCT_FIELD_CATALOG],
+      fields: effective.fields.map((field) => ({
+        field: field.field,
+        label: field.label,
+        group: field.group,
+        rule: ruleByField.get(field.field) ?? 'optional',
+        visible: field.visible,
+        required: field.required,
+        order: field.order,
+        mandatoryByDomain: field.mandatoryByDomain,
+        hint: field.hint,
+      })),
       units: [...COMMERCIAL_UNITS],
       origins: Object.entries(PRODUCT_ORIGIN_LABEL).map(([code, label]) => ({ code, label })),
       kinds: Object.entries(PRODUCT_KIND_LABEL).map(([code, label]) => ({ code, label })),

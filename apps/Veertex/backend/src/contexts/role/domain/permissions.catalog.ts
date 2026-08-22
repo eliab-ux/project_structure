@@ -54,6 +54,12 @@ export const PERMISSIONS = {
     update: 'roles.update',
     delete: 'roles.delete',
   },
+  // Personalizar Campos (§3.6). `read` para a tela ler a configuração efetiva; `update` para gravá-la.
+  // Sem `delete`: remover uma sobreposição é gravar o conjunto sem ela (o `SetFieldConfig` substitui).
+  fields: {
+    read: 'fields.read',
+    update: 'fields.update',
+  },
 } as const;
 
 /** Grants everything, present and future. Only the Admin role should hold it. */

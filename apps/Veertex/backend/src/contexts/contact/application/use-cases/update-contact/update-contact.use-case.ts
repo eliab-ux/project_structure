@@ -16,6 +16,8 @@ import {
   DuplicateContactCodeException,
   DuplicateContactDocumentException,
 } from '../../../domain/exceptions/contact-exceptions';
+import { RequiredFieldsChecker } from '../../../../field-config/application/required-fields.checker';
+import { AccountPreferencesReader } from '../../../../account/application/account-preferences.reader';
 
 export class UpdateContactCommand {
   constructor(
@@ -71,6 +73,8 @@ export class UpdateContactUseCase implements UseCase<UpdateContactCommand, Conta
   constructor(
     @Inject(CONTACT_REPOSITORY) private readonly contacts: ContactRepositoryPort,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
+    private readonly requiredFields: RequiredFieldsChecker,
+    private readonly preferences: AccountPreferencesReader,
   ) {}
 
   async execute(command: UpdateContactCommand): Promise<ContactDto> {
@@ -80,6 +84,12 @@ export class UpdateContactUseCase implements UseCase<UpdateContactCommand, Conta
       if (!contact) {
         throw new ContactNotFoundException(command.id);
       }
+
+      // Obrigatório dinâmico, modo `update`: só cobra os campos que o payload MENCIONA — um
+      // obrigatório ausente aqui significa "não mexa", não "apague".
+      await this.requiredFields.assertRequiredPresent('contact', { ...command.input }, 'update');
+
+      const prefs = await this.preferences.forAccount(contact.accountId);
 
       contact.update({
         ...command.input,
@@ -106,9 +116,14 @@ export class UpdateContactUseCase implements UseCase<UpdateContactCommand, Conta
       });
 
       // `exceptId`: sem ele, salvar um contato sem mexer no documento acusaria duplicata contra ele
-      // mesmo — o defeito clássico de unicidade em edição.
+      // mesmo — o defeito clássico de unicidade em edição. Condicional à preferência da conta (§3.4),
+      // como na criação.
       const document = contact.document?.value ?? null;
-      if (document && (await this.contacts.findByDocument(document, contactId))) {
+      if (
+        !prefs.allowDuplicateDocument &&
+        document &&
+        (await this.contacts.findByDocument(document, contactId))
+      ) {
         throw new DuplicateContactDocumentException(contact.document!.formatted);
       }
       if (contact.code && (await this.contacts.findByCode(contact.code, contactId))) {

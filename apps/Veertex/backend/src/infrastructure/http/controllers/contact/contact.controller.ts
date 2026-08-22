@@ -27,10 +27,11 @@ import {
 } from '../../../../contexts/contact/application/use-cases/get-contact/get-contact.use-case';
 import { ContactDto } from '../../../../contexts/contact/application/dto/contact.dto';
 import { ContactType } from '../../../../contexts/contact/domain/contact-types';
+import { CONTACT_FIELD_CATALOG } from '../../../../contexts/contact/domain/contact-field.catalog';
 import {
-  CONTACT_FIELD_CATALOG,
-  ContactFieldDefinition,
-} from '../../../../contexts/contact/domain/contact-field.catalog';
+  GetFieldConfigQuery,
+  GetFieldConfigUseCase,
+} from '../../../../contexts/field-config/application/use-cases/get-field-config/get-field-config.use-case';
 import { AuthTokenPayload } from '../../../../contexts/auth/application/ports/output/token-service.port';
 import { PERMISSIONS } from '../../../../contexts/role/domain/permissions.catalog';
 import { PermissionGuard } from '../../../security/guards/permission.guard';
@@ -41,6 +42,18 @@ import {
   ListContactsQueryDto,
   UpdateContactRequestDto,
 } from './dto/contact-request.dto';
+
+/** Um campo do Contato como a conta o vê — catálogo mesclado com `field_config`. */
+interface EffectiveContactFieldResponse {
+  field: string;
+  label: string;
+  rule: 'base' | 'optional';
+  visible: boolean;
+  required: boolean;
+  order: number | null;
+  mandatoryByDomain: boolean;
+  hint?: string;
+}
 
 /**
  * Contatos — §3.4 do CORE.
@@ -57,6 +70,7 @@ export class ContactController {
     private readonly updateContactUseCase: UpdateContactUseCase,
     private readonly listContactsUseCase: ListContactsUseCase,
     private readonly getContactUseCase: GetContactUseCase,
+    private readonly getFieldConfigUseCase: GetFieldConfigUseCase,
   ) {}
 
   @Get()
@@ -72,20 +86,31 @@ export class ContactController {
   }
 
   /**
-   * O catálogo de campos, para a tela montar o formulário sem manter uma cópia dele.
-   *
-   * Fixo em código (§3.6: *"o catálogo de campos por entidade é FIXO em código"*), e por isso é
-   * igual para todas as contas HOJE. Quando `field_config` existir, esta mesma rota devolverá o
-   * catálogo **mesclado** com a configuração da conta — mesmo formato, e a tela não muda. É o motivo
-   * de a resposta já trazer `visible` e `required` em vez de só a lista de nomes.
+   * O catálogo de campos **mesclado com a configuração da conta** (§3.6), para a tela montar o
+   * formulário sem manter cópia. O catálogo continua fixo em código; o que a rota agora aplica é a
+   * sobreposição da conta (`field_config`): `visible`, `required`, `label` e `order`. Campo sem linha
+   * de config usa o default do catálogo. `rule` e `hint` vêm do catálogo (não são configuráveis).
    *
    * Antes de `:id`, senão o roteador do Fastify trataria "field-catalog" como um id e o
    * `ParseUUIDPipe` responderia 400 para uma rota que existe.
    */
   @Get('field-catalog')
   @RequirePermission(PERMISSIONS.contacts.read)
-  fieldCatalog(): { fields: ContactFieldDefinition[] } {
-    return { fields: [...CONTACT_FIELD_CATALOG] };
+  async fieldCatalog(): Promise<{ fields: EffectiveContactFieldResponse[] }> {
+    const effective = await this.getFieldConfigUseCase.execute(new GetFieldConfigQuery('contact'));
+    const ruleByField = new Map(CONTACT_FIELD_CATALOG.map((def) => [def.field, def.rule]));
+    return {
+      fields: effective.fields.map((field) => ({
+        field: field.field,
+        label: field.label,
+        rule: ruleByField.get(field.field) ?? 'optional',
+        visible: field.visible,
+        required: field.required,
+        order: field.order,
+        mandatoryByDomain: field.mandatoryByDomain,
+        hint: field.hint,
+      })),
+    };
   }
 
   @Get(':id')

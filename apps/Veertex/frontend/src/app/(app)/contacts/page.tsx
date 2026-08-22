@@ -126,7 +126,7 @@ export default function ContactsPage() {
     return (nome: string) => porNome.get(nome);
   }, [catalog]);
 
-  const visivel = (nome: string) => campo(nome)?.defaultVisible ?? false;
+  const visivel = (nome: string) => campo(nome)?.visible ?? false;
 
   function abrirCriacao() {
     setEditing(null);

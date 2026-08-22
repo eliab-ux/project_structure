@@ -205,17 +205,21 @@ export interface Contact {
 }
 
 /**
- * O catálogo de campos, vindo do backend (§3.6: fixo em código, nunca no banco).
- *
- * A tela NÃO mantém cópia dele: uma segunda lista aqui divergiria da primeira no dia em que um campo
- * entrasse, e a tela passaria a esconder campo que existe ou mostrar campo que não existe.
+ * O catálogo de campos, vindo do backend (§3.6: fixo em código, nunca no banco) **já mesclado com a
+ * configuração da conta** (`field_config`). Por isso `visible`/`required` são os valores EFETIVOS —
+ * o default do catálogo já sobreposto pela config da conta, quando há. A tela não mantém cópia.
  */
 export interface ContactFieldDefinition {
   field: string;
   label: string;
   rule: 'base' | 'optional';
-  defaultVisible: boolean;
-  defaultRequired: boolean;
+  /** Valor efetivo (catálogo + config da conta), não o default cru. */
+  visible: boolean;
+  required: boolean;
+  /** Ordem preferida pela conta; `null` = ordem do catálogo. */
+  order?: number | null;
+  /** Obrigatório por regra de domínio — a config não consegue ocultá-lo nem torná-lo opcional. */
+  mandatoryByDomain?: boolean;
   /** Texto de apoio exibido abaixo do campo. É por aqui que o aviso do limite de crédito chega. */
   hint?: string;
 }

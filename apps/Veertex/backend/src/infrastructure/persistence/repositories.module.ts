@@ -8,6 +8,7 @@ import { ROLE_REPOSITORY } from '../../contexts/role/application/ports/output/ro
 import { USER_REPOSITORY } from '../../contexts/user/application/ports/output/user-repository.port';
 import { PASSWORD_RESET_CODE_REPOSITORY } from '../../contexts/auth/application/ports/output/password-reset-code-repository.port';
 import { ACCOUNT_MODULE_REPOSITORY } from '../../contexts/module/application/ports/output/account-module-repository.port';
+import { FIELD_CONFIG_REPOSITORY } from '../../contexts/field-config/application/ports/output/field-config-repository.port';
 
 import { PlanOrmEntity } from './mikro-orm/entities/plan-orm.entity';
 import { AccountOrmEntity } from './mikro-orm/entities/account-orm.entity';
@@ -17,12 +18,14 @@ import { UserOrmEntity } from './mikro-orm/entities/user-orm.entity';
 import { PasswordResetCodeOrmEntity } from './mikro-orm/entities/password-reset-code-orm.entity';
 import { ModuleOrmEntity } from './mikro-orm/entities/module-orm.entity';
 import { AccountModuleOrmEntity } from './mikro-orm/entities/account-module-orm.entity';
+import { FieldConfigOrmEntity } from './mikro-orm/entities/field-config-orm.entity';
 
 import { PlanMapper } from './mikro-orm/mappers/plan.mapper';
 import { AccountMapper } from './mikro-orm/mappers/account.mapper';
 import { CompanyMapper } from './mikro-orm/mappers/company.mapper';
 import { RoleMapper } from './mikro-orm/mappers/role.mapper';
 import { UserMapper } from './mikro-orm/mappers/user.mapper';
+import { FieldConfigMapper } from './mikro-orm/mappers/field-config.mapper';
 
 import { MikroOrmPlanRepository } from './mikro-orm/repositories/plan.repository';
 import { MikroOrmAccountRepository } from './mikro-orm/repositories/account.repository';
@@ -31,6 +34,7 @@ import { MikroOrmRoleRepository } from './mikro-orm/repositories/role.repository
 import { MikroOrmUserRepository } from './mikro-orm/repositories/user.repository';
 import { MikroOrmPasswordResetCodeRepository } from './mikro-orm/repositories/password-reset-code.repository';
 import { MikroOrmAccountModuleRepository } from './mikro-orm/repositories/account-module.repository';
+import { MikroOrmFieldConfigRepository } from './mikro-orm/repositories/field-config.repository';
 
 /**
  * Every repository, in one @Global module.
@@ -55,6 +59,7 @@ import { MikroOrmAccountModuleRepository } from './mikro-orm/repositories/accoun
       PasswordResetCodeOrmEntity,
       ModuleOrmEntity,
       AccountModuleOrmEntity,
+      FieldConfigOrmEntity,
     ]),
   ],
   providers: [
@@ -63,6 +68,7 @@ import { MikroOrmAccountModuleRepository } from './mikro-orm/repositories/accoun
     CompanyMapper,
     RoleMapper,
     UserMapper,
+    FieldConfigMapper,
     { provide: PLAN_REPOSITORY, useClass: MikroOrmPlanRepository },
     { provide: ACCOUNT_REPOSITORY, useClass: MikroOrmAccountRepository },
     { provide: COMPANY_REPOSITORY, useClass: MikroOrmCompanyRepository },
@@ -73,6 +79,7 @@ import { MikroOrmAccountModuleRepository } from './mikro-orm/repositories/accoun
       useClass: MikroOrmPasswordResetCodeRepository,
     },
     { provide: ACCOUNT_MODULE_REPOSITORY, useClass: MikroOrmAccountModuleRepository },
+    { provide: FIELD_CONFIG_REPOSITORY, useClass: MikroOrmFieldConfigRepository },
   ],
   exports: [
     PLAN_REPOSITORY,
@@ -82,6 +89,7 @@ import { MikroOrmAccountModuleRepository } from './mikro-orm/repositories/accoun
     USER_REPOSITORY,
     PASSWORD_RESET_CODE_REPOSITORY,
     ACCOUNT_MODULE_REPOSITORY,
+    FIELD_CONFIG_REPOSITORY,
   ],
 })
 export class RepositoriesModule {}

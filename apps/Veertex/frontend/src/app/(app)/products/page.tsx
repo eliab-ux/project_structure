@@ -234,7 +234,7 @@ export default function ProductsPage() {
       if (!campo) {
         return false;
       }
-      return campo.defaultVisible || avancados;
+      return campo.visible || avancados;
     },
     [camposVisiveis, avancados],
   );

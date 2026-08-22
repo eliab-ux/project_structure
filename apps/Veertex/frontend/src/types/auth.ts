@@ -11,6 +11,12 @@ export interface AuthUser {
   createdAt: string;
 }
 
+export interface AccountPreferences {
+  allowDuplicateDocument: boolean;
+  contactCodeMode: 'manual' | 'sequential';
+  productSkuMode: 'manual' | 'sequential';
+}
+
 export interface AuthAccount {
   id: string;
   name: string;
@@ -18,6 +24,8 @@ export interface AuthAccount {
   status: 'ACTIVE' | 'SUSPENDED' | 'CANCELLED';
   timezone: string;
   cancellationRequestedAt: string | null;
+  /** Preferências da conta (§1 do 01A). Vêm no `/auth/me` para a UI ler o valor em vigor. */
+  preferences: AccountPreferences;
 }
 
 export interface AuthRole {

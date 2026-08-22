@@ -2,6 +2,10 @@ import { AggregateRoot } from '@gitspread/domain-primitives';
 import { Document } from '../../../../shared/domain/value-objects/document.vo';
 import { AccountId } from '../value-objects/account-id.vo';
 import { AccountStatus } from '../value-objects/account-status.vo';
+import {
+  AccountPreferences,
+  AccountPreferencesProps,
+} from '../value-objects/account-preferences.vo';
 import { AccountCreatedEvent } from '../events/account-created.event';
 import { AccountUnavailableException } from '../exceptions/account-unavailable.exception';
 
@@ -26,6 +30,7 @@ export class Account extends AggregateRoot {
     private _suspensionReason: string | null,
     private _cancellationRequestedAt: Date | null,
     private _cancelledAt: Date | null,
+    private _preferences: AccountPreferences,
     private readonly _createdAt: Date,
   ) {
     super();
@@ -50,6 +55,9 @@ export class Account extends AggregateRoot {
       null,
       null,
       null,
+      // Conta nova nasce com as preferências DECLARADAS por default (§1 do 01A) — nunca com o
+      // conjunto vazio de onde alguém teria de inferir o comportamento.
+      AccountPreferences.defaults(),
       new Date(),
     );
     account.addDomainEvent(new AccountCreatedEvent(id.value, params.planCode));
@@ -67,6 +75,7 @@ export class Account extends AggregateRoot {
     suspensionReason: string | null;
     cancellationRequestedAt: Date | null;
     cancelledAt: Date | null;
+    preferences: AccountPreferences;
     createdAt: Date;
   }): Account {
     return new Account(
@@ -80,6 +89,7 @@ export class Account extends AggregateRoot {
       params.suspensionReason,
       params.cancellationRequestedAt,
       params.cancelledAt,
+      params.preferences,
       params.createdAt,
     );
   }
@@ -124,12 +134,22 @@ export class Account extends AggregateRoot {
     return this._cancelledAt;
   }
 
+  get preferences(): AccountPreferences {
+    return this._preferences;
+  }
+
   get createdAt(): Date {
     return this._createdAt;
   }
 
   get isActive(): boolean {
     return this._status === AccountStatus.ACTIVE;
+  }
+
+  /** Aplica mudanças de preferência. O VO valida/normaliza; a política de quais valores são aceitos
+   * hoje (ex.: `sequential` ainda não implementado) vive no use case, não aqui. */
+  changePreferences(changes: Partial<AccountPreferencesProps>): void {
+    this._preferences = this._preferences.with(changes);
   }
 
   /** Called on every authentication: a suspended tenant must not be able to log in. */

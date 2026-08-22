@@ -6,6 +6,7 @@ import { ContactOrmEntity } from '../../infrastructure/persistence/mikro-orm/ent
 import { ProductMapper } from '../../infrastructure/persistence/mikro-orm/mappers/product.mapper';
 import { MikroOrmProductRepository } from '../../infrastructure/persistence/mikro-orm/repositories/product.repository';
 import { ContactSupplierLookup } from '../../infrastructure/persistence/mikro-orm/repositories/contact-supplier.lookup';
+import { FieldConfigModule } from '../field-config/field-config.module';
 import { PRODUCT_REPOSITORY } from './application/ports/output/product-repository.port';
 import { SUPPLIER_LOOKUP } from './application/ports/output/supplier-lookup.port';
 import { CreateProductUseCase } from './application/use-cases/create-product/create-product.use-case';
@@ -25,6 +26,7 @@ import { GetProductUseCase } from './application/use-cases/get-product/get-produ
 @Module({
   imports: [
     MikroOrmModule.forFeature([ProductOrmEntity, ProductSupplierOrmEntity, ContactOrmEntity]),
+    FieldConfigModule,
   ],
   providers: [
     ProductMapper,

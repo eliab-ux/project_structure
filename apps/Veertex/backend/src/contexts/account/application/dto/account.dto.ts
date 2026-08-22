@@ -1,4 +1,20 @@
 import { Account } from '../../domain/entities/account.entity';
+import { CodeNumberingMode } from '../../domain/value-objects/account-preferences.vo';
+
+/** As preferências da conta expostas na fronteira da aplicação (§1 do 01A). */
+export class AccountPreferencesDto {
+  allowDuplicateDocument!: boolean;
+  contactCodeMode!: CodeNumberingMode;
+  productSkuMode!: CodeNumberingMode;
+
+  static fromDomain(account: Account): AccountPreferencesDto {
+    const dto = new AccountPreferencesDto();
+    dto.allowDuplicateDocument = account.preferences.allowDuplicateDocument;
+    dto.contactCodeMode = account.preferences.contactCodeMode;
+    dto.productSkuMode = account.preferences.productSkuMode;
+    return dto;
+  }
+}
 
 /**
  * Application-boundary view of an account.
@@ -15,6 +31,7 @@ export class AccountDto {
   status!: string;
   timezone!: string;
   cancellationRequestedAt!: Date | null;
+  preferences!: AccountPreferencesDto;
   createdAt!: Date;
 
   static fromDomain(account: Account): AccountDto {
@@ -27,6 +44,7 @@ export class AccountDto {
     dto.status = account.status;
     dto.timezone = account.timezone;
     dto.cancellationRequestedAt = account.cancellationRequestedAt;
+    dto.preferences = AccountPreferencesDto.fromDomain(account);
     dto.createdAt = account.createdAt;
     return dto;
   }

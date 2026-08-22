@@ -47,6 +47,10 @@ const ADMIN_NAV = [
   // `account.read` e não `account.update`: ver a configuração não é alterá-la (esconder não é
   // proteger — quem só lê continua vendo, com os controles inertes e explicados).
   { href: '/modules', label: 'Módulos', permission: 'account.read' },
+  // Personalizar campos (§3.6) e preferências da conta (§1 do 01A) — configuração da conta, como
+  // Módulos. `fields.read`/`account.read`: ver a configuração não é alterá-la.
+  { href: '/settings/fields', label: 'Campos', permission: 'fields.read' },
+  { href: '/settings/preferences', label: 'Preferências', permission: 'account.read' },
 ] as const;
 
 /**

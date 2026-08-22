@@ -2,6 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { Document } from '../../../../shared/domain/value-objects/document.vo';
 import { Account } from '../../../../contexts/account/domain/entities/account.entity';
 import { AccountId } from '../../../../contexts/account/domain/value-objects/account-id.vo';
+import {
+  AccountPreferences,
+  CodeNumberingMode,
+} from '../../../../contexts/account/domain/value-objects/account-preferences.vo';
 import { AccountOrmEntity } from '../entities/account-orm.entity';
 
 @Injectable()
@@ -18,6 +22,11 @@ export class AccountMapper {
       suspensionReason: orm.suspensionReason,
       cancellationRequestedAt: orm.cancellationRequestedAt,
       cancelledAt: orm.cancelledAt,
+      preferences: AccountPreferences.create({
+        allowDuplicateDocument: orm.allowDuplicateDocument,
+        contactCodeMode: orm.contactCodeMode as CodeNumberingMode,
+        productSkuMode: orm.productSkuMode as CodeNumberingMode,
+      }),
       createdAt: orm.createdAt,
     });
   }
@@ -34,6 +43,9 @@ export class AccountMapper {
       suspensionReason: account.suspensionReason,
       cancellationRequestedAt: account.cancellationRequestedAt,
       cancelledAt: account.cancelledAt,
+      allowDuplicateDocument: account.preferences.allowDuplicateDocument,
+      contactCodeMode: account.preferences.contactCodeMode,
+      productSkuMode: account.preferences.productSkuMode,
       createdAt: account.createdAt,
       updatedAt: new Date(),
     };

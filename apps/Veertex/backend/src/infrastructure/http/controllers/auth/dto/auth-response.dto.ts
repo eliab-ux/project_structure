@@ -33,6 +33,13 @@ export class UserResponseDto {
   }
 }
 
+/** The account's preferences, as the client sees them (§1 do 01A). No secrets — plain settings. */
+export class AccountPreferencesResponseDto {
+  allowDuplicateDocument!: boolean;
+  contactCodeMode!: string;
+  productSkuMode!: string;
+}
+
 export class AccountResponseDto {
   id!: string;
   name!: string;
@@ -40,6 +47,7 @@ export class AccountResponseDto {
   status!: string;
   timezone!: string;
   cancellationRequestedAt!: Date | null;
+  preferences!: AccountPreferencesResponseDto;
 
   static from(account: AccountDto): AccountResponseDto {
     const dto = new AccountResponseDto();
@@ -49,6 +57,11 @@ export class AccountResponseDto {
     dto.status = account.status;
     dto.timezone = account.timezone;
     dto.cancellationRequestedAt = account.cancellationRequestedAt;
+    dto.preferences = {
+      allowDuplicateDocument: account.preferences.allowDuplicateDocument,
+      contactCodeMode: account.preferences.contactCodeMode,
+      productSkuMode: account.preferences.productSkuMode,
+    };
     return dto;
   }
 }

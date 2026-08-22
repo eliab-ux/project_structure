@@ -52,6 +52,18 @@ export class AccountOrmEntity {
   @Property({ type: 'timestamptz', nullable: true, fieldName: 'cancelled_at' })
   cancelledAt: Date | null = null;
 
+  // ── Preferências da conta (§1 do 01A) — colunas nomeadas, com default declarado ──────────────
+  // Default no DB E no VO de domínio: a coluna nasce com o valor conservador, e uma leitura que
+  // encontrasse nulo (não deveria, com NOT NULL DEFAULT) ainda cairia no default do VO.
+  @Property({ fieldName: 'allow_duplicate_document' })
+  allowDuplicateDocument: boolean = false;
+
+  @Property({ length: 20, fieldName: 'contact_code_mode' })
+  contactCodeMode: string = 'manual';
+
+  @Property({ length: 20, fieldName: 'product_sku_mode' })
+  productSkuMode: string = 'manual';
+
   @Property({ type: 'timestamptz', fieldName: 'created_at' })
   createdAt: Date = new Date();
 
