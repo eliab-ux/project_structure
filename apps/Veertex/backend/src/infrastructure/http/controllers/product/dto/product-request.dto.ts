@@ -336,3 +336,23 @@ export class ListProductsQueryDto {
   @IsBoolean()
   includeInactive?: boolean;
 }
+
+/** Um componente do kit — id do produto e a quantidade por kit. */
+export class BundleComponentRequestDto {
+  @IsUUID()
+  componentProductId!: string;
+
+  @IsNumber({ maxDecimalPlaces: 3 })
+  @Min(0.001)
+  @Max(9_999_999)
+  quantity!: number;
+}
+
+/** A composição do kit (§2.5 do 03). Lista vazia = kit sem componentes (não montável). */
+export class SetBundleComponentsRequestDto {
+  @IsArray()
+  @ArrayMaxSize(200)
+  @ValidateNested({ each: true })
+  @Type(() => BundleComponentRequestDto)
+  components!: BundleComponentRequestDto[];
+}

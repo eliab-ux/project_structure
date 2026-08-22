@@ -28,13 +28,16 @@ export type ProductFormat = (typeof PRODUCT_FORMATS)[number];
  * ter feito** algo. O §3.5 remete o estoque do kit ao EST — *"estoque do kit deriva dos componentes
  * (baixa componentes ao vender)"* —, então metade do recurso mora num módulo que não existe.
  *
- * Volta INTEIRO com o EST: composição, derivação de saldo e baixa ao vender.
+ * **Voltou com o EST (22/08/2026):** `bundle` é criável de novo. A composição vive em
+ * `product_components` (guardas de domínio: componente não é bundle, não é ele mesmo, quantidade > 0),
+ * e o DISPONÍVEL do kit é DERIVADO dos componentes pelo EST (§2.5 do 03 — kit não tem saldo próprio).
+ * A baixa dos componentes ao vender chega com a integração VND↔EST de faturamento.
  *
  * ## `variant` — fora até o CAN
  *
  * O §3.5 é explícito: implementação antes do CAN completo, não agora.
  */
-export const CREATABLE_PRODUCT_FORMATS: readonly ProductFormat[] = ['simple'];
+export const CREATABLE_PRODUCT_FORMATS: readonly ProductFormat[] = ['simple', 'bundle'];
 
 /** Produto ou serviço. Decide, entre outras coisas, se peso e dimensão fazem sentido. */
 export const PRODUCT_KINDS = ['product', 'service'] as const;

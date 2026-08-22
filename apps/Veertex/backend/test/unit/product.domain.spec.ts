@@ -37,22 +37,13 @@ function produtoBase(overrides: Partial<Parameters<typeof Product.create>[0]> = 
 }
 
 describe('Product — formato', () => {
-  it('só permite criar produto simples', () => {
-    expect([...CREATABLE_PRODUCT_FORMATS]).toEqual(['simple']);
+  it('permite criar produto simples e KIT (bundle voltou com o EST, 22/08/2026)', () => {
+    expect([...CREATABLE_PRODUCT_FORMATS]).toEqual(['simple', 'bundle']);
     expect(produtoBase().format).toBe('simple');
+    expect(produtoBase({ format: 'bundle' }).format).toBe('bundle');
   });
 
-  it('RECUSA kit, e a mensagem nomeia o módulo que falta', () => {
-    /*
-     * A mensagem importa tanto quanto a recusa. "Formato inválido" faria o operador tentar de novo
-     * com outra grafia; dizer que o kit depende do Estoque explica por que não dá e quando vai dar.
-     */
-    expect(() => produtoBase({ format: 'bundle' })).toThrow(ProductFormatNotAvailableException);
-    expect(() => produtoBase({ format: 'bundle' })).toThrow(/módulo de Estoque/);
-    expect(() => produtoBase({ format: 'bundle' })).toThrow(/baixa os componentes ao vender/);
-  });
-
-  it('RECUSA variação', () => {
+  it('RECUSA variação (fora até o CAN)', () => {
     expect(() => produtoBase({ format: 'variant' })).toThrow(ProductFormatNotAvailableException);
   });
 

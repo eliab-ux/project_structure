@@ -45,6 +45,13 @@ export class GetStockBalanceUseCase implements UseCase<GetStockBalanceQuery, Sto
       throw new StockProductInvalidException('Produto não encontrado.');
     }
 
+    const now = new Date();
+
+    // KIT (§2.5): não tem saldo próprio — o disponível é DERIVADO dos componentes.
+    if (product.isBundle) {
+      return this.bundleBalance(query, product, now);
+    }
+
     const movements = await this.movements.listByCompanyProduct(query.companyId, query.productId);
     const balance = computeBalance(movements.map((m) => m.toBalanceInput()));
 
@@ -52,7 +59,7 @@ export class GetStockBalanceUseCase implements UseCase<GetStockBalanceQuery, Sto
     const reserved = await this.reservations.sumActiveReserved(
       query.companyId,
       query.productId,
-      new Date(),
+      now,
     );
 
     return StockBalanceDto.build({
@@ -61,6 +68,53 @@ export class GetStockBalanceUseCase implements UseCase<GetStockBalanceQuery, Sto
       productName: product.name,
       balance,
       available: Math.max(0, balance.quantity - reserved),
+      minimumQuantity: product.minimumQuantity,
+      maximumQuantity: product.maximumQuantity,
+    });
+  }
+
+  /**
+   * Disponível do kit = o menor `floor(disponível_do_componente / qtd_por_kit)` entre os componentes
+   * (§2.5 — o gargalo manda). Custo médio do kit = soma dos custos dos componentes por kit. Sem
+   * componentes, o kit não é montável: disponível 0.
+   */
+  private async bundleBalance(
+    query: GetStockBalanceQuery,
+    product: {
+      id: string;
+      name: string;
+      minimumQuantity: number | null;
+      maximumQuantity: number | null;
+      components: { productId: string; quantity: number }[];
+    },
+    now: Date,
+  ): Promise<StockBalanceDto> {
+    let kitAvailable = product.components.length > 0 ? Number.POSITIVE_INFINITY : 0;
+    let assemblyCost = 0;
+
+    for (const component of product.components) {
+      const movements = await this.movements.listByCompanyProduct(
+        query.companyId,
+        component.productId,
+      );
+      const componentBalance = computeBalance(movements.map((m) => m.toBalanceInput()));
+      const reserved = await this.reservations.sumActiveReserved(
+        query.companyId,
+        component.productId,
+        now,
+      );
+      const componentAvailable = Math.max(0, componentBalance.quantity - reserved);
+      kitAvailable = Math.min(kitAvailable, Math.floor(componentAvailable / component.quantity));
+      assemblyCost += componentBalance.averageCost * component.quantity;
+    }
+
+    const quantity = Number.isFinite(kitAvailable) ? kitAvailable : 0;
+    return StockBalanceDto.build({
+      companyId: query.companyId,
+      productId: query.productId,
+      productName: product.name,
+      balance: { quantity, averageCost: Math.round(assemblyCost * 10000) / 10000 },
+      available: quantity,
       minimumQuantity: product.minimumQuantity,
       maximumQuantity: product.maximumQuantity,
     });

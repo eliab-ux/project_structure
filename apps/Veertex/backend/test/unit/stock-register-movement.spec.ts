@@ -37,6 +37,8 @@ const produtoFalso: StockProductLookupPort = {
     minimumQuantity: null,
     maximumQuantity: null,
     active: true,
+    isBundle: false,
+    components: [],
   }),
 };
 

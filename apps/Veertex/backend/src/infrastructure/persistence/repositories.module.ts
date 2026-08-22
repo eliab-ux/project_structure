@@ -12,6 +12,7 @@ import { FIELD_CONFIG_REPOSITORY } from '../../contexts/field-config/application
 import { ORDER_REPOSITORY } from '../../contexts/order/application/ports/output/order-repository.port';
 import { STOCK_MOVEMENT_REPOSITORY } from '../../contexts/stock/application/ports/output/stock-movement-repository.port';
 import { STOCK_RESERVATION_REPOSITORY } from '../../contexts/stock/application/ports/output/stock-reservation-repository.port';
+import { PRODUCT_COMPONENT_REPOSITORY } from '../../contexts/product/application/ports/output/product-component-repository.port';
 
 import { PlanOrmEntity } from './mikro-orm/entities/plan-orm.entity';
 import { AccountOrmEntity } from './mikro-orm/entities/account-orm.entity';
@@ -27,6 +28,7 @@ import { OrderItemOrmEntity } from './mikro-orm/entities/order-item-orm.entity';
 import { OrderCounterOrmEntity } from './mikro-orm/entities/order-counter-orm.entity';
 import { StockMovementOrmEntity } from './mikro-orm/entities/stock-movement-orm.entity';
 import { StockReservationOrmEntity } from './mikro-orm/entities/stock-reservation-orm.entity';
+import { ProductComponentOrmEntity } from './mikro-orm/entities/product-component-orm.entity';
 
 import { PlanMapper } from './mikro-orm/mappers/plan.mapper';
 import { AccountMapper } from './mikro-orm/mappers/account.mapper';
@@ -49,6 +51,7 @@ import { MikroOrmFieldConfigRepository } from './mikro-orm/repositories/field-co
 import { MikroOrmOrderRepository } from './mikro-orm/repositories/order.repository';
 import { MikroOrmStockMovementRepository } from './mikro-orm/repositories/stock-movement.repository';
 import { MikroOrmStockReservationRepository } from './mikro-orm/repositories/stock-reservation.repository';
+import { MikroOrmProductComponentRepository } from './mikro-orm/repositories/product-component.repository';
 
 /**
  * Every repository, in one @Global module.
@@ -79,6 +82,7 @@ import { MikroOrmStockReservationRepository } from './mikro-orm/repositories/sto
       OrderCounterOrmEntity,
       StockMovementOrmEntity,
       StockReservationOrmEntity,
+      ProductComponentOrmEntity,
     ]),
   ],
   providers: [
@@ -105,6 +109,7 @@ import { MikroOrmStockReservationRepository } from './mikro-orm/repositories/sto
     { provide: ORDER_REPOSITORY, useClass: MikroOrmOrderRepository },
     { provide: STOCK_MOVEMENT_REPOSITORY, useClass: MikroOrmStockMovementRepository },
     { provide: STOCK_RESERVATION_REPOSITORY, useClass: MikroOrmStockReservationRepository },
+    { provide: PRODUCT_COMPONENT_REPOSITORY, useClass: MikroOrmProductComponentRepository },
   ],
   exports: [
     PLAN_REPOSITORY,
@@ -118,6 +123,7 @@ import { MikroOrmStockReservationRepository } from './mikro-orm/repositories/sto
     ORDER_REPOSITORY,
     STOCK_MOVEMENT_REPOSITORY,
     STOCK_RESERVATION_REPOSITORY,
+    PRODUCT_COMPONENT_REPOSITORY,
   ],
 })
 export class RepositoriesModule {}

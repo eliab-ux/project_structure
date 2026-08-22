@@ -13,6 +13,7 @@ import { CreateProductUseCase } from './application/use-cases/create-product/cre
 import { UpdateProductUseCase } from './application/use-cases/update-product/update-product.use-case';
 import { ListProductsUseCase } from './application/use-cases/list-products/list-products.use-case';
 import { GetProductUseCase } from './application/use-cases/get-product/get-product.use-case';
+import { SetBundleComponentsUseCase } from './application/use-cases/set-bundle-components/set-bundle-components.use-case';
 
 /**
  * O módulo de Produto.
@@ -36,9 +37,16 @@ import { GetProductUseCase } from './application/use-cases/get-product/get-produ
     UpdateProductUseCase,
     ListProductsUseCase,
     GetProductUseCase,
+    SetBundleComponentsUseCase,
   ],
   // Exportados porque a aprovação da Mesa despacha para os MESMOS use cases que o controller usa —
   // é isso que impede a intenção de ser um caminho com validação mais frouxa.
-  exports: [CreateProductUseCase, UpdateProductUseCase, ListProductsUseCase, GetProductUseCase],
+  exports: [
+    CreateProductUseCase,
+    UpdateProductUseCase,
+    ListProductsUseCase,
+    GetProductUseCase,
+    SetBundleComponentsUseCase,
+  ],
 })
 export class ProductModule {}

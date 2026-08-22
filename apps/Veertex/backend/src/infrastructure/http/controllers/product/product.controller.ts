@@ -2,10 +2,12 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -25,6 +27,10 @@ import {
   GetProductQuery,
   GetProductUseCase,
 } from '../../../../contexts/product/application/use-cases/get-product/get-product.use-case';
+import {
+  SetBundleComponentsCommand,
+  SetBundleComponentsUseCase,
+} from '../../../../contexts/product/application/use-cases/set-bundle-components/set-bundle-components.use-case';
 import { ProductDto } from '../../../../contexts/product/application/dto/product.dto';
 import { PRODUCT_FIELD_CATALOG } from '../../../../contexts/product/domain/product-field.catalog';
 import {
@@ -46,6 +52,7 @@ import { CurrentUser } from '../../../security/decorators/current-user.decorator
 import {
   CreateProductRequestDto,
   ListProductsQueryDto,
+  SetBundleComponentsRequestDto,
   UpdateProductRequestDto,
 } from './dto/product-request.dto';
 
@@ -79,6 +86,7 @@ export class ProductController {
     private readonly listProductsUseCase: ListProductsUseCase,
     private readonly getProductUseCase: GetProductUseCase,
     private readonly getFieldConfigUseCase: GetFieldConfigUseCase,
+    private readonly setBundleComponentsUseCase: SetBundleComponentsUseCase,
   ) {}
 
   @Get()
@@ -171,6 +179,24 @@ export class ProductController {
   ): Promise<ProductDto> {
     return this.updateProductUseCase.execute(
       new UpdateProductCommand(id, actor.modules ?? [], dto),
+    );
+  }
+
+  /**
+   * Define a composição de um kit (§2.5 do 03). Só produtos `bundle`; as guardas (componente não é
+   * kit, não é ele mesmo, quantidade > 0) vivem no use case. `products.update` — configurar o kit é
+   * alterar o produto.
+   */
+  @Put(':id/components')
+  @HttpCode(204)
+  @RequirePermission(PERMISSIONS.products.update)
+  async setComponents(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: SetBundleComponentsRequestDto,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<void> {
+    await this.setBundleComponentsUseCase.execute(
+      new SetBundleComponentsCommand(actor.accountId, id, dto.components),
     );
   }
 }
