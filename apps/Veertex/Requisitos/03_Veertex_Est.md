@@ -109,6 +109,15 @@ verdade do saldo — que é o que mantém o §3.1 (derivado) coerente.
 **Requisito: a expiração gera EVENTO VISÍVEL** (não é TTL silencioso — o vendedor não pode descobrir
 a liberação só quando o cliente cobra). Ver §3.9 do `02_Veertex_Vnd.md`, onde esta decisão é gêmea.
 
+**Implementação (22/08/2026): EXPIRAÇÃO PREGUIÇOSA.** A reserva vencida deixa de contar no disponível
+(a consulta filtra `expires_at > now`) — o disponível já fica correto, e ninguém vê saldo errado, sem
+agendador. É correto, não só conveniente: reserva vencida não deve reservar nada.
+
+**Pendência com gatilho:** o EVENTO visível de expiração (marcar a reserva como `expired` e avisar o
+dono) exige um agendador — e agendador só para isso é caro (gatilho 5, dependência nova). Entra
+**junto com o BullMQ**, que a geocodificação assíncrona (§8 do 01A) já vai exigir. Não é "quando der":
+é aquele momento. Até lá, a reserva vencida simplesmente não conta.
+
 ### 3.4 Método de custeio
 "Custo médio" no §3.5 sugere média ponderada móvel.
 

@@ -30,3 +30,15 @@ export class OriginMovementNotFoundException extends DomainException {
     super('O movimento de origem da devolução não foi encontrado.');
   }
 }
+
+/**
+ * Reserva pedida acima do DISPONÍVEL (§3.9). A mensagem nomeia o produto e o quanto falta — é o que
+ * decide se o pedido pode ser confirmado, então precisa ser acionável (vem do backend, §pedido).
+ */
+export class NotEnoughAvailableException extends DomainException {
+  constructor(productName: string, available: string, requested: string) {
+    super(
+      `Disponível insuficiente de "${productName}": disponível ${available}, reserva de ${requested}.`,
+    );
+  }
+}

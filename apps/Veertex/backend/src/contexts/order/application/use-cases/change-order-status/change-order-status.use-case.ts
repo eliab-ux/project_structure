@@ -6,7 +6,13 @@ import {
 } from '../../../../../infrastructure/persistence/ports/unit-of-work.port';
 import { ORDER_REPOSITORY, OrderRepositoryPort } from '../../ports/output/order-repository.port';
 import { CUSTOMER_LOOKUP, CustomerLookupPort } from '../../ports/output/customer-lookup.port';
+import {
+  ORDER_STOCK_RESERVATION,
+  OrderStockReservationPort,
+} from '../../ports/output/order-stock-reservation.port';
+import { MODULES } from '../../../../module/domain/modules.catalog';
 import { OrderId } from '../../../domain/value-objects/order-id.vo';
+import { Order } from '../../../domain/entities/order.entity';
 import { OrderDto } from '../../dto/order.dto';
 import {
   CreditLimitExceededException,
@@ -19,6 +25,8 @@ export class ChangeOrderStatusCommand {
   constructor(
     public readonly orderId: string,
     public readonly action: OrderStatusAction,
+    /** Módulos ativos do TOKEN — decidem se a confirmação reserva estoque (só com EST ativo). */
+    public readonly activeModules: readonly string[] = [],
   ) {}
 }
 
@@ -36,6 +44,7 @@ export class ChangeOrderStatusUseCase implements UseCase<ChangeOrderStatusComman
   constructor(
     @Inject(ORDER_REPOSITORY) private readonly orders: OrderRepositoryPort,
     @Inject(CUSTOMER_LOOKUP) private readonly customers: CustomerLookupPort,
+    @Inject(ORDER_STOCK_RESERVATION) private readonly reservation: OrderStockReservationPort,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
   ) {}
 
@@ -49,6 +58,9 @@ export class ChangeOrderStatusUseCase implements UseCase<ChangeOrderStatusComman
       switch (command.action) {
         case 'confirm': {
           await this.assertWithinCreditLimit(order.contactId, order.total);
+          // Reserva ANTES de mudar a situação: falta de disponível recusa a confirmação (a mensagem,
+          // vinda do EST, nomeia produto e quantidade) e reverte tudo na transação do request.
+          await this.reserveIfStockActive(order, command.activeModules);
           order.confirm();
           break;
         }
@@ -57,6 +69,8 @@ export class ChangeOrderStatusUseCase implements UseCase<ChangeOrderStatusComman
           break;
         case 'cancel':
           order.cancel();
+          // Libera as reservas do pedido. No-op se não houver (conta sem EST, ou nada reservado).
+          await this.reservation.release(order.id.value, 'cancelled');
           break;
         case 'invoice':
           order.invoice(); // sempre lança no V1 — depende de EST/FIN/FIS
@@ -64,6 +78,22 @@ export class ChangeOrderStatusUseCase implements UseCase<ChangeOrderStatusComman
       }
 
       return OrderDto.fromDomain(await this.orders.save(order));
+    });
+  }
+
+  /** Reserva o estoque do pedido, só quando o EST está ativo para a conta (§3.9). */
+  private async reserveIfStockActive(
+    order: Order,
+    activeModules: readonly string[],
+  ): Promise<void> {
+    if (!activeModules.includes(MODULES.EST)) {
+      return;
+    }
+    await this.reservation.reserve({
+      accountId: order.accountId,
+      companyId: order.companyId,
+      orderId: order.id.value,
+      lines: order.items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
     });
   }
 

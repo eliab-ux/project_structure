@@ -7,6 +7,8 @@ import { STOCK_PRODUCT_LOOKUP } from './application/ports/output/stock-product-l
 import { RegisterMovementUseCase } from './application/use-cases/register-movement/register-movement.use-case';
 import { GetStockBalanceUseCase } from './application/use-cases/get-stock-balance/get-stock-balance.use-case';
 import { ListMovementsUseCase } from './application/use-cases/list-movements/list-movements.use-case';
+import { ReserveOrderStockUseCase } from './application/use-cases/reserve-order-stock/reserve-order-stock.use-case';
+import { ReleaseOrderReservationsUseCase } from './application/use-cases/release-order-reservations/release-order-reservations.use-case';
 
 /**
  * EST — Estoque (§03). `STOCK_MOVEMENT_REPOSITORY` vem do @Global RepositoriesModule; este módulo
@@ -21,7 +23,15 @@ import { ListMovementsUseCase } from './application/use-cases/list-movements/lis
     RegisterMovementUseCase,
     GetStockBalanceUseCase,
     ListMovementsUseCase,
+    ReserveOrderStockUseCase,
+    ReleaseOrderReservationsUseCase,
   ],
-  exports: [RegisterMovementUseCase, GetStockBalanceUseCase, ListMovementsUseCase],
+  exports: [
+    RegisterMovementUseCase,
+    GetStockBalanceUseCase,
+    ListMovementsUseCase,
+    ReserveOrderStockUseCase,
+    ReleaseOrderReservationsUseCase,
+  ],
 })
 export class StockModule {}

@@ -8,6 +8,10 @@ import {
   STOCK_PRODUCT_LOOKUP,
   StockProductLookupPort,
 } from '../../ports/output/stock-product-lookup.port';
+import {
+  STOCK_RESERVATION_REPOSITORY,
+  StockReservationRepositoryPort,
+} from '../../ports/output/stock-reservation-repository.port';
 import { computeBalance } from '../../../domain/stock-balance';
 import { StockBalanceDto } from '../../dto/stock.dto';
 import { StockProductInvalidException } from '../../../domain/exceptions/stock-exceptions';
@@ -31,6 +35,8 @@ export class GetStockBalanceUseCase implements UseCase<GetStockBalanceQuery, Sto
   constructor(
     @Inject(STOCK_MOVEMENT_REPOSITORY) private readonly movements: StockMovementRepositoryPort,
     @Inject(STOCK_PRODUCT_LOOKUP) private readonly products: StockProductLookupPort,
+    @Inject(STOCK_RESERVATION_REPOSITORY)
+    private readonly reservations: StockReservationRepositoryPort,
   ) {}
 
   async execute(query: GetStockBalanceQuery): Promise<StockBalanceDto> {
@@ -42,13 +48,19 @@ export class GetStockBalanceUseCase implements UseCase<GetStockBalanceQuery, Sto
     const movements = await this.movements.listByCompanyProduct(query.companyId, query.productId);
     const balance = computeBalance(movements.map((m) => m.toBalanceInput()));
 
+    // Disponível = físico − reservas ativas e NÃO VENCIDAS (expiração preguiçosa, §3.9).
+    const reserved = await this.reservations.sumActiveReserved(
+      query.companyId,
+      query.productId,
+      new Date(),
+    );
+
     return StockBalanceDto.build({
       companyId: query.companyId,
       productId: query.productId,
       productName: product.name,
       balance,
-      // Reserva ainda não existe nesta fatia — disponível = físico. Ver o relatório.
-      available: balance.quantity,
+      available: Math.max(0, balance.quantity - reserved),
       minimumQuantity: product.minimumQuantity,
       maximumQuantity: product.maximumQuantity,
     });

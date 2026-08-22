@@ -69,6 +69,12 @@ const produtoFalso: OrderProductLookupPort = {
 
 const uowFalso: UnitOfWorkPort = { execute: async (fn) => fn() } as UnitOfWorkPort;
 
+/** Reserva de estoque que não faz nada — o teste de reserva de verdade vive no EST. */
+const reservaFalsa = {
+  reserve: async () => undefined,
+  release: async () => undefined,
+};
+
 function itemInput(overrides: Record<string, unknown> = {}) {
   return { productId: PRODUTO, quantity: 2, ...overrides };
 }
@@ -176,7 +182,12 @@ describe('ChangeOrderStatusUseCase — crédito na confirmação (§2.2)', () =>
   it('bloqueia confirmação acima do limite de crédito, nomeando limite e total', async () => {
     const { repo } = repoFalso([pedidoRascunho(6000)]);
     const alvo = (await repo.list({}))[0];
-    const uc = new ChangeOrderStatusUseCase(repo, customerFalso({ creditLimit: 5000 }), uowFalso);
+    const uc = new ChangeOrderStatusUseCase(
+      repo,
+      customerFalso({ creditLimit: 5000 }),
+      reservaFalsa,
+      uowFalso,
+    );
 
     const p = uc.execute(new ChangeOrderStatusCommand(alvo.id.value, 'confirm'));
     await expect(p).rejects.toThrow(CreditLimitExceededException);
@@ -186,7 +197,12 @@ describe('ChangeOrderStatusUseCase — crédito na confirmação (§2.2)', () =>
   it('confirma dentro do limite', async () => {
     const { repo } = repoFalso([pedidoRascunho(4000)]);
     const alvo = (await repo.list({}))[0];
-    const uc = new ChangeOrderStatusUseCase(repo, customerFalso({ creditLimit: 5000 }), uowFalso);
+    const uc = new ChangeOrderStatusUseCase(
+      repo,
+      customerFalso({ creditLimit: 5000 }),
+      reservaFalsa,
+      uowFalso,
+    );
     const dto = await uc.execute(new ChangeOrderStatusCommand(alvo.id.value, 'confirm'));
     expect(dto.status).toBe('confirmado');
   });
@@ -194,7 +210,12 @@ describe('ChangeOrderStatusUseCase — crédito na confirmação (§2.2)', () =>
   it('sem limite definido, não bloqueia', async () => {
     const { repo } = repoFalso([pedidoRascunho(999999)]);
     const alvo = (await repo.list({}))[0];
-    const uc = new ChangeOrderStatusUseCase(repo, customerFalso({ creditLimit: null }), uowFalso);
+    const uc = new ChangeOrderStatusUseCase(
+      repo,
+      customerFalso({ creditLimit: null }),
+      reservaFalsa,
+      uowFalso,
+    );
     const dto = await uc.execute(new ChangeOrderStatusCommand(alvo.id.value, 'confirm'));
     expect(dto.status).toBe('confirmado');
   });

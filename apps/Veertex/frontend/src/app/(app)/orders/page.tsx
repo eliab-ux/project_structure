@@ -35,6 +35,7 @@ import companyService from 'src/services/companyService';
 import contactService from 'src/services/contactService';
 import userService from 'src/services/userService';
 import productService from 'src/services/productService';
+import stockService from 'src/services/stockService';
 import { Company } from 'src/types/admin';
 import { Contact } from 'src/types/admin';
 import { AdminUser } from 'src/types/admin';
@@ -432,7 +433,11 @@ function OrderFormDialog({
   onSaved: () => void;
 }) {
   const { enqueueSnackbar } = useSnackbar();
+  const { hasModule } = useAuth();
+  const estActive = hasModule('EST');
   const [saving, setSaving] = useState(false);
+  // Disponível por produto (§3.9) — é o que decide se dá para confirmar. Só faz sentido com EST.
+  const [available, setAvailable] = useState<Record<string, number>>({});
 
   const [companyId, setCompanyId] = useState(editing?.companyId ?? '');
   const [contactId, setContactId] = useState(editing?.contactId ?? '');
@@ -474,6 +479,13 @@ function OrderFormDialog({
       productId,
       unitPrice: product?.basePrice != null ? String(product.basePrice) : '',
     });
+    // Busca o disponível (§3.9) — a informação que decide a confirmação. Silencioso em falha.
+    if (estActive && companyId && productId && available[productId] === undefined) {
+      stockService
+        .balance(companyId, productId)
+        .then((b) => setAvailable((current) => ({ ...current, [productId]: b.available })))
+        .catch(() => undefined);
+    }
   }
 
   const total = useMemo(
@@ -642,6 +654,11 @@ function OrderFormDialog({
                     onChange={(e) => onPickProduct(index, e.target.value)}
                     size="small"
                     sx={{ flex: 2, minWidth: 180 }}
+                    helperText={
+                      estActive && row.productId && available[row.productId] !== undefined
+                        ? `Disponível: ${available[row.productId]}`
+                        : undefined
+                    }
                   >
                     {refs.products
                       .filter((p) => p.active)

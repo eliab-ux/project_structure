@@ -129,20 +129,36 @@ export class OrderController {
 
   @Post(':id/confirm')
   @RequirePermission(PERMISSIONS.orders.update)
-  async confirm(@Param('id', ParseUUIDPipe) id: string): Promise<OrderDto> {
-    return this.changeOrderStatusUseCase.execute(new ChangeOrderStatusCommand(id, 'confirm'));
+  async confirm(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<OrderDto> {
+    // `modules` do TOKEN — decide se a confirmação reserva estoque (§3.9). Só com EST ativo.
+    return this.changeOrderStatusUseCase.execute(
+      new ChangeOrderStatusCommand(id, 'confirm', actor.modules ?? []),
+    );
   }
 
   @Post(':id/complete')
   @RequirePermission(PERMISSIONS.orders.update)
-  async complete(@Param('id', ParseUUIDPipe) id: string): Promise<OrderDto> {
-    return this.changeOrderStatusUseCase.execute(new ChangeOrderStatusCommand(id, 'complete'));
+  async complete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<OrderDto> {
+    return this.changeOrderStatusUseCase.execute(
+      new ChangeOrderStatusCommand(id, 'complete', actor.modules ?? []),
+    );
   }
 
   @Post(':id/cancel')
   @RequirePermission(PERMISSIONS.orders.cancel)
-  async cancel(@Param('id', ParseUUIDPipe) id: string): Promise<OrderDto> {
-    return this.changeOrderStatusUseCase.execute(new ChangeOrderStatusCommand(id, 'cancel'));
+  async cancel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<OrderDto> {
+    return this.changeOrderStatusUseCase.execute(
+      new ChangeOrderStatusCommand(id, 'cancel', actor.modules ?? []),
+    );
   }
 
   /** Lê a sub-permissão de desconto do token. `grants` resolve wildcard segmento a segmento. */

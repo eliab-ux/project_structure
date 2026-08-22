@@ -4,8 +4,11 @@ import { ContactOrmEntity } from '../../infrastructure/persistence/mikro-orm/ent
 import { ProductOrmEntity } from '../../infrastructure/persistence/mikro-orm/entities/product-orm.entity';
 import { OrderCustomerLookup } from '../../infrastructure/persistence/mikro-orm/repositories/order-customer.lookup';
 import { OrderProductLookup } from '../../infrastructure/persistence/mikro-orm/repositories/order-product.lookup';
+import { StockModule } from '../stock/stock.module';
+import { EstOrderStockReservation } from '../../infrastructure/persistence/mikro-orm/repositories/est-order-stock-reservation.adapter';
 import { CUSTOMER_LOOKUP } from './application/ports/output/customer-lookup.port';
 import { ORDER_PRODUCT_LOOKUP } from './application/ports/output/order-product-lookup.port';
+import { ORDER_STOCK_RESERVATION } from './application/ports/output/order-stock-reservation.port';
 import { CreateOrderUseCase } from './application/use-cases/create-order/create-order.use-case';
 import { UpdateOrderUseCase } from './application/use-cases/update-order/update-order.use-case';
 import { ChangeOrderStatusUseCase } from './application/use-cases/change-order-status/change-order-status.use-case';
@@ -19,10 +22,13 @@ import { ListOrdersUseCase } from './application/use-cases/list-orders/list-orde
  * sem importar o módulo do outro e ganhar acesso a `save`/`list` que não deveria ter.
  */
 @Module({
-  imports: [MikroOrmModule.forFeature([ContactOrmEntity, ProductOrmEntity])],
+  // StockModule fornece os use cases de reserva que o adapter EST usa. O VND depende do PORT, não do
+  // módulo EST diretamente — o adapter é quem conhece o EST.
+  imports: [MikroOrmModule.forFeature([ContactOrmEntity, ProductOrmEntity]), StockModule],
   providers: [
     { provide: CUSTOMER_LOOKUP, useClass: OrderCustomerLookup },
     { provide: ORDER_PRODUCT_LOOKUP, useClass: OrderProductLookup },
+    { provide: ORDER_STOCK_RESERVATION, useClass: EstOrderStockReservation },
     CreateOrderUseCase,
     UpdateOrderUseCase,
     ChangeOrderStatusUseCase,
