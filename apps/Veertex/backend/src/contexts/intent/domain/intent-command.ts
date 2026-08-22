@@ -114,6 +114,23 @@ export const INTENT_COMMANDS = {
  * cifrada, exibir validade — §3.2 do CORE), e não antes.
  */
 
+/**
+ * ⚠️ `CreateOrder`/`UpdateOrder` estão FORA do catálogo de propósito (decisão de Eliab, 22/08/2026),
+ * mesmo com backend pronto (VND, §02) — e a razão é diferente da do KIT.
+ *
+ * Não é falta de backend: é que o pedido é o objeto mais complexo do sistema (`items[]`), e o painel
+ * de rascunho da Mesa **não edita campos aninhados** por decisão registrada (§10 / `IntentDraftPanel`).
+ * Um comando aqui aceitaria a intenção, montaria o rascunho e o operador não conseguiria preencher os
+ * itens — casca que falha na aprovação. E ditar um pedido por frase competiria com um formulário que
+ * acabou de ficar bom: a Mesa ganha onde substitui digitação repetitiva, não onde duplica uma tela
+ * melhor.
+ *
+ * **O caso que justifica o editor de itens da Mesa, quando vier, é a ENTRADA POR IMAGEM** — fotografar
+ * o pedido do cliente e ter os itens lidos (§7 do `DEPENDENCIAS_EXTERNAS.md`, ADR-0006). Aí o desenho
+ * do editor nasce do caso real, não do genérico. Até lá, os comandos de pedido ficam fora e não se
+ * cria casca.
+ */
+
 export type IntentCommandName = keyof typeof INTENT_COMMANDS;
 
 export const INTENT_COMMAND_NAMES = Object.keys(INTENT_COMMANDS) as IntentCommandName[];

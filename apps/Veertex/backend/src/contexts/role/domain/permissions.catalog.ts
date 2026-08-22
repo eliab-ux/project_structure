@@ -79,6 +79,12 @@ export const PERMISSIONS = {
     // `grants()` resolve por wildcard segmento a segmento.
     discountGrant: 'orders.discount.grant',
   },
+  // Estoque (EST, §03). `read` para ver saldo/custo/movimentos; `move` para registrar movimento.
+  // Sem `delete`: movimento é append-only — estorno é movimento novo, nunca exclusão.
+  stock: {
+    read: 'stock.read',
+    move: 'stock.move',
+  },
 } as const;
 
 /** Grants everything, present and future. Only the Admin role should hold it. */

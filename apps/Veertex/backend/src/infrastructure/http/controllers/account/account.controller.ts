@@ -78,6 +78,11 @@ export class UpdateAccountPreferencesRequestDto {
   @IsOptional()
   @IsBoolean()
   contactCarteirizacao?: boolean;
+
+  /** Estoque negativo permitido (§3.2 do 03). */
+  @IsOptional()
+  @IsBoolean()
+  stockAllowNegative?: boolean;
 }
 
 export class PlanResponseDto {
@@ -158,6 +163,7 @@ export class AccountController {
         contactCodeMode: dto.contactCodeMode as CodeNumberingMode | undefined,
         productSkuMode: dto.productSkuMode as CodeNumberingMode | undefined,
         contactCarteirizacao: dto.contactCarteirizacao,
+        stockAllowNegative: dto.stockAllowNegative,
       }),
     );
     return AccountResponseDto.from(account);

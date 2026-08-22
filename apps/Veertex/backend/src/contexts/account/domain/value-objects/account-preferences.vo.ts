@@ -21,6 +21,12 @@ export interface AccountPreferencesProps {
    * conta. O filtro é RLS, resolvido por request (ADR-0007), nunca no token.
    */
   contactCarteirizacao: boolean;
+  /**
+   * Estoque negativo permitido (§3.2 do 03). Default **desligado** — bloquear evita vender o que não
+   * existe. Ligar é decisão explícita da conta (venda com mercadoria a caminho, divergência de
+   * inventário).
+   */
+  stockAllowNegative: boolean;
 }
 
 /**
@@ -52,6 +58,7 @@ export class AccountPreferences extends ValueObject<AccountPreferencesProps> {
     contactCodeMode: 'manual',
     productSkuMode: 'manual',
     contactCarteirizacao: false,
+    stockAllowNegative: false,
   };
 
   private constructor(props: AccountPreferencesProps) {
@@ -77,6 +84,8 @@ export class AccountPreferences extends ValueObject<AccountPreferencesProps> {
       ),
       contactCarteirizacao:
         partial?.contactCarteirizacao ?? AccountPreferences.DEFAULTS.contactCarteirizacao,
+      stockAllowNegative:
+        partial?.stockAllowNegative ?? AccountPreferences.DEFAULTS.stockAllowNegative,
     });
   }
 
@@ -96,6 +105,9 @@ export class AccountPreferences extends ValueObject<AccountPreferencesProps> {
   }
   get contactCarteirizacao(): boolean {
     return this.props.contactCarteirizacao;
+  }
+  get stockAllowNegative(): boolean {
+    return this.props.stockAllowNegative;
   }
 }
 

@@ -22,6 +22,7 @@ export class UpdateAccountPreferencesCommand {
       contactCodeMode?: CodeNumberingMode;
       productSkuMode?: CodeNumberingMode;
       contactCarteirizacao?: boolean;
+      stockAllowNegative?: boolean;
     },
   ) {}
 }

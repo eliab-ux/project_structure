@@ -10,6 +10,7 @@ import { PASSWORD_RESET_CODE_REPOSITORY } from '../../contexts/auth/application/
 import { ACCOUNT_MODULE_REPOSITORY } from '../../contexts/module/application/ports/output/account-module-repository.port';
 import { FIELD_CONFIG_REPOSITORY } from '../../contexts/field-config/application/ports/output/field-config-repository.port';
 import { ORDER_REPOSITORY } from '../../contexts/order/application/ports/output/order-repository.port';
+import { STOCK_MOVEMENT_REPOSITORY } from '../../contexts/stock/application/ports/output/stock-movement-repository.port';
 
 import { PlanOrmEntity } from './mikro-orm/entities/plan-orm.entity';
 import { AccountOrmEntity } from './mikro-orm/entities/account-orm.entity';
@@ -23,6 +24,7 @@ import { FieldConfigOrmEntity } from './mikro-orm/entities/field-config-orm.enti
 import { OrderOrmEntity } from './mikro-orm/entities/order-orm.entity';
 import { OrderItemOrmEntity } from './mikro-orm/entities/order-item-orm.entity';
 import { OrderCounterOrmEntity } from './mikro-orm/entities/order-counter-orm.entity';
+import { StockMovementOrmEntity } from './mikro-orm/entities/stock-movement-orm.entity';
 
 import { PlanMapper } from './mikro-orm/mappers/plan.mapper';
 import { AccountMapper } from './mikro-orm/mappers/account.mapper';
@@ -31,6 +33,7 @@ import { RoleMapper } from './mikro-orm/mappers/role.mapper';
 import { UserMapper } from './mikro-orm/mappers/user.mapper';
 import { FieldConfigMapper } from './mikro-orm/mappers/field-config.mapper';
 import { OrderMapper } from './mikro-orm/mappers/order.mapper';
+import { StockMovementMapper } from './mikro-orm/mappers/stock-movement.mapper';
 
 import { MikroOrmPlanRepository } from './mikro-orm/repositories/plan.repository';
 import { MikroOrmAccountRepository } from './mikro-orm/repositories/account.repository';
@@ -41,6 +44,7 @@ import { MikroOrmPasswordResetCodeRepository } from './mikro-orm/repositories/pa
 import { MikroOrmAccountModuleRepository } from './mikro-orm/repositories/account-module.repository';
 import { MikroOrmFieldConfigRepository } from './mikro-orm/repositories/field-config.repository';
 import { MikroOrmOrderRepository } from './mikro-orm/repositories/order.repository';
+import { MikroOrmStockMovementRepository } from './mikro-orm/repositories/stock-movement.repository';
 
 /**
  * Every repository, in one @Global module.
@@ -69,6 +73,7 @@ import { MikroOrmOrderRepository } from './mikro-orm/repositories/order.reposito
       OrderOrmEntity,
       OrderItemOrmEntity,
       OrderCounterOrmEntity,
+      StockMovementOrmEntity,
     ]),
   ],
   providers: [
@@ -79,6 +84,7 @@ import { MikroOrmOrderRepository } from './mikro-orm/repositories/order.reposito
     UserMapper,
     FieldConfigMapper,
     OrderMapper,
+    StockMovementMapper,
     { provide: PLAN_REPOSITORY, useClass: MikroOrmPlanRepository },
     { provide: ACCOUNT_REPOSITORY, useClass: MikroOrmAccountRepository },
     { provide: COMPANY_REPOSITORY, useClass: MikroOrmCompanyRepository },
@@ -91,6 +97,7 @@ import { MikroOrmOrderRepository } from './mikro-orm/repositories/order.reposito
     { provide: ACCOUNT_MODULE_REPOSITORY, useClass: MikroOrmAccountModuleRepository },
     { provide: FIELD_CONFIG_REPOSITORY, useClass: MikroOrmFieldConfigRepository },
     { provide: ORDER_REPOSITORY, useClass: MikroOrmOrderRepository },
+    { provide: STOCK_MOVEMENT_REPOSITORY, useClass: MikroOrmStockMovementRepository },
   ],
   exports: [
     PLAN_REPOSITORY,
@@ -102,6 +109,7 @@ import { MikroOrmOrderRepository } from './mikro-orm/repositories/order.reposito
     ACCOUNT_MODULE_REPOSITORY,
     FIELD_CONFIG_REPOSITORY,
     ORDER_REPOSITORY,
+    STOCK_MOVEMENT_REPOSITORY,
   ],
 })
 export class RepositoriesModule {}

@@ -39,6 +39,7 @@ export class AccountPreferencesResponseDto {
   contactCodeMode!: string;
   productSkuMode!: string;
   contactCarteirizacao!: boolean;
+  stockAllowNegative!: boolean;
 }
 
 export class AccountResponseDto {
@@ -63,6 +64,7 @@ export class AccountResponseDto {
       contactCodeMode: account.preferences.contactCodeMode,
       productSkuMode: account.preferences.productSkuMode,
       contactCarteirizacao: account.preferences.contactCarteirizacao,
+      stockAllowNegative: account.preferences.stockAllowNegative,
     };
     return dto;
   }

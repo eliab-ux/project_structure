@@ -38,6 +38,7 @@ export default function PreferencesPage() {
   const [contactCarteirizacao, setContactCarteirizacao] = useState(
     prefs?.contactCarteirizacao ?? false,
   );
+  const [stockAllowNegative, setStockAllowNegative] = useState(prefs?.stockAllowNegative ?? false);
   const [saving, setSaving] = useState(false);
 
   async function save() {
@@ -47,6 +48,7 @@ export default function PreferencesPage() {
         contactCodeMode,
         productSkuMode,
         contactCarteirizacao,
+        stockAllowNegative,
       });
       await refreshSession();
       enqueueSnackbar('Preferências salvas.', { variant: 'success' });
@@ -129,6 +131,29 @@ export default function PreferencesPage() {
               />
             }
             label={contactCarteirizacao ? 'Ligada' : 'Desligada'}
+          />
+        </Paper>
+
+        {/* Estoque negativo (§3.2 do 03) — preferência real e disponível. */}
+        <Paper variant="outlined" sx={{ p: 2.5 }}>
+          <Typography variant="body1" sx={{ fontWeight: 600 }}>
+            Permitir estoque negativo
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Desligado (padrão), uma saída que deixaria o saldo negativo é bloqueada — evita vender o
+            que não existe. Ligado, a saída passa (venda com mercadoria a caminho, divergência de
+            inventário).
+          </Typography>
+          <FormControlLabel
+            sx={{ mt: 1 }}
+            control={
+              <Switch
+                checked={stockAllowNegative}
+                onChange={(event) => setStockAllowNegative(event.target.checked)}
+                disabled={!canEdit}
+              />
+            }
+            label={stockAllowNegative ? 'Permitido' : 'Bloqueado'}
           />
         </Paper>
 

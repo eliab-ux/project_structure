@@ -7,6 +7,7 @@ export class AccountPreferencesDto {
   contactCodeMode!: CodeNumberingMode;
   productSkuMode!: CodeNumberingMode;
   contactCarteirizacao!: boolean;
+  stockAllowNegative!: boolean;
 
   static fromDomain(account: Account): AccountPreferencesDto {
     const dto = new AccountPreferencesDto();
@@ -14,6 +15,7 @@ export class AccountPreferencesDto {
     dto.contactCodeMode = account.preferences.contactCodeMode;
     dto.productSkuMode = account.preferences.productSkuMode;
     dto.contactCarteirizacao = account.preferences.contactCarteirizacao;
+    dto.stockAllowNegative = account.preferences.stockAllowNegative;
     return dto;
   }
 }

@@ -27,6 +27,7 @@ export class AccountMapper {
         contactCodeMode: orm.contactCodeMode as CodeNumberingMode,
         productSkuMode: orm.productSkuMode as CodeNumberingMode,
         contactCarteirizacao: orm.contactCarteirizacao,
+        stockAllowNegative: orm.stockAllowNegative,
       }),
       createdAt: orm.createdAt,
     });
@@ -48,6 +49,7 @@ export class AccountMapper {
       contactCodeMode: account.preferences.contactCodeMode,
       productSkuMode: account.preferences.productSkuMode,
       contactCarteirizacao: account.preferences.contactCarteirizacao,
+      stockAllowNegative: account.preferences.stockAllowNegative,
       createdAt: account.createdAt,
       updatedAt: new Date(),
     };

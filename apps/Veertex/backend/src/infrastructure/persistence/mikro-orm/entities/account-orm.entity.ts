@@ -68,6 +68,10 @@ export class AccountOrmEntity {
   @Property({ fieldName: 'contact_carteirizacao' })
   contactCarteirizacao: boolean = false;
 
+  /** Estoque negativo permitido (§3.2 do 03). Default bloquear. */
+  @Property({ fieldName: 'stock_allow_negative' })
+  stockAllowNegative: boolean = false;
+
   @Property({ type: 'timestamptz', fieldName: 'created_at' })
   createdAt: Date = new Date();
 

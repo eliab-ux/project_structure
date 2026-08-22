@@ -6,6 +6,7 @@ import { ContactModule } from '../../contexts/contact/contact.module';
 import { ProductModule } from '../../contexts/product/product.module';
 import { FieldConfigModule } from '../../contexts/field-config/field-config.module';
 import { OrderModule } from '../../contexts/order/order.module';
+import { StockModule } from '../../contexts/stock/stock.module';
 import { ModuleModule } from '../../contexts/module/module.module';
 import { PlanModule } from '../../contexts/plan/plan.module';
 import { RoleModule } from '../../contexts/role/role.module';
@@ -18,6 +19,7 @@ import { ContactController } from './controllers/contact/contact.controller';
 import { ProductController } from './controllers/product/product.controller';
 import { FieldConfigController } from './controllers/field-config/field-config.controller';
 import { OrderController } from './controllers/order/order.controller';
+import { StockController } from './controllers/stock/stock.controller';
 import { ModuleController } from './controllers/module/module.controller';
 import { RoleController } from './controllers/role/role.controller';
 import { UserController } from './controllers/user/user.controller';
@@ -50,6 +52,7 @@ import { IntentModule } from '../../contexts/intent/intent.module';
     ProductModule,
     FieldConfigModule,
     OrderModule,
+    StockModule,
     ModuleModule,
     PlanModule,
     RoleModule,
@@ -65,6 +68,7 @@ import { IntentModule } from '../../contexts/intent/intent.module';
     ProductController,
     FieldConfigController,
     OrderController,
+    StockController,
     ModuleController,
     RoleController,
     UserController,

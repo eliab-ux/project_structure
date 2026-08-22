@@ -17,6 +17,8 @@ export interface AccountPreferences {
   productSkuMode: 'manual' | 'sequential';
   /** Carteirização (§2.3 / ADR-0007): vendedor vê só a própria carteira de contatos. */
   contactCarteirizacao: boolean;
+  /** Estoque negativo permitido (§3.2 do 03). Default bloquear. */
+  stockAllowNegative: boolean;
 }
 
 export interface AuthAccount {
