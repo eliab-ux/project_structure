@@ -6,11 +6,13 @@ import {
   IntentParserPort,
 } from '../../contexts/intent/application/ports/output/intent-parser.port';
 import {
+  INTENT_COMMAND_FIELDS,
   INTENT_COMMANDS,
   IntentCommandName,
   IntentResult,
   isKnownIntentCommand,
 } from '../../contexts/intent/domain/intent-command';
+import { PERMISSIONS } from '../../contexts/role/domain/permissions.catalog';
 import { IntentChannelUnavailableException } from '../../contexts/intent/domain/intent-exceptions';
 import { looksLikeQuestion, QUESTION_GUESS } from '../../contexts/intent/domain/question-detection';
 
@@ -279,9 +281,29 @@ export class GeminiIntentParser implements IntentParserPort {
    * O filtro na entrada é mais confiável do que descartar na saída, e as duas coisas são feitas.
    */
   private systemInstruction(request: IntentParseRequest): string {
+    // Cada comando com seus CAMPOS EXATOS (nome, tipo, obrigatório). Sem isto o modelo inventava
+    // nomes por convenção — e o approve exigia campos que o rascunho nunca teve (defeito real de
+    // 23/08/2026: CreateRole/`code`). A spec é a mesma que o dispatch lê; ver INTENT_COMMAND_FIELDS.
     const catalogue = request.availableCommands
-      .map((name) => `- ${name}: ${INTENT_COMMANDS[name].label}`)
+      .map((name) => {
+        const fields = INTENT_COMMAND_FIELDS[name]
+          .map(
+            (field) =>
+              `${field.name}(${field.kind}${field.required ? ', obrigatório' : ''}): ${field.hint}`,
+          )
+          .join('; ');
+        return `- ${name}: ${INTENT_COMMANDS[name].label}. Campos: ${fields}`;
+      })
       .join('\n');
+
+    // CreateRole/SetRolePermissions pedem CÓDIGOS de permissão — o vocabulário é fechado e o modelo
+    // não tem como adivinhá-lo. Só entra no prompt quando um desses comandos está disponível.
+    const precisaPermissoes = request.availableCommands.some(
+      (name) => name === 'CreateRole' || name === 'SetRolePermissions',
+    );
+    const permissionCodes = precisaPermissoes
+      ? Object.values(PERMISSIONS).flatMap((area) => Object.values(area) as string[])
+      : [];
 
     return [
       'Você traduz a frase de um operador de ERP em UM comando estruturado. Você NÃO executa nada,',
@@ -295,7 +317,19 @@ export class GeminiIntentParser implements IntentParserPort {
       ' "fields":{"<campo>":{"value":<valor ou null>,"origin":"ditado|consulta|padrao|null",',
       ' "review":<true|false>}},"unresolved":["<pergunta em português>"],"guess":"<null ou resumo>"}',
       '',
+      ...(permissionCodes.length > 0
+        ? [
+            '',
+            'O campo "permissions" é um ARRAY de códigos, apenas destes valores:',
+            permissionCodes.join(', '),
+            'Traduza o que a frase disse para esses códigos; o que não mapear com certeza fica fora',
+            'e vira pergunta em unresolved.',
+          ]
+        : []),
+      '',
       'Regras obrigatórias:',
+      '0. Use SOMENTE os nomes de campo listados no comando. Campo tipo list é ARRAY JSON de',
+      '   strings; tipo flag é booleano true/false; tipo number é número.',
       '1. Campo que a frase NÃO disse vem com value null, origin null e review true.',
       '   NUNCA suponha um valor. Não dizer é diferente de dizer que não.',
       '2. Se a frase não corresponder a nenhum comando da lista, devolva command null e',

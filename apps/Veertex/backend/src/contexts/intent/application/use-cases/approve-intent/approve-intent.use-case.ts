@@ -430,20 +430,38 @@ class FieldReader {
 
   /** Lista opcional: ausente vira `undefined`, e `undefined` significa "não mexa neste campo". */
   optionalList(name: string): string[] | undefined {
-    const value = this.fields[name]?.value;
-    if (!Array.isArray(value) || value.length === 0) {
-      return undefined;
-    }
-    return (value as unknown[]).filter((item): item is string => typeof item === 'string');
+    const value = this.coerceList(this.fields[name]?.value);
+    return value.length > 0 ? value : undefined;
   }
 
   list(name: string): string[] {
-    const value = this.fields[name]?.value;
-    if (!Array.isArray(value) || value.length === 0) {
+    const value = this.coerceList(this.fields[name]?.value);
+    if (value.length === 0) {
       this.missing.push(name);
       this.throwIfMissing();
     }
-    return (value as unknown[]).filter((item): item is string => typeof item === 'string');
+    return value;
+  }
+
+  /**
+   * Lista que aceita TEXTO separado por vírgula, além do array.
+   *
+   * O painel do rascunho edita todo campo como texto (decisão do §10 — sem editor aninhado): um
+   * array que o operador toque vira a string "a, b" no PATCH do campo. Recusar essa string
+   * devolveria "faltam informações" para um campo que está NA TELA, preenchido — o operador não
+   * teria como se salvar. Vírgula/ponto-e-vírgula são os separadores; espaço sobrando é aparado.
+   */
+  private coerceList(value: unknown): string[] {
+    if (Array.isArray(value)) {
+      return (value as unknown[]).filter((item): item is string => typeof item === 'string');
+    }
+    if (typeof value === 'string' && value.trim() !== '') {
+      return value
+        .split(/[,;]/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+    return [];
   }
 
   /**
@@ -494,11 +512,14 @@ class FieldReader {
 
   flag(name: string): boolean {
     const value = this.fields[name]?.value;
-    if (typeof value !== 'boolean') {
-      this.missing.push(name);
-      this.throwIfMissing();
+    if (typeof value === 'boolean') {
+      return value;
     }
-    return value as boolean;
+    // O painel edita como texto: um flag tocado pelo operador chega "true"/"false" (String(bool)).
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    this.missing.push(name);
+    this.throwIfMissing();
   }
 
   private throwIfMissing(): never {

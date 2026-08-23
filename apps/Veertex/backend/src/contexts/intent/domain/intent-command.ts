@@ -133,6 +133,141 @@ export const INTENT_COMMANDS = {
 
 export type IntentCommandName = keyof typeof INTENT_COMMANDS;
 
+/**
+ * O TIPO de um campo do comando — o que o painel edita e o `FieldReader` do approve lê.
+ * `list` = array de strings · `flag` = booleano · `address` = objeto de endereço (não editável
+ * no painel; vem por imagem/consulta ou pela tela própria).
+ */
+export type IntentFieldKind = 'text' | 'list' | 'number' | 'flag' | 'address';
+
+export interface IntentFieldSpec {
+  name: string;
+  kind: IntentFieldKind;
+  required: boolean;
+  /** Dica curta em português — vai no prompt do tradutor e serve de documentação. */
+  hint: string;
+}
+
+/**
+ * A ESPECIFICAÇÃO DE CAMPOS de cada comando — a mesma lista que o dispatch do `ApproveIntent` lê.
+ *
+ * Nasceu da varredura de 23/08/2026 (defeito real: o approve do `CreateRole` exigia `code`, que o
+ * tradutor nunca produzia — o prompt do Gemini listava só nome+label dos comandos, e o modelo
+ * INVENTAVA os nomes de campo por convenção). Três consequências desta tabela:
+ *
+ *  1. o prompt do tradutor enumera os campos EXATOS (nome, tipo, obrigatório) — fim do palpite;
+ *  2. o teste de contrato (`intent-catalog-contract.spec.ts`) aprova cada comando com exatamente
+ *     estes campos e falha se o dispatch pedir algo fora da tabela — o descompasso morre no CI,
+ *     não na frente do operador;
+ *  3. o painel pode um dia derivar labels/editor por tipo daqui, sem segunda fonte.
+ *
+ * ⚠️ Mudou o dispatch? Muda AQUI no mesmo commit — o teste de contrato é quem cobra.
+ */
+export const INTENT_COMMAND_FIELDS: Record<IntentCommandName, IntentFieldSpec[]> = {
+  CreateCompany: [
+    { name: 'legalName', kind: 'text', required: true, hint: 'razão social' },
+    { name: 'document', kind: 'text', required: true, hint: 'CNPJ, só dígitos' },
+    { name: 'taxRegime', kind: 'text', required: true, hint: 'SIMPLES | NORMAL | MEI' },
+    { name: 'address', kind: 'address', required: true, hint: 'endereço completo' },
+    { name: 'stateRegistrationExempt', kind: 'flag', required: true, hint: 'IE isenta?' },
+    { name: 'tradeName', kind: 'text', required: false, hint: 'nome fantasia' },
+    { name: 'stateRegistration', kind: 'text', required: false, hint: 'inscrição estadual' },
+    { name: 'municipalRegistration', kind: 'text', required: false, hint: 'inscrição municipal' },
+    { name: 'suframa', kind: 'text', required: false, hint: 'SUFRAMA' },
+    { name: 'cnae', kind: 'text', required: false, hint: 'CNAE principal' },
+    { name: 'contactEmail', kind: 'text', required: false, hint: 'e-mail de contato' },
+    { name: 'billingEmail', kind: 'text', required: false, hint: 'e-mail de cobrança' },
+    { name: 'phone', kind: 'text', required: false, hint: 'telefone' },
+  ],
+  UpdateCompany: [
+    { name: 'companyId', kind: 'text', required: true, hint: 'id da empresa' },
+    { name: 'legalName', kind: 'text', required: false, hint: 'razão social' },
+    { name: 'tradeName', kind: 'text', required: false, hint: 'nome fantasia' },
+    { name: 'taxRegime', kind: 'text', required: false, hint: 'SIMPLES | NORMAL | MEI' },
+    { name: 'stateRegistration', kind: 'text', required: false, hint: 'inscrição estadual' },
+    { name: 'municipalRegistration', kind: 'text', required: false, hint: 'inscrição municipal' },
+    { name: 'suframa', kind: 'text', required: false, hint: 'SUFRAMA' },
+    { name: 'cnae', kind: 'text', required: false, hint: 'CNAE' },
+    { name: 'contactEmail', kind: 'text', required: false, hint: 'e-mail de contato' },
+    { name: 'billingEmail', kind: 'text', required: false, hint: 'e-mail de cobrança' },
+    { name: 'phone', kind: 'text', required: false, hint: 'telefone' },
+  ],
+  InviteUser: [
+    { name: 'name', kind: 'text', required: true, hint: 'nome da pessoa' },
+    { name: 'email', kind: 'text', required: true, hint: 'e-mail (será o login)' },
+    { name: 'phone', kind: 'text', required: true, hint: 'WhatsApp com DDD (obrigatório)' },
+    { name: 'password', kind: 'text', required: true, hint: 'senha provisória' },
+    { name: 'roleId', kind: 'text', required: true, hint: 'id do papel' },
+  ],
+  UpdateUser: [
+    { name: 'userId', kind: 'text', required: true, hint: 'id do usuário' },
+    { name: 'name', kind: 'text', required: false, hint: 'novo nome' },
+    { name: 'email', kind: 'text', required: false, hint: 'novo e-mail' },
+    { name: 'phone', kind: 'text', required: false, hint: 'novo WhatsApp' },
+    { name: 'roleId', kind: 'text', required: false, hint: 'novo papel (id)' },
+  ],
+  AssignRole: [
+    { name: 'userId', kind: 'text', required: true, hint: 'id do usuário' },
+    { name: 'roleId', kind: 'text', required: true, hint: 'id do papel de destino' },
+  ],
+  CreateRole: [
+    { name: 'name', kind: 'text', required: true, hint: 'nome do papel' },
+    // `code` NÃO é ditado: o rascunho o DERIVA do nome (BuildIntentDraft) e o exibe. Continua na
+    // spec porque o dispatch o lê — o teste de contrato preenche e confere.
+    { name: 'code', kind: 'text', required: true, hint: 'código interno — derivado do nome' },
+    { name: 'permissions', kind: 'list', required: true, hint: 'códigos de permissão' },
+    { name: 'description', kind: 'text', required: false, hint: 'descrição' },
+  ],
+  SetRolePermissions: [
+    { name: 'roleId', kind: 'text', required: true, hint: 'id do papel' },
+    { name: 'permissions', kind: 'list', required: true, hint: 'códigos de permissão (substitui)' },
+  ],
+  CreateContact: [
+    { name: 'types', kind: 'list', required: true, hint: 'customer | supplier | carrier | reseller' },
+    { name: 'personKind', kind: 'text', required: true, hint: 'individual | company' },
+    { name: 'legalName', kind: 'text', required: true, hint: 'nome ou razão social' },
+    { name: 'tradeName', kind: 'text', required: false, hint: 'nome fantasia' },
+    { name: 'document', kind: 'text', required: false, hint: 'CPF/CNPJ, só dígitos' },
+    { name: 'notes', kind: 'text', required: false, hint: 'observações' },
+    { name: 'email', kind: 'text', required: false, hint: 'e-mail' },
+    { name: 'phone', kind: 'text', required: false, hint: 'telefone/WhatsApp' },
+  ],
+  UpdateContact: [
+    { name: 'contactId', kind: 'text', required: true, hint: 'id do contato' },
+    { name: 'legalName', kind: 'text', required: false, hint: 'novo nome' },
+    { name: 'tradeName', kind: 'text', required: false, hint: 'nome fantasia' },
+    { name: 'notes', kind: 'text', required: false, hint: 'observações' },
+  ],
+  CreateProduct: [
+    { name: 'name', kind: 'text', required: true, hint: 'nome do produto' },
+    { name: 'unit', kind: 'text', required: true, hint: 'unidade comercial (UN, KG, CX...)' },
+    { name: 'sku', kind: 'text', required: false, hint: 'SKU' },
+    { name: 'kind', kind: 'text', required: false, hint: 'tipo do produto' },
+    { name: 'brand', kind: 'text', required: false, hint: 'marca' },
+    { name: 'categoryPath', kind: 'text', required: false, hint: 'categoria (caminho)' },
+    { name: 'basePrice', kind: 'number', required: false, hint: 'preço base' },
+    { name: 'barcode', kind: 'text', required: false, hint: 'código de barras' },
+    { name: 'shortDescription', kind: 'text', required: false, hint: 'descrição curta' },
+    { name: 'ncm', kind: 'text', required: false, hint: 'NCM' },
+    { name: 'grossWeightKg', kind: 'number', required: false, hint: 'peso bruto (kg)' },
+  ],
+  UpdateProduct: [
+    { name: 'productId', kind: 'text', required: true, hint: 'id do produto' },
+    { name: 'name', kind: 'text', required: false, hint: 'novo nome' },
+    { name: 'unit', kind: 'text', required: false, hint: 'unidade' },
+    { name: 'sku', kind: 'text', required: false, hint: 'SKU' },
+    { name: 'brand', kind: 'text', required: false, hint: 'marca' },
+    { name: 'categoryPath', kind: 'text', required: false, hint: 'categoria' },
+    { name: 'basePrice', kind: 'number', required: false, hint: 'preço base' },
+    { name: 'shortDescription', kind: 'text', required: false, hint: 'descrição curta' },
+  ],
+  ToggleModule: [
+    { name: 'moduleCode', kind: 'text', required: true, hint: 'VND | EST | FIN | ROT | ...' },
+    { name: 'active', kind: 'flag', required: true, hint: 'true = ativar, false = desativar' },
+  ],
+};
+
+
 export const INTENT_COMMAND_NAMES = Object.keys(INTENT_COMMANDS) as IntentCommandName[];
 
 export function isKnownIntentCommand(name: string): name is IntentCommandName {

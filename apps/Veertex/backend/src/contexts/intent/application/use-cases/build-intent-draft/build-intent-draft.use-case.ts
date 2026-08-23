@@ -80,6 +80,18 @@ export class BuildIntentDraftUseCase implements UseCase<BuildIntentDraftCommand,
       }),
     );
 
+    // CreateRole: `code` é identificador interno (A-Z0-9_) que ninguém dita — o approve o exige, e
+    // um rascunho sem ele morria em 400 sem o operador ter o que preencher (defeito real,
+    // 23/08/2026). Derivado do nome e EXIBIDO com origem 'padrao': o operador aprova o que vê;
+    // colisão de code responde como mensagem de negócio na aprovação.
+    if (name === 'CreateRole' && !fields.code?.value && typeof fields.name?.value === 'string') {
+      fields.code = {
+        value: deriveRoleCode(fields.name.value),
+        origin: 'padrao',
+        review: false,
+      };
+    }
+
     const reviewFields = Object.entries(fields)
       .filter(([, field]) => field.review)
       .map(([name_]) => name_);
@@ -98,4 +110,16 @@ export class BuildIntentDraftUseCase implements UseCase<BuildIntentDraftCommand,
       approvals: 1,
     };
   }
+}
+
+/** Nome → código de papel: sem acento, A-Z0-9_ (o formato que a entidade Role valida), 2–30. */
+function deriveRoleCode(name: string): string {
+  const code = name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 30);
+  return code.length >= 2 ? code : 'PAPEL';
 }
