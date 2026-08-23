@@ -43,6 +43,14 @@ async function update(id: string, payload: UpdateProductPayload): Promise<Produc
   return response.data;
 }
 
-const productService = { list, get, catalog, create, update };
+/** Substitui a composição do kit (§2.5 do 03) — só produtos `bundle`. */
+async function setComponents(
+  id: string,
+  components: { componentProductId: string; quantity: number }[],
+): Promise<void> {
+  await api.put(`/products/${id}/components`, { components });
+}
+
+const productService = { list, get, catalog, create, update, setComponents };
 
 export default productService;

@@ -35,6 +35,8 @@ import { useAuth } from 'src/contexts/AuthContext';
 import { apiErrorMessage } from 'src/services/api';
 import contactService from 'src/services/contactService';
 import userService from 'src/services/userService';
+import salesConfigService from 'src/services/salesConfigService';
+import { PaymentCondition } from 'src/types/sales';
 import {
   AdminUser,
   Contact,
@@ -56,6 +58,7 @@ interface FormState {
   document: string;
   creditLimit: string;
   salesRepId: string;
+  defaultPaymentConditionId: string;
   notes: string;
   email: string;
   phone: string;
@@ -69,6 +72,7 @@ const FORM_VAZIO: FormState = {
   document: '',
   creditLimit: '',
   salesRepId: '',
+  defaultPaymentConditionId: '',
   notes: '',
   email: '',
   phone: '',
@@ -97,6 +101,7 @@ export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [catalog, setCatalog] = useState<ContactFieldDefinition[]>([]);
   const [sellers, setSellers] = useState<AdminUser[]>([]);
+  const [paymentConditions, setPaymentConditions] = useState<PaymentCondition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -126,6 +131,14 @@ export default function ContactsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Condições de pagamento (VND) — para o default do contato (§3.6 do 02). Sem VND, lista vazia.
+  useEffect(() => {
+    void salesConfigService
+      .listPaymentConditions()
+      .then(setPaymentConditions)
+      .catch(() => undefined);
+  }, []);
 
   // Lista de vendedores para o seletor de carteira. Silenciosa: quem não tem `users.read` recebe 403
   // e o seletor fica sem opções — o campo continua visível, só não há a quem vincular.
@@ -165,6 +178,7 @@ export default function ContactsPage() {
       document: contact.document ?? '',
       creditLimit: contact.creditLimit === null ? '' : String(contact.creditLimit),
       salesRepId: contact.salesRepId ?? '',
+      defaultPaymentConditionId: contact.defaultPaymentConditionId ?? '',
       notes: contact.notes ?? '',
       email: contact.emails[0]?.email ?? '',
       phone: contact.phones[0]?.phone ?? '',
@@ -187,6 +201,7 @@ export default function ContactsPage() {
         document: form.document.replace(/\D/g, '') || null,
         creditLimit: form.creditLimit === '' ? null : Number(form.creditLimit),
         salesRepId: form.salesRepId || null,
+        defaultPaymentConditionId: form.defaultPaymentConditionId || null,
         notes: form.notes || null,
         emails: form.email ? [{ email: form.email }] : [],
         phones: form.phone ? [{ phone: form.phone.replace(/\D/g, '') }] : [],
@@ -442,6 +457,28 @@ export default function ContactsPage() {
                   </Alert>
                 ) : null}
               </Box>
+            ) : null}
+
+            {paymentConditions.length > 0 ? (
+              <TextField
+                select
+                fullWidth
+                label="Condição de pagamento padrão"
+                value={form.defaultPaymentConditionId}
+                onChange={(event) =>
+                  setForm((c) => ({ ...c, defaultPaymentConditionId: event.target.value }))
+                }
+                helperText="O pedido herda esta condição na criação e pode trocar (§3.6)."
+              >
+                <MenuItem value="">Nenhuma</MenuItem>
+                {paymentConditions
+                  .filter((condition) => condition.active)
+                  .map((condition) => (
+                    <MenuItem key={condition.id} value={condition.id}>
+                      {condition.name} ({condition.kindLabel})
+                    </MenuItem>
+                  ))}
+              </TextField>
             ) : null}
 
             {visivel('notes') ? (

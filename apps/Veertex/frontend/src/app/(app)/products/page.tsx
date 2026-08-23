@@ -161,6 +161,7 @@ export default function ProductsPage() {
 
   const [aberto, setAberto] = useState(false);
   const [editando, setEditando] = useState<Product | null>(null);
+  const [kitProduct, setKitProduct] = useState<Product | null>(null);
   const [form, setForm] = useState<FormState>(FORM_VAZIO);
   const [avancados, setAvancados] = useState(false);
   /**
@@ -503,6 +504,11 @@ export default function ProductsPage() {
                           </IconButton>
                         </Tooltip>
                       ) : null}
+                      {podeEditar && product.format === 'bundle' ? (
+                        <Button size="small" onClick={() => setKitProduct(product)}>
+                          Kit
+                        </Button>
+                      ) : null}
                       {podeEditar ? (
                         <Button size="small" onClick={() => void alternarSituacao(product)}>
                           {product.active ? 'Desativar' : 'Reativar'}
@@ -787,6 +793,13 @@ export default function ProductsPage() {
           </Button>
         </DialogActions>
       </Dialog>
+      {kitProduct ? (
+        <BundleComponentsDialog
+          product={kitProduct}
+          allProducts={products}
+          onClose={() => setKitProduct(null)}
+        />
+      ) : null}
     </Box>
   );
 }
@@ -845,5 +858,149 @@ function CompletudeLinha({ status }: { status: ProductPurposeStatus }) {
         </Alert>
       ) : null}
     </Box>
+  );
+}
+
+/**
+ * Composição do kit (§2.5 do 03): lê a composição ATUAL (GET por id traz `components` para
+ * `bundle`) e substitui no PUT. As guardas de domínio (componente não é kit, não é ele mesmo,
+ * quantidade > 0) são do servidor — a tela repete só o óbvio.
+ */
+function BundleComponentsDialog({
+  product,
+  allProducts,
+  onClose,
+}: {
+  product: Product;
+  allProducts: Product[];
+  onClose: () => void;
+}) {
+  const { enqueueSnackbar } = useSnackbar();
+  const [rows, setRows] = useState<{ componentProductId: string; quantity: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    void productService
+      .get(product.id)
+      .then((full) => {
+        const current = full.components ?? [];
+        setRows(
+          current.length > 0
+            ? current.map((component) => ({
+                componentProductId: component.componentProductId,
+                quantity: String(component.quantity),
+              }))
+            : [{ componentProductId: '', quantity: '1' }],
+        );
+      })
+      .catch(() => setRows([{ componentProductId: '', quantity: '1' }]))
+      .finally(() => setLoading(false));
+  }, [product.id]);
+
+  async function save() {
+    const valid = rows.filter((row) => row.componentProductId && Number(row.quantity) > 0);
+    if (valid.length === 0) {
+      enqueueSnackbar('Informe ao menos um componente.', { variant: 'warning' });
+      return;
+    }
+    setSaving(true);
+    try {
+      await productService.setComponents(
+        product.id,
+        valid.map((row) => ({
+          componentProductId: row.componentProductId,
+          quantity: Number(row.quantity),
+        })),
+      );
+      enqueueSnackbar('Composição do kit salva.', { variant: 'success' });
+      onClose();
+    } catch (requestError) {
+      enqueueSnackbar(apiErrorMessage(requestError), { variant: 'error' });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open onClose={saving ? undefined : onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Componentes do kit — {product.name}</DialogTitle>
+      <DialogContent>
+        {loading ? (
+          <Typography color="text.secondary" sx={{ py: 2 }} role="status">
+            Carregando composição…
+          </Typography>
+        ) : (
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            {rows.map((row, index) => (
+              <Stack key={index} direction="row" spacing={1.5} alignItems="center">
+                <TextField
+                  select
+                  label="Componente"
+                  value={row.componentProductId}
+                  onChange={(event) =>
+                    setRows((current) =>
+                      current.map((r, i) =>
+                        i === index ? { ...r, componentProductId: event.target.value } : r,
+                      ),
+                    )
+                  }
+                  size="small"
+                  sx={{ flex: 2 }}
+                >
+                  {allProducts
+                    .filter(
+                      (candidate) => candidate.format !== 'bundle' && candidate.id !== product.id,
+                    )
+                    .map((candidate) => (
+                      <MenuItem key={candidate.id} value={candidate.id}>
+                        {candidate.name}
+                      </MenuItem>
+                    ))}
+                </TextField>
+                <TextField
+                  label="Qtd"
+                  type="number"
+                  value={row.quantity}
+                  onChange={(event) =>
+                    setRows((current) =>
+                      current.map((r, i) =>
+                        i === index ? { ...r, quantity: event.target.value } : r,
+                      ),
+                    )
+                  }
+                  size="small"
+                  inputProps={{ min: 0, step: '0.001' }}
+                  sx={{ width: 110 }}
+                />
+                <Button
+                  size="small"
+                  onClick={() => setRows((current) => current.filter((_, i) => i !== index))}
+                  disabled={rows.length === 1}
+                >
+                  Remover
+                </Button>
+              </Stack>
+            ))}
+            <Button
+              onClick={() =>
+                setRows((current) => [...current, { componentProductId: '', quantity: '1' }])
+              }
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              Adicionar componente
+            </Button>
+          </Stack>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} disabled={saving}>
+          Cancelar
+        </Button>
+        <Button variant="contained" onClick={() => void save()} disabled={saving || loading}>
+          Salvar composição
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }

@@ -19,6 +19,7 @@ import { SetCommercialRuleUseCase } from './application/use-cases/set-commercial
 import { CreateTripUseCase } from './application/use-cases/create-trip/create-trip.use-case';
 import { ChangeTripStatusUseCase } from './application/use-cases/change-trip-status/change-trip-status.use-case';
 import { ListTripsUseCase } from './application/use-cases/list-trips/list-trips.use-case';
+import { GetTripDetailsUseCase } from './application/use-cases/get-trip-details/get-trip-details.use-case';
 import { LoadTripCargoUseCase } from './application/use-cases/load-trip-cargo/load-trip-cargo.use-case';
 import { BuildTripWalletUseCase } from './application/use-cases/build-trip-wallet/build-trip-wallet.use-case';
 import { RegisterFieldReceiptUseCase } from './application/use-cases/register-field-receipt/register-field-receipt.use-case';
@@ -70,6 +71,7 @@ import { PromissoryDebtorLookup } from '../../infrastructure/persistence/mikro-o
     CreateTripUseCase,
     ChangeTripStatusUseCase,
     ListTripsUseCase,
+    GetTripDetailsUseCase,
     LoadTripCargoUseCase,
     BuildTripWalletUseCase,
     RegisterFieldReceiptUseCase,
@@ -93,6 +95,7 @@ import { PromissoryDebtorLookup } from '../../infrastructure/persistence/mikro-o
     CreateTripUseCase,
     ChangeTripStatusUseCase,
     ListTripsUseCase,
+    GetTripDetailsUseCase,
     LoadTripCargoUseCase,
     BuildTripWalletUseCase,
     RegisterFieldReceiptUseCase,

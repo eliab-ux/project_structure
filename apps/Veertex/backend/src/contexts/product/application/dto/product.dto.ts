@@ -38,6 +38,8 @@ export class ProductDto {
   name!: string;
   sku!: string | null;
   format!: ProductFormat;
+  /** Composição do kit (§2.5 do 03) — presente só no GET por id de um `bundle`. */
+  components?: { componentProductId: string; quantity: number }[];
   kind!: ProductKind;
   unit!: CommercialUnit;
   condition!: ProductCondition;

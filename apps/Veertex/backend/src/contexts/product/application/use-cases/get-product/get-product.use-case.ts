@@ -5,6 +5,10 @@ import {
   ProductRepositoryPort,
 } from '../../ports/output/product-repository.port';
 import { SUPPLIER_LOOKUP, SupplierLookupPort } from '../../ports/output/supplier-lookup.port';
+import {
+  PRODUCT_COMPONENT_REPOSITORY,
+  ProductComponentRepositoryPort,
+} from '../../ports/output/product-component-repository.port';
 import { ProductId } from '../../../domain/value-objects/product-id.vo';
 import { ProductDto } from '../../dto/product.dto';
 import { ProductNotFoundException } from '../../../domain/exceptions/product-exceptions';
@@ -21,6 +25,8 @@ export class GetProductUseCase implements UseCase<GetProductQuery, ProductDto> {
   constructor(
     @Inject(PRODUCT_REPOSITORY) private readonly products: ProductRepositoryPort,
     @Inject(SUPPLIER_LOOKUP) private readonly suppliers: SupplierLookupPort,
+    @Inject(PRODUCT_COMPONENT_REPOSITORY)
+    private readonly components: ProductComponentRepositoryPort,
   ) {}
 
   async execute(query: GetProductQuery): Promise<ProductDto> {
@@ -39,6 +45,11 @@ export class GetProductUseCase implements UseCase<GetProductQuery, ProductDto> {
         )
       : new Map<string, string>();
 
-    return ProductDto.fromDomain(product, query.activeModules, nomes);
+    const dto = ProductDto.fromDomain(product, query.activeModules, nomes);
+    if (product.format === 'bundle') {
+      // A composição sai no GET por id — a tela de kit edita sobre o que EXISTE, nunca às cegas.
+      dto.components = await this.components.findByParent(product.id.value);
+    }
+    return dto;
   }
 }

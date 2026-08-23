@@ -61,6 +61,11 @@ import {
   CloseTripUseCase,
   TripClosureSummary,
 } from '../../../../contexts/route/application/use-cases/close-trip/close-trip.use-case';
+import {
+  GetTripDetailsQuery,
+  GetTripDetailsUseCase,
+  TripDetailsDto,
+} from '../../../../contexts/route/application/use-cases/get-trip-details/get-trip-details.use-case';
 import { TripExpenseCategory } from '../../../../contexts/route/domain/entities/trip-expense.entity';
 import { TripDto } from '../../../../contexts/route/application/dto/trip.dto';
 import { AuthTokenPayload } from '../../../../contexts/auth/application/ports/output/token-service.port';
@@ -105,6 +110,7 @@ export class TripController {
     private readonly exchangeItems: ExchangeConsignedItemsUseCase,
     private readonly registerExpense: RegisterTripExpenseUseCase,
     private readonly closeTrip: CloseTripUseCase,
+    private readonly getTripDetails: GetTripDetailsUseCase,
   ) {}
 
   @Get()
@@ -117,6 +123,13 @@ export class TripController {
         status: query.status ?? null,
       }),
     );
+  }
+
+  @Get(':id')
+  @RequirePermission(PERMISSIONS.rot.read)
+  async details(@Param('id', ParseUUIDPipe) id: string): Promise<TripDetailsDto> {
+    // Viagem + carteira + recebimentos + despesas numa leitura — a tela do acerto opera sobre isto.
+    return this.getTripDetails.execute(new GetTripDetailsQuery(id));
   }
 
   @Post()

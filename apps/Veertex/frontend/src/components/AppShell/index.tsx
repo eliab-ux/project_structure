@@ -34,32 +34,102 @@ import { MESA } from 'src/constants/routes';
  * segurança: quem decide é o `PermissionGuard` no backend. Esconder só evita oferecer um caminho
  * que terminaria em 403.
  */
-const ADMIN_NAV = [
-  { href: MESA, label: 'Mesa', permission: null, module: null },
-  { href: '/companies', label: 'Empresas', permission: 'companies.read', module: null },
-  { href: '/contacts', label: 'Contatos', permission: 'contacts.read', module: null },
-  { href: '/products', label: 'Produtos', permission: 'products.read', module: null },
-  // Pedidos é MÓDULO (VND), não CORE: só aparece se o módulo está ativo (plano ∩ conta) E o papel
-  // tem a permissão. `module` some do menu quando o módulo é desligado — o guard já recusaria a rota.
-  { href: '/orders', label: 'Pedidos', permission: 'orders.read', module: 'VND' },
-  { href: '/users', label: 'Usuários', permission: 'users.read', module: null },
-  { href: '/roles', label: 'Papéis', permission: 'roles.read', module: null },
-  // Módulos é tela de CONFIGURAÇÃO DA CONTA, não de módulo — por isso entra aqui, fixa, e não no
-  // menu derivado de `plano ∩ conta ∩ papel`. Ela é justamente onde esse cruzamento se administra:
-  // um menu que sumisse ao desligar módulos tiraria o caminho de voltar a ligá-los.
-  // `account.read` e não `account.update`: ver a configuração não é alterá-la (esconder não é
-  // proteger — quem só lê continua vendo, com os controles inertes e explicados).
-  { href: '/modules', label: 'Módulos', permission: 'account.read', module: null },
-  // Personalizar campos (§3.6) e preferências da conta (§1 do 01A) — configuração da conta, como
-  // Módulos. `fields.read`/`account.read`: ver a configuração não é alterá-la.
-  { href: '/settings/fields', label: 'Campos', permission: 'fields.read', module: null },
+interface NavItem {
+  href: string;
+  label: string;
+  permission: string | null;
+  module: string | null;
+}
+
+interface NavGroup {
+  label: string;
+  /** Módulo que liga o grupo inteiro — `null` = sempre visível (CORE/configuração da conta). */
+  module: string | null;
+  items: NavItem[];
+}
+
+/**
+ * O menu agrupado POR MÓDULO. Grupo de módulo (`module`) some inteiro quando o módulo é desligado —
+ * o guard já recusaria a rota; itens individuais somem por permissão. Grupo com UM item visível
+ * vira botão direto (dropdown de um item é um clique a mais por nada).
+ */
+const NAV_GROUPS: NavGroup[] = [
   {
-    href: '/settings/preferences',
-    label: 'Preferências',
-    permission: 'account.read',
+    label: 'Mesa',
     module: null,
+    items: [{ href: MESA, label: 'Mesa', permission: null, module: null }],
   },
-] as const;
+  {
+    label: 'Cadastros',
+    module: null,
+    items: [
+      { href: '/companies', label: 'Empresas', permission: 'companies.read', module: null },
+      { href: '/contacts', label: 'Contatos', permission: 'contacts.read', module: null },
+      { href: '/products', label: 'Produtos', permission: 'products.read', module: null },
+    ],
+  },
+  {
+    label: 'Vendas',
+    module: 'VND',
+    items: [
+      { href: '/orders', label: 'Pedidos', permission: 'orders.read', module: 'VND' },
+      {
+        href: '/sales/price-lists',
+        label: 'Tabelas de preço',
+        permission: 'sales.settings.read',
+        module: 'VND',
+      },
+      {
+        href: '/sales/payment-conditions',
+        label: 'Condições de pagamento',
+        permission: 'sales.settings.read',
+        module: 'VND',
+      },
+      {
+        href: '/sales/commission',
+        label: 'Comissão (modelo A)',
+        permission: 'sales.settings.read',
+        module: 'VND',
+      },
+    ],
+  },
+  {
+    label: 'Estoque',
+    module: 'EST',
+    items: [{ href: '/stock', label: 'Estoque', permission: 'stock.read', module: 'EST' }],
+  },
+  {
+    label: 'Financeiro',
+    module: 'FIN',
+    items: [{ href: '/finance', label: 'Financeiro', permission: 'finance.read', module: 'FIN' }],
+  },
+  {
+    label: 'Rotas',
+    module: 'ROT',
+    items: [
+      { href: '/routes', label: 'Rotas', permission: 'rot.read', module: 'ROT' },
+      { href: '/trips', label: 'Viagens', permission: 'rot.read', module: 'ROT' },
+    ],
+  },
+  {
+    // Configuração da conta — fixa, nunca derivada de módulo: é onde os módulos se administram, e
+    // um menu que sumisse ao desligar módulos tiraria o caminho de voltar a ligá-los.
+    label: 'Conta',
+    module: null,
+    items: [
+      { href: '/users', label: 'Usuários', permission: 'users.read', module: null },
+      { href: '/roles', label: 'Papéis', permission: 'roles.read', module: null },
+      { href: '/modules', label: 'Módulos', permission: 'account.read', module: null },
+      { href: '/settings/fields', label: 'Campos', permission: 'fields.read', module: null },
+      {
+        href: '/settings/preferences',
+        label: 'Preferências',
+        permission: 'account.read',
+        module: null,
+      },
+    ],
+  },
+];
 
 /**
  * NAVEGAÇÃO CONTEXTUAL (§3), e o comportamento é o ponto da tese.
@@ -82,10 +152,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [navAnchorEl, setNavAnchorEl] = useState<HTMLElement | null>(null);
 
   const onMesa = pathname === MESA;
-  const visibleNav = ADMIN_NAV.filter(
-    (item) =>
-      (!item.permission || can(item.permission)) && (!item.module || hasModule(item.module)),
-  );
+  const visibleGroups = NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter(
+      (item) =>
+        (!item.permission || can(item.permission)) && (!item.module || hasModule(item.module)),
+    ),
+  })).filter((group) => group.items.length > 0 && (!group.module || hasModule(group.module)));
+  // A lista plana continua alimentando o menu do celular e a rota de escape da Mesa.
+  const visibleNav = visibleGroups.flatMap((group) => group.items);
 
   /**
    * `Esc` volta para a Mesa de qualquer tela (§3).
@@ -127,28 +202,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             spacing={0.5}
             sx={{ ml: 3, display: { xs: 'none', md: onMesa ? 'none' : 'flex' } }}
           >
-            {visibleNav.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-              return (
-                <Button
-                  key={item.href}
-                  component={NextLink}
-                  href={item.href}
-                  color="inherit"
-                  size="small"
-                  aria-current={active ? 'page' : undefined}
-                  sx={{
-                    fontWeight: active ? 700 : 400,
-                    // Sublinhado, e não só o negrito: peso de fonte sozinho é uma diferença que
-                    // passa despercebida e que ninguém enxerga em monocromático.
-                    borderBottom: active ? '2px solid currentColor' : '2px solid transparent',
-                    borderRadius: 0,
-                  }}
-                >
-                  {item.label}
-                </Button>
-              );
-            })}
+            {visibleGroups.map((group) =>
+              group.items.length === 1 ? (
+                <NavLinkButton
+                  key={group.items[0].href}
+                  href={group.items[0].href}
+                  label={group.items[0].label}
+                  pathname={pathname}
+                />
+              ) : (
+                <NavGroupButton key={group.label} group={group} pathname={pathname} />
+              ),
+            )}
           </Stack>
 
           <Box sx={{ flexGrow: 1 }} />
@@ -266,5 +331,75 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {children}
       </Box>
     </Box>
+  );
+}
+
+function isActivePath(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function NavLinkButton({
+  href,
+  label,
+  pathname,
+}: {
+  href: string;
+  label: string;
+  pathname: string;
+}) {
+  const active = isActivePath(pathname, href);
+  return (
+    <Button
+      component={NextLink}
+      href={href}
+      color="inherit"
+      size="small"
+      aria-current={active ? 'page' : undefined}
+      sx={{
+        fontWeight: active ? 700 : 400,
+        // Sublinhado, e não só o negrito: peso de fonte sozinho é uma diferença que passa
+        // despercebida e que ninguém enxerga em monocromático.
+        borderBottom: active ? '2px solid currentColor' : '2px solid transparent',
+        borderRadius: 0,
+      }}
+    >
+      {label}
+    </Button>
+  );
+}
+
+function NavGroupButton({ group, pathname }: { group: NavGroup; pathname: string }) {
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const active = group.items.some((item) => isActivePath(pathname, item.href));
+  return (
+    <>
+      <Button
+        color="inherit"
+        size="small"
+        aria-haspopup="menu"
+        aria-current={active ? 'page' : undefined}
+        onClick={(event) => setAnchorEl(event.currentTarget)}
+        sx={{
+          fontWeight: active ? 700 : 400,
+          borderBottom: active ? '2px solid currentColor' : '2px solid transparent',
+          borderRadius: 0,
+        }}
+      >
+        {group.label} ▾
+      </Button>
+      <Menu anchorEl={anchorEl} open={!!anchorEl} onClose={() => setAnchorEl(null)}>
+        {group.items.map((item) => (
+          <MenuItem
+            key={item.href}
+            component={NextLink}
+            href={item.href}
+            onClick={() => setAnchorEl(null)}
+            selected={isActivePath(pathname, item.href)}
+          >
+            {item.label}
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
   );
 }

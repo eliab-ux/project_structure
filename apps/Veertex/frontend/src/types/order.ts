@@ -1,7 +1,15 @@
 /** Espelha o `OrderDto` do backend (VND, §02). */
 
 export type OrderStatus =
-  'rascunho' | 'orcamento' | 'confirmado' | 'faturado' | 'concluido' | 'cancelado';
+  | 'rascunho'
+  | 'orcamento'
+  | 'confirmado'
+  | 'faturado'
+  | 'concluido'
+  | 'cancelado'
+  | 'consignado_aberto'
+  | 'em_acerto'
+  | 'fechado';
 export type OrderOrigin = 'erp' | 'pdv' | 'rota' | 'vitrine' | 'marketplace';
 export type DeliveryMode = 'retirada' | 'envio' | 'rota_entrega';
 
@@ -12,6 +20,9 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   faturado: 'Faturado',
   concluido: 'Concluído',
   cancelado: 'Cancelado',
+  consignado_aberto: 'Consignado aberto',
+  em_acerto: 'Em acerto',
+  fechado: 'Fechado',
 };
 
 export const ORDER_ORIGIN_LABEL: Record<OrderOrigin, string> = {
@@ -53,6 +64,8 @@ export interface Order {
   deliveryMode: string;
   deliveryModeLabel: string;
   originDetail: string | null;
+  tripId: string | null;
+  paymentConditionId: string | null;
   status: OrderStatus;
   statusLabel: string;
   items: OrderItem[];
@@ -83,6 +96,8 @@ export interface CreateOrderPayload {
   origin: OrderOrigin;
   deliveryMode?: DeliveryMode;
   originDetail?: string | null;
+  tripId?: string | null;
+  paymentConditionId?: string | null;
   items: OrderItemPayload[];
   discountPercent?: number | null;
   discountValue?: number | null;

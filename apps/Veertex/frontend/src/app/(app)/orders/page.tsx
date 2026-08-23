@@ -36,10 +36,14 @@ import contactService from 'src/services/contactService';
 import userService from 'src/services/userService';
 import productService from 'src/services/productService';
 import stockService from 'src/services/stockService';
+import salesConfigService from 'src/services/salesConfigService';
+import routeService from 'src/services/routeService';
 import { Company } from 'src/types/admin';
 import { Contact } from 'src/types/admin';
 import { AdminUser } from 'src/types/admin';
 import { Product } from 'src/types/product';
+import { PaymentCondition, PRICE_SOURCE_LABEL } from 'src/types/sales';
+import { Trip } from 'src/types/route';
 import {
   Order,
   ORDER_ORIGIN_LABEL,
@@ -57,6 +61,8 @@ interface Refs {
   customers: Contact[];
   sellers: AdminUser[];
   products: Product[];
+  paymentConditions: PaymentCondition[];
+  trips: Trip[];
 }
 
 const STATUS_CHIP: Record<OrderStatus, 'default' | 'info' | 'success' | 'warning'> = {
@@ -66,6 +72,9 @@ const STATUS_CHIP: Record<OrderStatus, 'default' | 'info' | 'success' | 'warning
   faturado: 'warning',
   concluido: 'success',
   cancelado: 'default',
+  consignado_aberto: 'warning',
+  em_acerto: 'info',
+  fechado: 'success',
 };
 
 /**
@@ -135,8 +144,13 @@ export default function OrdersPage() {
           userService.list(),
           productService.list({}),
         ]);
+        // Condições (VND) e viagens (ROT) são de módulos opcionais — falha vira lista vazia.
+        const [paymentConditions, trips] = await Promise.all([
+          salesConfigService.listPaymentConditions().catch(() => [] as PaymentCondition[]),
+          routeService.listTrips().catch(() => [] as Trip[]),
+        ]);
         if (!cancelled) {
-          setRefs({ companies, customers, sellers, products });
+          setRefs({ companies, customers, sellers, products, paymentConditions, trips });
         }
       } catch {
         // Silencioso: a lista de pedidos ainda funciona; o formulário avisa se as refs faltarem.
@@ -155,9 +169,14 @@ export default function OrdersPage() {
     return { company, contact, seller };
   }, [refs]);
 
-  async function runAction(order: Order, action: 'confirm' | 'complete' | 'cancel') {
+  async function runAction(order: Order, action: 'quote' | 'confirm' | 'complete' | 'cancel') {
     try {
-      const verb = { confirm: 'confirmado', complete: 'concluído', cancel: 'cancelado' }[action];
+      const verb = {
+        quote: 'virou orçamento',
+        confirm: 'confirmado',
+        complete: 'concluído',
+        cancel: 'cancelado',
+      }[action];
       await orderService[action](order.id);
       enqueueSnackbar(`Pedido #${order.number} ${verb}.`, { variant: 'success' });
       await load();
@@ -362,7 +381,7 @@ function OrderActions({
   canUpdate: boolean;
   canCancel: boolean;
   onEdit: () => void;
-  onAction: (action: 'confirm' | 'complete' | 'cancel') => void;
+  onAction: (action: 'quote' | 'confirm' | 'complete' | 'cancel') => void;
 }) {
   return (
     <Stack direction="row" spacing={0.5} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
@@ -371,10 +390,20 @@ function OrderActions({
           <Button size="small" onClick={onEdit}>
             Editar
           </Button>
+          <Button size="small" onClick={() => onAction('quote')}>
+            Gerar orçamento
+          </Button>
           <Button size="small" variant="outlined" onClick={() => onAction('confirm')}>
             Confirmar
           </Button>
         </>
+      ) : null}
+
+      {order.status === 'orcamento' && canUpdate ? (
+        // A CONVERSÃO do orçamento (§3.3 do 02A): confirmar é o que o transforma em pedido firme.
+        <Button size="small" variant="outlined" onClick={() => onAction('confirm')}>
+          Converter em pedido
+        </Button>
       ) : null}
 
       {order.status === 'confirmado' && canUpdate ? (
@@ -393,7 +422,10 @@ function OrderActions({
         </>
       ) : null}
 
-      {(order.status === 'rascunho' || order.status === 'confirmado') && canCancel ? (
+      {(order.status === 'rascunho' ||
+        order.status === 'orcamento' ||
+        order.status === 'confirmado') &&
+      canCancel ? (
         <Button size="small" color="error" onClick={() => onAction('cancel')}>
           Cancelar
         </Button>
@@ -444,6 +476,9 @@ function OrderFormDialog({
   const [contactId, setContactId] = useState(editing?.contactId ?? '');
   const [salesRepId, setSalesRepId] = useState(editing?.salesRepId ?? '');
   const [origin, setOrigin] = useState<OrderOrigin>((editing?.origin as OrderOrigin) ?? 'pdv');
+  // Condição de pagamento (§3.6): '' = herdar o default do contato (a herança é do servidor).
+  const [paymentConditionId, setPaymentConditionId] = useState(editing?.paymentConditionId ?? '');
+  const [tripId, setTripId] = useState(editing?.tripId ?? '');
   const [referenceDate, setReferenceDate] = useState(
     (editing?.referenceDate ?? new Date().toISOString()).slice(0, 10),
   );
@@ -468,18 +503,29 @@ function OrderFormDialog({
 
   const productById = useMemo(() => new Map(refs.products.map((p) => [p.id, p])), [refs.products]);
 
+  // O nome da condição default do cliente escolhido — só para o helperText dizer o que "herdar" dá.
+  const contactDefaultConditionName = useMemo(() => {
+    const contact = refs.customers.find((c) => c.id === contactId);
+    const defaultId = contact?.defaultPaymentConditionId;
+    if (!defaultId) return null;
+    return refs.paymentConditions.find((condition) => condition.id === defaultId)?.name ?? null;
+  }, [refs.customers, refs.paymentConditions, contactId]);
+
   function setItem(index: number, patch: Partial<ItemRow>) {
     setItems((current) => current.map((row, i) => (i === index ? { ...row, ...patch } : row)));
   }
 
+  // De onde veio o preço de cada linha (tabela do cliente/vendedor/base) — informativo (§3.2 02A).
+  const [priceSource, setPriceSource] = useState<Record<number, string>>({});
+
   function onPickProduct(index: number, productId: string) {
     const product = productById.get(productId);
-    // Preço cai para o base do produto ao escolher — editável (§3.5). Se o produto não tem base, fica
-    // em branco e o operador informa.
+    // Preço provisório = base do produto; o resolve da tabela de preço substitui quando responder.
     setItem(index, {
       productId,
       unitPrice: product?.basePrice != null ? String(product.basePrice) : '',
     });
+    resolveLinePrice(index, productId);
     // Busca o disponível (§3.9) — a informação que decide a confirmação. Silencioso em falha.
     if (estActive && companyId && productId && available[productId] === undefined) {
       stockService
@@ -487,6 +533,33 @@ function OrderFormDialog({
         .then((b) => setAvailable((current) => ({ ...current, [productId]: b.available })))
         .catch(() => undefined);
     }
+  }
+
+  /**
+   * Consulta a tabela de preço vigente (GET /price-lists/resolve) para produto+quantidade, com o
+   * cliente e o vendedor do cabeçalho. Falha é silenciosa: o preço base já está na linha, e o
+   * servidor resolve de novo (com autoridade) ao salvar sem preço informado.
+   */
+  function resolveLinePrice(index: number, productId: string, quantityRaw?: string) {
+    if (!productId) return;
+    const quantity = Number(quantityRaw ?? items[index]?.quantity ?? 1) || 1;
+    salesConfigService
+      .resolvePrice({
+        productId,
+        quantity,
+        ...(contactId ? { contactId } : {}),
+        ...(salesRepId || defaultSellerId
+          ? { salesRepId: salesRepId || (defaultSellerId as string) }
+          : {}),
+      })
+      .then((resolved) => {
+        setItem(index, { productId, unitPrice: String(resolved.unitPrice) });
+        setPriceSource((current) => ({
+          ...current,
+          [index]: PRICE_SOURCE_LABEL[resolved.source] ?? resolved.source,
+        }));
+      })
+      .catch(() => undefined);
   }
 
   const total = useMemo(
@@ -508,6 +581,10 @@ function OrderFormDialog({
       enqueueSnackbar('Adicione ao menos um item.', { variant: 'warning' });
       return;
     }
+    if (origin === 'rota' && !tripId) {
+      enqueueSnackbar('Pedido de rota precisa de uma viagem.', { variant: 'warning' });
+      return;
+    }
 
     setSaving(true);
     try {
@@ -521,6 +598,9 @@ function OrderFormDialog({
       const common = {
         salesRepId: salesRepId || null,
         origin,
+        // '' = herdar o default do contato — a herança acontece no servidor, uma vez, na criação.
+        paymentConditionId: paymentConditionId || null,
+        tripId: origin === 'rota' ? tripId || null : null,
         items: itemsPayload,
         discountPercent: canDiscount && orderDiscountPercent ? Number(orderDiscountPercent) : null,
         discountValue: canDiscount && orderDiscountValue ? Number(orderDiscountValue) : null,
@@ -634,6 +714,54 @@ function OrderFormDialog({
             />
           </Stack>
 
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <TextField
+              select
+              label="Condição de pagamento"
+              value={paymentConditionId}
+              onChange={(e) => setPaymentConditionId(e.target.value)}
+              fullWidth
+              helperText={
+                contactDefaultConditionName
+                  ? `Em branco = herdar do cliente (${contactDefaultConditionName}).`
+                  : 'Em branco = herdar o default do cliente, se houver.'
+              }
+            >
+              <MenuItem value="">Herdar do cliente</MenuItem>
+              {refs.paymentConditions
+                .filter((condition) => condition.active)
+                .map((condition) => (
+                  <MenuItem key={condition.id} value={condition.id}>
+                    {condition.name} ({condition.kindLabel})
+                  </MenuItem>
+                ))}
+            </TextField>
+
+            {origin === 'rota' ? (
+              <TextField
+                select
+                label="Viagem"
+                value={tripId}
+                onChange={(e) => setTripId(e.target.value)}
+                fullWidth
+                required
+                helperText="Pedido de rota pertence a uma viagem (§3.1 do 04)."
+              >
+                {refs.trips
+                  .filter((trip) => trip.status === 'planejada' || trip.status === 'em_andamento')
+                  .map((trip) => (
+                    <MenuItem key={trip.id} value={trip.id}>
+                      {`${trip.statusLabel} — saída ${
+                        trip.departureAt
+                          ? new Date(trip.departureAt).toLocaleDateString('pt-BR')
+                          : 'não registrada'
+                      } (${trip.id.slice(0, 8)})`}
+                    </MenuItem>
+                  ))}
+              </TextField>
+            ) : null}
+          </Stack>
+
           <Divider textAlign="left">
             <Typography variant="caption" color="text.secondary">
               Itens
@@ -673,6 +801,7 @@ function OrderFormDialog({
                     label="Qtd"
                     value={row.quantity}
                     onChange={(e) => setItem(index, { quantity: e.target.value })}
+                    onBlur={(e) => resolveLinePrice(index, row.productId, e.target.value)}
                     size="small"
                     inputProps={{ inputMode: 'decimal' }}
                     sx={{ width: 90 }}
@@ -683,7 +812,8 @@ function OrderFormDialog({
                     onChange={(e) => setItem(index, { unitPrice: e.target.value })}
                     size="small"
                     inputProps={{ inputMode: 'decimal' }}
-                    sx={{ width: 120 }}
+                    helperText={priceSource[index]}
+                    sx={{ width: 140 }}
                   />
                   {canDiscount ? (
                     <>

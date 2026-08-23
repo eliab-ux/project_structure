@@ -38,6 +38,8 @@ export interface Product {
   name: string;
   sku: string | null;
   format: ProductFormat;
+  /** Composição do kit — presente só no GET por id de um `bundle`. */
+  components?: { componentProductId: string; quantity: number }[];
   kind: ProductKind;
   unit: string;
   condition: ProductCondition;

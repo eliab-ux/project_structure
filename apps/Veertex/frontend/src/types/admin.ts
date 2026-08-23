@@ -182,6 +182,8 @@ export interface Contact {
   creditLimit: number | null;
   /** Vendedor vinculado (carteirização, §2.3 / ADR-0007). `null` = sem carteira. */
   salesRepId: string | null;
+  /** Condição de pagamento default (§3.6 do 02) — o pedido herda na criação. */
+  defaultPaymentConditionId: string | null;
   notes: string | null;
   municipalRegistration: string | null;
   suframa: string | null;
@@ -234,6 +236,7 @@ export interface CreateContactPayload {
   document?: string | null;
   creditLimit?: number | null;
   salesRepId?: string | null;
+  defaultPaymentConditionId?: string | null;
   notes?: string | null;
   emails?: { email: string; label?: string | null }[];
   phones?: { phone: string; label?: string | null; isWhatsapp?: boolean }[];
