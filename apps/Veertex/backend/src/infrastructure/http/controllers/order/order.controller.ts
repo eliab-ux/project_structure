@@ -84,6 +84,7 @@ export class OrderController {
         companyId: query.companyId ?? null,
         contactId: query.contactId ?? null,
         salesRepId: query.salesRepId ?? null,
+        tripId: query.tripId ?? null,
         referenceFrom: query.from ? new Date(query.from) : null,
         referenceTo: query.to ? new Date(query.to) : null,
         search: query.search ?? null,

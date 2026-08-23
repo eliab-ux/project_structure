@@ -23,7 +23,7 @@ import { DataState } from 'src/components/DataState';
 import { PageHeader } from 'src/components/PageHeader';
 import { useAuth } from 'src/contexts/AuthContext';
 import { apiErrorMessage } from 'src/services/api';
-import salesConfigService from 'src/services/salesConfigService';
+import salesConfigService, { ModelBTiers } from 'src/services/salesConfigService';
 import companyService from 'src/services/companyService';
 import userService from 'src/services/userService';
 import { CommissionModelAResult, CommissionTier, SalesTarget } from 'src/types/sales';
@@ -56,6 +56,9 @@ export default function CommissionPage() {
 
   const [tiers, setTiers] = useState<CommissionTier[]>([]);
   const [tierRows, setTierRows] = useState<TierRow[]>([]);
+  const [bTiers, setBTiers] = useState<ModelBTiers | null>(null);
+  const [bTierRows, setBTierRows] = useState<TierRow[]>([]);
+  const [savingBTiers, setSavingBTiers] = useState(false);
   const [targets, setTargets] = useState<SalesTarget[]>([]);
   const [sellers, setSellers] = useState<AdminUser[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -79,10 +82,18 @@ export default function CommissionPage() {
     setLoading(true);
     setError(null);
     try {
-      const [tierList, targetList] = await Promise.all([
+      const [tierList, targetList, bTierResult] = await Promise.all([
         salesConfigService.listCommissionTiers(),
         salesConfigService.listTargets(period),
+        salesConfigService.getModelBTiers().catch(() => null),
       ]);
+      setBTiers(bTierResult);
+      setBTierRows(
+        (bTierResult?.tiers ?? []).map((tier) => ({
+          thresholdPercent: String(tier.thresholdPercent),
+          commissionPercent: String(tier.commissionPercent),
+        })),
+      );
       setTiers(tierList);
       setTierRows(
         tierList.map((tier) => ({
@@ -135,6 +146,29 @@ export default function CommissionPage() {
       enqueueSnackbar(apiErrorMessage(requestError), { variant: 'error' });
     } finally {
       setSavingTiers(false);
+    }
+  }
+
+  async function saveBTiers() {
+    const parsed = bTierRows
+      .filter((row) => row.thresholdPercent !== '' && row.commissionPercent !== '')
+      .map((row) => ({
+        thresholdPercent: Number(row.thresholdPercent),
+        commissionPercent: Number(row.commissionPercent),
+      }));
+    if (parsed.length === 0) {
+      enqueueSnackbar('Informe ao menos uma faixa.', { variant: 'warning' });
+      return;
+    }
+    setSavingBTiers(true);
+    try {
+      const result = await salesConfigService.setModelBTiers(parsed);
+      setBTiers(result);
+      enqueueSnackbar('Faixas do modelo B salvas para a conta.', { variant: 'success' });
+    } catch (requestError) {
+      enqueueSnackbar(apiErrorMessage(requestError), { variant: 'error' });
+    } finally {
+      setSavingBTiers(false);
     }
   }
 
@@ -300,6 +334,94 @@ export default function CommissionPage() {
                 <Typography variant="caption" color="text.secondary">
                   Nenhuma faixa cadastrada — a apuração devolve comissão zero até existirem faixas.
                 </Typography>
+              ) : null}
+            </Stack>
+          </Paper>
+
+          <Paper
+            variant="outlined"
+            sx={{ p: 3 }}
+            component="article"
+            aria-label="Faixas do modelo B"
+          >
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Faixas do modelo B (rota)
+              {bTiers?.usingDefault ? (
+                <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                  — usando o padrão da operação (nada customizado)
+                </Typography>
+              ) : null}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Recebido ÷ carteira da viagem → faixa → % DIRETO sobre o recebido. Aplicadas no
+              fechamento da viagem; salvar aqui customiza a conta (o padrão real fica de seed).
+            </Typography>
+            <Stack spacing={1.5}>
+              {bTierRows.map((row, index) => (
+                <Stack key={index} direction="row" spacing={1.5} alignItems="center">
+                  <TextField
+                    label="Recebimento ≥ (%)"
+                    type="number"
+                    size="small"
+                    value={row.thresholdPercent}
+                    onChange={(event) =>
+                      setBTierRows((current) =>
+                        current.map((r, i) =>
+                          i === index ? { ...r, thresholdPercent: event.target.value } : r,
+                        ),
+                      )
+                    }
+                    inputProps={{ min: 0, step: '0.01' }}
+                    disabled={!canManage}
+                  />
+                  <TextField
+                    label="Comissão (%)"
+                    type="number"
+                    size="small"
+                    value={row.commissionPercent}
+                    onChange={(event) =>
+                      setBTierRows((current) =>
+                        current.map((r, i) =>
+                          i === index ? { ...r, commissionPercent: event.target.value } : r,
+                        ),
+                      )
+                    }
+                    inputProps={{ min: 0, step: '0.01' }}
+                    disabled={!canManage}
+                  />
+                  {canManage ? (
+                    <IconButton
+                      aria-label="Remover faixa B"
+                      onClick={() =>
+                        setBTierRows((current) => current.filter((_, i) => i !== index))
+                      }
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  ) : null}
+                </Stack>
+              ))}
+              {canManage ? (
+                <Stack direction="row" spacing={2}>
+                  <Button
+                    startIcon={<AddIcon />}
+                    onClick={() =>
+                      setBTierRows((current) => [
+                        ...current,
+                        { thresholdPercent: '', commissionPercent: '' },
+                      ])
+                    }
+                  >
+                    Adicionar faixa
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={() => void saveBTiers()}
+                    disabled={savingBTiers}
+                  >
+                    Salvar faixas B
+                  </Button>
+                </Stack>
               ) : null}
             </Stack>
           </Paper>

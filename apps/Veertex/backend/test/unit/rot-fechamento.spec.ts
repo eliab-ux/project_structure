@@ -2,6 +2,10 @@ import {
   CloseTripCommand,
   CloseTripUseCase,
 } from '../../src/contexts/route/application/use-cases/close-trip/close-trip.use-case';
+import {
+  GetTripClosureQuery,
+  GetTripClosureUseCase,
+} from '../../src/contexts/route/application/use-cases/get-trip-closure/get-trip-closure.use-case';
 import { Trip } from '../../src/contexts/route/domain/entities/trip.entity';
 import { TripCollection } from '../../src/contexts/route/domain/entities/trip-collection.entity';
 import { FieldReceipt } from '../../src/contexts/route/domain/entities/field-receipt.entity';
@@ -332,5 +336,57 @@ describe('CloseTrip — comparativo com a viagem anterior (§3.5 do 04)', () => 
     });
     const summary = await uc.execute(new CloseTripCommand(CONTA, trip.id));
     expect(summary.previousTrip).toBeNull();
+  });
+});
+
+describe('GetTripClosure — batimento RE-EXIBÍVEL por recomputação determinística (23/08/2026)', () => {
+  it('depois do fechamento, o GET devolve os MESMOS blocos e a folha persistida', async () => {
+    const trip = viagemEmFechamento(500);
+    trip.editHeader({ returnCash: 1540 });
+    const collections = [cobranca(trip, 't1', 2000)];
+    const receipts = [
+      recebimentoEfetivado(trip, 't1', 1000, 'dinheiro', 50),
+      recebimentoEfetivado(trip, null, 300, 'pix'),
+    ];
+    const expenses = [
+      TripExpense.create({ accountId: CONTA, tripId: trip.id, category: 'hotel', amount: 250 }),
+    ];
+    const { uc } = fakes({ trip, collections, receipts, expenses });
+    const closed = await uc.execute(
+      new CloseTripCommand(CONTA, trip.id, { managerPercent: 2, helperAmount: 600 }),
+    );
+
+    const trips = { findById: async () => trip, list: async () => [trip], save: async (t: Trip) => t };
+    const get = new GetTripClosureUseCase(
+      trips as never,
+      { listByTrip: async () => collections } as never,
+      { listByTrip: async () => receipts } as never,
+      { listByTrip: async () => expenses } as never,
+    );
+    const replay = await get.execute(new GetTripClosureQuery(trip.id));
+
+    // Blocos idênticos — mesma função, mesmos dados append-only.
+    expect(replay.cobranca).toEqual(closed.cobranca);
+    expect(replay.cash).toEqual(closed.cash);
+    expect(replay.expenses).toEqual(closed.expenses);
+    // Folha do PERSISTIDO (closure_*), não recomputada de faixas que podem ter mudado.
+    expect(replay.commission.repCommission).toBe(closed.commission.repCommission);
+    expect(replay.commission.commissionPercent).toBe(closed.commission.commissionPercent);
+    expect(replay.commission.managerCommission).toBe(closed.commission.managerCommission);
+    expect(replay.commission.helperAmount).toBe(600);
+    expect(replay.commission.appliedThresholdPercent).toBeNull();
+  });
+
+  it('viagem não fechada recusa — o batimento só existe depois do fechamento', async () => {
+    const trip = viagemEmFechamento();
+    const get = new GetTripClosureUseCase(
+      { findById: async () => trip, list: async () => [trip], save: async (t: Trip) => t } as never,
+      { listByTrip: async () => [] } as never,
+      { listByTrip: async () => [] } as never,
+      { listByTrip: async () => [] } as never,
+    );
+    await expect(get.execute(new GetTripClosureQuery(trip.id))).rejects.toThrow(
+      'batimento só existe para viagem fechada',
+    );
   });
 });

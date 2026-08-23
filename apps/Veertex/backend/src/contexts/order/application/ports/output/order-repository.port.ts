@@ -4,6 +4,8 @@ import { OrderId } from '../../../domain/value-objects/order-id.vo';
 export const ORDER_REPOSITORY = Symbol('ORDER_REPOSITORY');
 
 export interface ListOrdersFilter {
+  /** Pedidos de UMA viagem (04 §3.1) — a tela do acerto filtra no servidor, não no cliente. */
+  tripId?: string | null;
   status?: string | null;
   companyId?: string | null;
   contactId?: string | null;

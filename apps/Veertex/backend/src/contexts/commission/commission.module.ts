@@ -7,6 +7,10 @@ import { CommissionPayableViaFinance } from '../../infrastructure/persistence/mi
 import { FinanceModule } from '../finance/finance.module';
 import { SetCommissionTiersUseCase } from './application/use-cases/set-commission-tiers/set-commission-tiers.use-case';
 import { GetCommissionTiersUseCase } from './application/use-cases/get-commission-tiers/get-commission-tiers.use-case';
+import {
+  GetModelBTiersUseCase,
+  SetModelBTiersUseCase,
+} from './application/use-cases/model-b-tiers/model-b-tiers.use-case';
 import { SetSalesTargetUseCase } from './application/use-cases/set-sales-target/set-sales-target.use-case';
 import { ListSalesTargetsUseCase } from './application/use-cases/list-sales-targets/list-sales-targets.use-case';
 import { ComputeModelACommissionUseCase } from './application/use-cases/compute-model-a/compute-model-a.use-case';
@@ -25,6 +29,8 @@ import { GenerateCommissionPayableUseCase } from './application/use-cases/genera
     { provide: COMMISSION_PAYABLE, useClass: CommissionPayableViaFinance },
     SetCommissionTiersUseCase,
     GetCommissionTiersUseCase,
+    GetModelBTiersUseCase,
+    SetModelBTiersUseCase,
     SetSalesTargetUseCase,
     ListSalesTargetsUseCase,
     ComputeModelACommissionUseCase,
@@ -33,6 +39,8 @@ import { GenerateCommissionPayableUseCase } from './application/use-cases/genera
   exports: [
     SetCommissionTiersUseCase,
     GetCommissionTiersUseCase,
+    GetModelBTiersUseCase,
+    SetModelBTiersUseCase,
     SetSalesTargetUseCase,
     ListSalesTargetsUseCase,
     ComputeModelACommissionUseCase,

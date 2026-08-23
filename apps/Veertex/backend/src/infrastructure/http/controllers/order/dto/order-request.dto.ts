@@ -185,6 +185,10 @@ export class UpdateOrderRequestDto {
 
 export class ListOrdersQueryDto {
   @IsOptional()
+  @IsUUID()
+  tripId?: string;
+
+  @IsOptional()
   @IsIn(ORDER_STATUSES as unknown as string[])
   status?: string;
 

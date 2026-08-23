@@ -76,6 +76,22 @@ async function setCommissionTiers(tiers: CommissionTier[]): Promise<CommissionTi
   return response.data;
 }
 
+export interface ModelBTiers {
+  tiers: CommissionTier[];
+  usingDefault: boolean;
+}
+
+/** Faixas do Modelo B (rota) — customizáveis por conta; o default real da operação é o seed. */
+async function getModelBTiers(): Promise<ModelBTiers> {
+  const response = await api.get<ModelBTiers>('/commission/b-tiers');
+  return response.data;
+}
+
+async function setModelBTiers(tiers: CommissionTier[]): Promise<ModelBTiers> {
+  const response = await api.put<ModelBTiers>('/commission/b-tiers', { tiers });
+  return response.data;
+}
+
 async function listTargets(period: string): Promise<SalesTarget[]> {
   const response = await api.get<SalesTarget[]>('/commission/targets', { params: { period } });
   return response.data;
@@ -116,6 +132,8 @@ const salesConfigService = {
   updatePaymentCondition,
   listCommissionTiers,
   setCommissionTiers,
+  getModelBTiers,
+  setModelBTiers,
   listTargets,
   setTarget,
   computeModelA,

@@ -16,3 +16,10 @@ export class CommissionSalesRepNotFoundException extends DomainException {
     super('Vendedor não encontrado.');
   }
 }
+
+/** Faixas malformadas (vazias, limiar repetido, comissão decrescente) — erro de digitação, recusado. */
+export class InvalidCommissionTiersException extends DomainException {
+  constructor(message: string) {
+    super(message);
+  }
+}

@@ -31,6 +31,7 @@ import {
   TripExpenseRepositoryPort,
 } from '../../ports/output/trip-expense-repository.port';
 import { TripNotFoundException } from '../../../domain/exceptions/route-exceptions';
+import { buildPreviousTripComparison, computeClosureBlocks } from '../../trip-closure-math';
 
 export class CloseTripCommand {
   constructor(
@@ -126,46 +127,15 @@ export class CloseTripUseCase implements UseCase<CloseTripCommand, TripClosureSu
       );
       const expenses = await this.expenses.listByTrip(trip.id);
 
-      // ── Blocos cobrança/recobrança (§3.5) ─────────────────────────────────────────────────────
-      const walletByKind = { cobranca: 0, recobranca: 0 };
-      const titleKind = new Map<string, 'cobranca' | 'recobranca'>();
-      for (const c of collections) {
-        walletByKind[c.kind] += c.amountAtBuild;
-        titleKind.set(c.titleId, c.kind);
-      }
-      const receivedByKind = { cobranca: 0, recobranca: 0 };
-      let interestReceived = 0;
-      let otherReceipts = 0;
-      for (const r of receipts) {
-        if (r.insideWallet && r.titleId) {
-          const kind = titleKind.get(r.titleId) ?? 'cobranca';
-          receivedByKind[kind] += r.amount;
-          interestReceived += r.interest;
-        } else {
-          otherReceipts += r.amount;
-        }
-      }
-
-      // ── Despesas por categoria (§3.5) ─────────────────────────────────────────────────────────
-      const byCategory: Record<string, number> = {};
-      let expensesTotal = 0;
-      for (const e of expenses) {
-        byCategory[e.category] = round2((byCategory[e.category] ?? 0) + e.amount);
-        expensesTotal += e.amount;
-      }
-
-      const wallet = round2(walletByKind.cobranca + walletByKind.recobranca);
-      const received = round2(receivedByKind.cobranca + receivedByKind.recobranca);
-      const totalCashIn = round2(received + interestReceived + otherReceipts);
-
-      // ── Conferência física × sistema (§3.5): caixa esperado × contado ─────────────────────────
-      // Esperado = caixa inicial + tudo que entrou em DINHEIRO − despesas (pagas do caixa da viagem).
-      const cashReceipts = receipts
-        .filter((r) => r.method === 'dinheiro')
-        .reduce((sum, r) => sum + r.amount + r.interest, 0);
-      const expectedCash = round2(trip.initialCash + cashReceipts - expensesTotal);
-      const countedCash = trip.returnCash;
-      const cashDifference = countedCash === null ? null : round2(countedCash - expectedCash);
+      // A MESMA matemática da re-exibição (`trip-closure-math.ts`) — recomputação determinística.
+      const blocks = computeClosureBlocks({
+        initialCash: trip.initialCash,
+        returnCash: trip.returnCash,
+        collections,
+        receipts,
+        expenses,
+      });
+      const { wallet, received } = blocks;
 
       // ── Folha de comissões (§3.6) — motor B, faixas da conta (default = operação real) ────────
       const accountTiers = await this.bTiers.getForAccount();
@@ -223,31 +193,24 @@ export class CloseTripUseCase implements UseCase<CloseTripCommand, TripClosureSu
 
       // ── Comparativo com a viagem anterior (§3.5) ──────────────────────────────────────────────
       const receivedPercent = pct(received, wallet);
-      const previousTrip = await this.buildPreviousTripComparison(trip, {
-        received,
-        receivedPercent,
-        expensesTotal: round2(expensesTotal),
-      });
+      const previousTrip = await buildPreviousTripComparison(
+        {
+          listTrips: (filter) => this.trips.list(filter),
+          listCollections: (tripId) => this.collections.listByTrip(tripId),
+          listReceipts: (tripId) => this.receipts.listByTrip(tripId),
+          listExpenses: (tripId) => this.expenses.listByTrip(tripId),
+        },
+        trip,
+        { received, receivedPercent, expensesTotal: blocks.expenses.total },
+      );
 
       return {
-        cobranca: {
-          wallet: round2(walletByKind.cobranca),
-          received: round2(receivedByKind.cobranca),
-          percent: pct(receivedByKind.cobranca, walletByKind.cobranca),
-        },
-        recobranca: {
-          wallet: round2(walletByKind.recobranca),
-          received: round2(receivedByKind.recobranca),
-          percent: pct(receivedByKind.recobranca, walletByKind.recobranca),
-        },
-        interestReceived: round2(interestReceived),
-        otherReceipts: round2(otherReceipts),
-        expenses: {
-          byCategory,
-          total: round2(expensesTotal),
-          percentOfReceived: pct(expensesTotal, totalCashIn),
-        },
-        cash: { expected: expectedCash, counted: countedCash, difference: cashDifference },
+        cobranca: blocks.cobranca,
+        recobranca: blocks.recobranca,
+        interestReceived: blocks.interestReceived,
+        otherReceipts: blocks.otherReceipts,
+        expenses: blocks.expenses,
+        cash: blocks.cash,
         commission: {
           wallet,
           received,
@@ -264,57 +227,4 @@ export class CloseTripUseCase implements UseCase<CloseTripCommand, TripClosureSu
     });
   }
 
-  /**
-   * A viagem anterior = a última FECHADA da mesma rota que saiu antes desta. Os números dela saem
-   * das cobranças/recebimentos append-only (mesma régua do fechamento atual). Falha aqui não pode
-   * derrubar um fechamento — o comparativo é leitura; sem anterior, é `null` e o fechamento segue.
-   */
-  private async buildPreviousTripComparison(
-    trip: { id: string; routeId: string; departureAt: Date | null; createdAt: Date },
-    current: { received: number; receivedPercent: number; expensesTotal: number },
-  ): Promise<TripClosureSummary['previousTrip']> {
-    const closed = await this.trips.list({ routeId: trip.routeId, status: 'fechada' });
-    const anchor = (trip.departureAt ?? trip.createdAt).getTime();
-    const previous = closed
-      .filter((t) => t.id !== trip.id)
-      .filter((t) => (t.departureAt ?? t.createdAt).getTime() <= anchor)
-      .sort(
-        (a, b) => (b.departureAt ?? b.createdAt).getTime() - (a.departureAt ?? a.createdAt).getTime(),
-      )[0];
-    if (!previous) {
-      return null;
-    }
-
-    const collections = await this.collections.listByTrip(previous.id);
-    const walletTitleIds = new Set(collections.map((c) => c.titleId));
-    const wallet = round2(collections.reduce((sum, c) => sum + c.amountAtBuild, 0));
-
-    const receipts = (await this.receipts.listByTrip(previous.id)).filter(
-      (r) => r.status === 'efetivado',
-    );
-    const received = round2(
-      receipts
-        .filter((r) => r.insideWallet && r.titleId && walletTitleIds.has(r.titleId))
-        .reduce((sum, r) => sum + r.amount, 0),
-    );
-
-    const expensesTotal = round2(
-      (await this.expenses.listByTrip(previous.id)).reduce((sum, e) => sum + e.amount, 0),
-    );
-
-    const receivedPercent = wallet > 0 ? round2((received / wallet) * 100) : 0;
-    return {
-      tripId: previous.id,
-      departureAt: previous.departureAt ? previous.departureAt.toISOString() : null,
-      wallet,
-      received,
-      receivedPercent,
-      expensesTotal,
-      deltas: {
-        received: round2(current.received - received),
-        receivedPercent: round2(current.receivedPercent - receivedPercent),
-        expensesTotal: round2(current.expensesTotal - expensesTotal),
-      },
-    };
-  }
 }

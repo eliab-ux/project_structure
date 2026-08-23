@@ -31,6 +31,12 @@ import { PERMISSIONS } from '../../../../contexts/role/domain/permissions.catalo
 import { ModuleGuard } from '../../../security/guards/module.guard';
 import { PermissionGuard } from '../../../security/guards/permission.guard';
 import { RequireModule } from '../../../security/decorators/require-module.decorator';
+import {
+  GetModelBTiersUseCase,
+  ModelBTiersDto,
+  SetModelBTiersCommand,
+  SetModelBTiersUseCase,
+} from '../../../../contexts/commission/application/use-cases/model-b-tiers/model-b-tiers.use-case';
 import { RequirePermission } from '../../../security/decorators/require-permission.decorator';
 import { CurrentUser } from '../../../security/decorators/current-user.decorator';
 import {
@@ -53,6 +59,8 @@ export class CommissionController {
   constructor(
     private readonly setTiers: SetCommissionTiersUseCase,
     private readonly getTiers: GetCommissionTiersUseCase,
+    private readonly getBTiers: GetModelBTiersUseCase,
+    private readonly setBTiers: SetModelBTiersUseCase,
     private readonly setTarget: SetSalesTargetUseCase,
     private readonly listTargets: ListSalesTargetsUseCase,
     private readonly computeModelA: ComputeModelACommissionUseCase,
@@ -72,6 +80,22 @@ export class CommissionController {
     @CurrentUser() actor: AuthTokenPayload,
   ): Promise<CommissionTierDto[]> {
     return this.setTiers.execute(new SetCommissionTiersCommand(actor.accountId, dto.tiers));
+  }
+
+  @Get('b-tiers')
+  @RequirePermission(PERMISSIONS.sales.settingsRead)
+  async bTiers(): Promise<ModelBTiersDto> {
+    // Faixas do Modelo B (rota) — customizáveis por conta; o default real fica como seed.
+    return this.getBTiers.execute();
+  }
+
+  @Put('b-tiers')
+  @RequirePermission(PERMISSIONS.sales.settingsManage)
+  async replaceBTiers(
+    @Body() dto: SetCommissionTiersRequestDto,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<ModelBTiersDto> {
+    return this.setBTiers.execute(new SetModelBTiersCommand(actor.accountId, dto.tiers));
   }
 
   @Get('targets')

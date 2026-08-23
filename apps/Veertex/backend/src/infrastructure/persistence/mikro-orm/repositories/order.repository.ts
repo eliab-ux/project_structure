@@ -40,6 +40,7 @@ export class MikroOrmOrderRepository implements OrderRepositoryPort {
         ...(filter.companyId ? { companyId: filter.companyId } : {}),
         ...(filter.contactId ? { contactId: filter.contactId } : {}),
         ...(filter.salesRepId ? { salesRepId: filter.salesRepId } : {}),
+        ...(filter.tripId ? { tripId: filter.tripId } : {}),
         ...(filter.referenceFrom || filter.referenceTo
           ? {
               referenceDate: {

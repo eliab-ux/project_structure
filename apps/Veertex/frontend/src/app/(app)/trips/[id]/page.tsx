@@ -97,9 +97,15 @@ export default function TripDetailPage() {
     try {
       const data = await routeService.getTripDetails(tripId);
       setDetails(data);
-      // Pedidos da viagem: a lista de pedidos não filtra por viagem — filtramos aqui (volume baixo).
-      const allOrders = await orderService.list({}).catch(() => [] as Order[]);
-      setOrders(allOrders.filter((order) => order.tripId === tripId));
+      // Viagem fechada: o batimento é re-exibível — recomputado no servidor dos dados persistidos.
+      if (data.trip.status === 'fechada') {
+        void routeService
+          .getTripClosure(tripId)
+          .then(setClosure)
+          .catch(() => undefined);
+      }
+      // Pedidos da viagem — filtrados NO SERVIDOR (client-side não escala e vaza volume).
+      setOrders(await orderService.list({ tripId }).catch(() => [] as Order[]));
     } catch (requestError) {
       setError(apiErrorMessage(requestError, 'Não foi possível carregar a viagem.'));
     } finally {

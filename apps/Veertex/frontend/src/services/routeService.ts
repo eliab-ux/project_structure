@@ -173,6 +173,12 @@ async function registerExpense(
   return response.data;
 }
 
+/** Batimento de viagem FECHADA — recomputação determinística no servidor (auditoria que se relê). */
+async function getTripClosure(tripId: string): Promise<TripClosureSummary> {
+  const response = await api.get<TripClosureSummary>(`/trips/${tripId}/closure`);
+  return response.data;
+}
+
 async function closeTrip(
   tripId: string,
   payload: { managerUserId?: string | null; managerPercent?: number; helperAmount?: number } = {},
@@ -243,6 +249,7 @@ const routeService = {
   exchangeItems,
   registerExpense,
   closeTrip,
+  getTripClosure,
   registerEvidence,
   changeGps,
   generatePromissory,

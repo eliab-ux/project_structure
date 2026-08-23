@@ -109,6 +109,7 @@ export interface CreateOrderPayload {
 export type UpdateOrderPayload = Partial<Omit<CreateOrderPayload, 'companyId' | 'contactId'>>;
 
 export interface ListOrdersParams {
+  tripId?: string;
   status?: string;
   companyId?: string;
   contactId?: string;

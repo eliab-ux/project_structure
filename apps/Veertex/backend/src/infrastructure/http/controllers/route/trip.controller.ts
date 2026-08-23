@@ -66,6 +66,10 @@ import {
   GetTripDetailsUseCase,
   TripDetailsDto,
 } from '../../../../contexts/route/application/use-cases/get-trip-details/get-trip-details.use-case';
+import {
+  GetTripClosureQuery,
+  GetTripClosureUseCase,
+} from '../../../../contexts/route/application/use-cases/get-trip-closure/get-trip-closure.use-case';
 import { TripExpenseCategory } from '../../../../contexts/route/domain/entities/trip-expense.entity';
 import { TripDto } from '../../../../contexts/route/application/dto/trip.dto';
 import { AuthTokenPayload } from '../../../../contexts/auth/application/ports/output/token-service.port';
@@ -111,6 +115,7 @@ export class TripController {
     private readonly registerExpense: RegisterTripExpenseUseCase,
     private readonly closeTrip: CloseTripUseCase,
     private readonly getTripDetails: GetTripDetailsUseCase,
+    private readonly getTripClosure: GetTripClosureUseCase,
   ) {}
 
   @Get()
@@ -130,6 +135,13 @@ export class TripController {
   async details(@Param('id', ParseUUIDPipe) id: string): Promise<TripDetailsDto> {
     // Viagem + carteira + recebimentos + despesas numa leitura — a tela do acerto opera sobre isto.
     return this.getTripDetails.execute(new GetTripDetailsQuery(id));
+  }
+
+  @Get(':id/closure')
+  @RequirePermission(PERMISSIONS.rot.read)
+  async closure(@Param('id', ParseUUIDPipe) id: string): Promise<TripClosureSummary> {
+    // Batimento de viagem FECHADA — recomputação determinística (auditoria que se relê).
+    return this.getTripClosure.execute(new GetTripClosureQuery(id));
   }
 
   @Post()
