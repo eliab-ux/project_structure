@@ -3,10 +3,13 @@ import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
+  IsInt,
   IsOptional,
   IsString,
   IsUUID,
+  Max,
   MaxLength,
+  Min,
   MinLength,
 } from 'class-validator';
 
@@ -25,6 +28,13 @@ export class CreateRouteRequestDto {
   @MaxLength(40)
   @Transform(trimmed)
   code?: string | null;
+
+  /** Ciclo da rota em dias (~60) — a "próxima passagem". Default 60. */
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(365)
+  cycleDays?: number;
 }
 
 export class UpdateRouteRequestDto {
@@ -40,6 +50,12 @@ export class UpdateRouteRequestDto {
   @MaxLength(40)
   @Transform(trimmed)
   code?: string | null;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(365)
+  cycleDays?: number;
 
   @IsOptional()
   @IsBoolean()

@@ -13,6 +13,7 @@ export class CreateRouteCommand {
     public readonly accountId: string,
     public readonly name: string,
     public readonly code?: string | null,
+    public readonly cycleDays?: number | null,
   ) {}
 }
 
@@ -29,6 +30,7 @@ export class CreateRouteUseCase implements UseCase<CreateRouteCommand, RouteDto>
       accountId: command.accountId,
       name: command.name,
       code: command.code ?? null,
+      cycleDays: command.cycleDays ?? null,
     });
     return this.uow.execute(async () => {
       const saved = await this.routes.save(route);

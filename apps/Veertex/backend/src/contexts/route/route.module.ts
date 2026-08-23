@@ -30,9 +30,12 @@ import { CloseTripUseCase } from './application/use-cases/close-trip/close-trip.
 import { RegisterOrderEvidenceUseCase } from './application/use-cases/register-order-evidence/register-order-evidence.use-case';
 import { ChangeOrderGpsUseCase } from './application/use-cases/change-order-gps/change-order-gps.use-case';
 import { GeneratePromissoryNoteUseCase } from './application/use-cases/generate-promissory-note/generate-promissory-note.use-case';
+import { OpenConsignedOrderUseCase } from './application/use-cases/open-consigned-order/open-consigned-order.use-case';
+import { CloseConsignedOrderUseCase } from './application/use-cases/close-consigned-order/close-consigned-order.use-case';
 import { EVIDENCE_STORAGE } from './application/ports/output/evidence-storage.port';
 import { PROMISSORY_DEBTOR_LOOKUP } from './application/ports/output/promissory-debtor-lookup.port';
 import { NoopEvidenceStorage } from '../../infrastructure/observability/noop-evidence-storage';
+import { MinioEvidenceStorage } from '../../infrastructure/storage/minio-evidence-storage';
 import { PromissoryDebtorLookup } from '../../infrastructure/persistence/mikro-orm/repositories/promissory-debtor.lookup';
 
 /**
@@ -48,7 +51,13 @@ import { PromissoryDebtorLookup } from '../../infrastructure/persistence/mikro-o
     { provide: CONSIGNMENT_FISCAL, useClass: NoopConsignmentFiscal },
     { provide: WALLET_TITLE_LOOKUP, useClass: WalletTitleLookup },
     { provide: ROT_WALLET_PARAMS, useClass: RotWalletParamsReader },
-    { provide: EVIDENCE_STORAGE, useClass: NoopEvidenceStorage },
+    {
+      // MinIO real quando configurado (MINIO_ENDPOINT); no-op em dev sem servidor — o registro da
+      // evidência (linha + chave) funciona igual nos dois; só o binário muda de destino.
+      provide: EVIDENCE_STORAGE,
+      useFactory: () =>
+        process.env.MINIO_ENDPOINT ? new MinioEvidenceStorage() : new NoopEvidenceStorage(),
+    },
     { provide: PROMISSORY_DEBTOR_LOOKUP, useClass: PromissoryDebtorLookup },
     CreateRouteUseCase,
     ListRoutesUseCase,
@@ -69,6 +78,8 @@ import { PromissoryDebtorLookup } from '../../infrastructure/persistence/mikro-o
     RegisterOrderEvidenceUseCase,
     ChangeOrderGpsUseCase,
     GeneratePromissoryNoteUseCase,
+    OpenConsignedOrderUseCase,
+    CloseConsignedOrderUseCase,
   ],
   exports: [
     CreateRouteUseCase,
@@ -90,6 +101,8 @@ import { PromissoryDebtorLookup } from '../../infrastructure/persistence/mikro-o
     RegisterOrderEvidenceUseCase,
     ChangeOrderGpsUseCase,
     GeneratePromissoryNoteUseCase,
+    OpenConsignedOrderUseCase,
+    CloseConsignedOrderUseCase,
   ],
 })
 export class RouteModule {}

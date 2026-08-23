@@ -9,7 +9,7 @@ import {
   FinancialTitleRepositoryPort,
 } from '../../ports/output/financial-title-repository.port';
 import { FinancialTitle } from '../../../domain/entities/financial-title.entity';
-import { TitleDirection } from '../../../domain/title-enums';
+import { TitleDirection, TitleOrigin } from '../../../domain/title-enums';
 import { FinancialTitleDto } from '../../dto/finance.dto';
 
 export class CreateFinancialTitleCommand {
@@ -24,6 +24,8 @@ export class CreateFinancialTitleCommand {
       amount: number;
       issueDate?: Date | null;
       dueDate: Date;
+      /** Origem do título. Default `manual`; o ROT passa `consignment` (§2.1(b) do 05). */
+      origin?: TitleOrigin;
     },
   ) {}
 }
@@ -54,7 +56,7 @@ export class CreateFinancialTitleUseCase implements UseCase<
       amount: command.input.amount,
       issueDate: command.input.issueDate ?? null,
       dueDate: command.input.dueDate,
-      origin: 'manual',
+      origin: command.input.origin ?? 'manual',
     });
     return this.uow.execute(async () => {
       const saved = await this.titles.save(title);

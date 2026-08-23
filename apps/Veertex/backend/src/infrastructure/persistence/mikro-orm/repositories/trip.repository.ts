@@ -27,6 +27,24 @@ export class MikroOrmTripRepository implements TripRepositoryPort {
       initialKm: orm.initialKm,
       finalKm: orm.finalKm,
       loadLocationId: orm.loadLocationId,
+      closure:
+        orm.closureManagerUserId === null &&
+        orm.closureManagerPercent === null &&
+        orm.closureHelperAmount === null &&
+        orm.closureCommissionPercent === null &&
+        orm.closureRepCommission === null
+          ? null
+          : {
+              managerUserId: orm.closureManagerUserId,
+              managerPercent:
+                orm.closureManagerPercent === null ? null : Number(orm.closureManagerPercent),
+              helperAmount:
+                orm.closureHelperAmount === null ? null : Number(orm.closureHelperAmount),
+              commissionPercent:
+                orm.closureCommissionPercent === null ? null : Number(orm.closureCommissionPercent),
+              repCommission:
+                orm.closureRepCommission === null ? null : Number(orm.closureRepCommission),
+            },
       createdAt: orm.createdAt,
     });
   }
@@ -61,6 +79,15 @@ export class MikroOrmTripRepository implements TripRepositoryPort {
       existing.initialKm = trip.initialKm === null ? null : trip.initialKm.toFixed(1);
       existing.finalKm = trip.finalKm === null ? null : trip.finalKm.toFixed(1);
       existing.loadLocationId = trip.loadLocationId;
+      existing.closureManagerUserId = trip.closure?.managerUserId ?? null;
+      existing.closureManagerPercent =
+        trip.closure?.managerPercent == null ? null : trip.closure.managerPercent.toFixed(2);
+      existing.closureHelperAmount =
+        trip.closure?.helperAmount == null ? null : trip.closure.helperAmount.toFixed(2);
+      existing.closureCommissionPercent =
+        trip.closure?.commissionPercent == null ? null : trip.closure.commissionPercent.toFixed(2);
+      existing.closureRepCommission =
+        trip.closure?.repCommission == null ? null : trip.closure.repCommission.toFixed(2);
       existing.updatedAt = new Date();
       await this.em.flush();
       return this.toDomain(existing);
@@ -80,6 +107,11 @@ export class MikroOrmTripRepository implements TripRepositoryPort {
       initialKm: trip.initialKm === null ? null : trip.initialKm.toFixed(1),
       finalKm: trip.finalKm === null ? null : trip.finalKm.toFixed(1),
       loadLocationId: trip.loadLocationId,
+      closureManagerUserId: null,
+      closureManagerPercent: null,
+      closureHelperAmount: null,
+      closureCommissionPercent: null,
+      closureRepCommission: null,
       createdAt: trip.createdAt,
       updatedAt: new Date(),
       deletedAt: null,

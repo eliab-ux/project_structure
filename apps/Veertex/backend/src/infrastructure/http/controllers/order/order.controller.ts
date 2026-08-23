@@ -40,6 +40,15 @@ import { RequireModule } from '../../../security/decorators/require-module.decor
 import { RequirePermission } from '../../../security/decorators/require-permission.decorator';
 import { CurrentUser } from '../../../security/decorators/current-user.decorator';
 import {
+  OpenConsignedOrderCommand,
+  OpenConsignedOrderUseCase,
+} from '../../../../contexts/route/application/use-cases/open-consigned-order/open-consigned-order.use-case';
+import {
+  CloseConsignedOrderCommand,
+  CloseConsignedOrderUseCase,
+} from '../../../../contexts/route/application/use-cases/close-consigned-order/close-consigned-order.use-case';
+import { CloseConsignmentRequestDto } from './dto/order-request.dto';
+import {
   CreateOrderRequestDto,
   ListOrdersQueryDto,
   UpdateOrderRequestDto,
@@ -62,6 +71,8 @@ export class OrderController {
     private readonly changeOrderStatusUseCase: ChangeOrderStatusUseCase,
     private readonly getOrderUseCase: GetOrderUseCase,
     private readonly listOrdersUseCase: ListOrdersUseCase,
+    private readonly openConsignedOrderUseCase: OpenConsignedOrderUseCase,
+    private readonly closeConsignedOrderUseCase: CloseConsignedOrderUseCase,
   ) {}
 
   @Get()
@@ -179,8 +190,9 @@ export class OrderController {
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() actor: AuthTokenPayload,
   ): Promise<OrderDto> {
-    return this.changeOrderStatusUseCase.execute(
-      new ChangeOrderStatusCommand(id, 'open_consignment', actor.modules ?? []),
+    // Efetivação + nascimento do TÍTULO da consignação (vencimento = saída + cycle_days da rota).
+    return this.openConsignedOrderUseCase.execute(
+      new OpenConsignedOrderCommand(actor.accountId, id),
     );
   }
 
@@ -201,10 +213,13 @@ export class OrderController {
   @RequirePermission(PERMISSIONS.rot.trip)
   async closeConsignment(
     @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CloseConsignmentRequestDto,
     @CurrentUser() actor: AuthTokenPayload,
   ): Promise<OrderDto> {
-    return this.changeOrderStatusUseCase.execute(
-      new ChangeOrderStatusCommand(id, 'close_consignment', actor.modules ?? []),
+    // Venda do consignado = saída física da carga (sale_out @rep_load) + emitConsignedSale, no
+    // mesmo evento (semântica confirmada). soldLines ausente → itens do pedido inteiros.
+    return this.closeConsignedOrderUseCase.execute(
+      new CloseConsignedOrderCommand(actor.accountId, id, dto.soldLines ?? null),
     );
   }
 

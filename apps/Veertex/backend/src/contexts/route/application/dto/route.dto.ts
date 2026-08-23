@@ -5,6 +5,7 @@ export class RouteDto {
   id!: string;
   name!: string;
   code!: string | null;
+  cycleDays!: number;
   active!: boolean;
   createdAt!: Date;
 
@@ -13,6 +14,7 @@ export class RouteDto {
     dto.id = route.id;
     dto.name = route.name;
     dto.code = route.code;
+    dto.cycleDays = route.cycleDays;
     dto.active = route.active;
     dto.createdAt = route.createdAt;
     return dto;

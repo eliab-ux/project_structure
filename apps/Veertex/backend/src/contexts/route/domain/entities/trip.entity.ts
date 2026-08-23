@@ -59,6 +59,7 @@ export class Trip extends AggregateRoot {
     private _initialKm: number | null,
     private _finalKm: number | null,
     private _loadLocationId: string | null,
+    private _closure: TripClosureInputs | null,
     private readonly _createdAt: Date,
   ) {
     super();
@@ -88,6 +89,7 @@ export class Trip extends AggregateRoot {
       params.initialKm ?? null,
       null,
       null,
+      null,
       new Date(),
     );
   }
@@ -111,6 +113,7 @@ export class Trip extends AggregateRoot {
       params.initialKm === null || params.initialKm === undefined ? null : Number(params.initialKm),
       params.finalKm === null || params.finalKm === undefined ? null : Number(params.finalKm),
       params.loadLocationId ?? null,
+      params.closure ?? null,
       params.createdAt,
     );
   }
@@ -148,6 +151,15 @@ export class Trip extends AggregateRoot {
   /** em_fechamento → fechada: efetivação do fechamento (fatia 5 dispara a comissão B aqui). */
   close(): void {
     this.transitionTo('fechada');
+  }
+
+  /**
+   * Persiste os INPUTS e resultados da folha do fechamento na viagem — o batimento fica reproduzível
+   * deterministicamente dos dados gravados (nenhum input vive só no request), e a % da faixa aplicada
+   * fica congelada contra mudança futura das faixas.
+   */
+  registerClosure(closure: TripClosureInputs): void {
+    this._closure = closure;
   }
 
   cancel(): void {
@@ -221,7 +233,19 @@ export class Trip extends AggregateRoot {
   get loadLocationId(): string | null {
     return this._loadLocationId;
   }
+  get closure(): TripClosureInputs | null {
+    return this._closure;
+  }
   get createdAt(): Date {
     return this._createdAt;
   }
+}
+
+/** Inputs manuais + resultados congelados do fechamento (persistidos em `trips`). */
+export interface TripClosureInputs {
+  managerUserId: string | null;
+  managerPercent: number | null;
+  helperAmount: number | null;
+  commissionPercent: number | null;
+  repCommission: number | null;
 }

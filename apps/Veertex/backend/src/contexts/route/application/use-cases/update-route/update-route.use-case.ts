@@ -11,7 +11,12 @@ import { RouteNotFoundException } from '../../../domain/exceptions/route-excepti
 export class UpdateRouteCommand {
   constructor(
     public readonly id: string,
-    public readonly input: { name?: string; code?: string | null; active?: boolean },
+    public readonly input: {
+      name?: string;
+      code?: string | null;
+      cycleDays?: number | null;
+      active?: boolean;
+    },
   ) {}
 }
 

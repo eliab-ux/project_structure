@@ -14,6 +14,7 @@ export class MikroOrmRouteRepository implements RouteRepositoryPort {
       accountId: orm.accountId,
       name: orm.name,
       code: orm.code,
+      cycleDays: orm.cycleDays,
       active: orm.active,
       createdAt: orm.createdAt,
     });
@@ -38,6 +39,7 @@ export class MikroOrmRouteRepository implements RouteRepositoryPort {
     if (existing) {
       existing.name = route.name;
       existing.code = route.code;
+      existing.cycleDays = route.cycleDays;
       existing.active = route.active;
       existing.updatedAt = new Date();
       await this.em.flush();
@@ -48,6 +50,7 @@ export class MikroOrmRouteRepository implements RouteRepositoryPort {
       accountId: route.accountId,
       name: route.name,
       code: route.code,
+      cycleDays: route.cycleDays,
       active: route.active,
       createdAt: route.createdAt,
       updatedAt: new Date(),

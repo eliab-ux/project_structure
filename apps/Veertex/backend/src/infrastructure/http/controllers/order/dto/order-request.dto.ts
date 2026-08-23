@@ -209,3 +209,26 @@ export class ListOrdersQueryDto {
   @IsInt()
   page?: number;
 }
+
+export class SoldLineRequestDto {
+  @IsUUID()
+  productId!: string;
+
+  @IsNumber({ maxDecimalPlaces: 3 })
+  @Min(0.001)
+  @Max(9_999_999)
+  quantity!: number;
+}
+
+export class CloseConsignmentRequestDto {
+  /**
+   * Linhas efetivamente VENDIDAS. Ausente = itens do pedido inteiros. A retaguarda que registrou
+   * devolução/troca informa o vendido real (baixar o total após devolução baixaria duas vezes).
+   */
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(200)
+  @ValidateNested({ each: true })
+  @Type(() => SoldLineRequestDto)
+  soldLines?: SoldLineRequestDto[] | null;
+}

@@ -185,7 +185,14 @@ export class CloseTripUseCase implements UseCase<CloseTripCommand, TripClosureSu
       await emit(`Comissão do gerente — viagem ${trip.id.slice(0, 8)}`, managerCommission);
       await emit(`Ajudante — viagem ${trip.id.slice(0, 8)}`, helperAmount);
 
-      // ── Efetiva o fechamento (em_fechamento → fechada) ────────────────────────────────────────
+      // ── Efetiva o fechamento (em_fechamento → fechada) e PERSISTE os inputs da folha ──────────
+      trip.registerClosure({
+        managerUserId: command.payroll.managerUserId ?? null,
+        managerPercent: managerPercent > 0 ? managerPercent : null,
+        helperAmount: helperAmount > 0 ? helperAmount : null,
+        commissionPercent: modelB.commissionPercent,
+        repCommission: modelB.commissionValue,
+      });
       trip.close();
       await this.trips.save(trip);
 

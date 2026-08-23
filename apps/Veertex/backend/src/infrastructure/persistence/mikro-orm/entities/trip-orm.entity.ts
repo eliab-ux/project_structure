@@ -44,4 +44,45 @@ export class TripOrmEntity extends TenantScopedOrmEntity {
   /** Localização `rep_load` (03A) onde a carga da viagem vive; criada na primeira carga. */
   @Property({ type: 'uuid', nullable: true, fieldName: 'load_location_id' })
   loadLocationId: string | null = null;
+
+  // ── Inputs/resultados do FECHAMENTO persistidos: o batimento é reproduzível dos dados gravados ──
+  @Property({ type: 'uuid', nullable: true, fieldName: 'closure_manager_user_id' })
+  closureManagerUserId: string | null = null;
+
+  @Property({
+    type: 'numeric',
+    precision: 6,
+    scale: 2,
+    nullable: true,
+    fieldName: 'closure_manager_percent',
+  })
+  closureManagerPercent: string | null = null;
+
+  @Property({
+    type: 'numeric',
+    precision: 14,
+    scale: 2,
+    nullable: true,
+    fieldName: 'closure_helper_amount',
+  })
+  closureHelperAmount: string | null = null;
+
+  /** % da faixa B aplicada no fechamento — congela a folha contra mudança futura das faixas. */
+  @Property({
+    type: 'numeric',
+    precision: 6,
+    scale: 2,
+    nullable: true,
+    fieldName: 'closure_commission_percent',
+  })
+  closureCommissionPercent: string | null = null;
+
+  @Property({
+    type: 'numeric',
+    precision: 14,
+    scale: 2,
+    nullable: true,
+    fieldName: 'closure_rep_commission',
+  })
+  closureRepCommission: string | null = null;
 }

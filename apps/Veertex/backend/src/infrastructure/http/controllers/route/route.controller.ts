@@ -75,7 +75,7 @@ export class RouteController {
     @CurrentUser() actor: AuthTokenPayload,
   ): Promise<RouteDto> {
     return this.createRoute.execute(
-      new CreateRouteCommand(actor.accountId, dto.name, dto.code ?? null),
+      new CreateRouteCommand(actor.accountId, dto.name, dto.code ?? null, dto.cycleDays ?? null),
     );
   }
 
@@ -86,7 +86,12 @@ export class RouteController {
     @Body() dto: UpdateRouteRequestDto,
   ): Promise<RouteDto> {
     return this.updateRoute.execute(
-      new UpdateRouteCommand(id, { name: dto.name, code: dto.code, active: dto.active }),
+      new UpdateRouteCommand(id, {
+        name: dto.name,
+        code: dto.code,
+        cycleDays: dto.cycleDays ?? null,
+        active: dto.active,
+      }),
     );
   }
 

@@ -13,18 +13,26 @@ export class Route extends AggregateRoot {
     private readonly _accountId: string,
     private _name: string,
     private _code: string | null,
+    /** Ciclo da rota em DIAS (~60): a "próxima passagem" — vencimento do título consignado. */
+    private _cycleDays: number,
     private _active: boolean,
     private readonly _createdAt: Date,
   ) {
     super();
   }
 
-  static create(params: { accountId: string; name: string; code?: string | null }): Route {
+  static create(params: {
+    accountId: string;
+    name: string;
+    code?: string | null;
+    cycleDays?: number | null;
+  }): Route {
     return new Route(
       randomUUID(),
       params.accountId,
       params.name.trim(),
       params.code?.trim() || null,
+      Math.max(1, Math.trunc(params.cycleDays ?? 60)),
       true,
       new Date(),
     );
@@ -35,6 +43,7 @@ export class Route extends AggregateRoot {
     accountId: string;
     name: string;
     code: string | null;
+    cycleDays: number;
     active: boolean;
     createdAt: Date;
   }): Route {
@@ -43,14 +52,23 @@ export class Route extends AggregateRoot {
       params.accountId,
       params.name,
       params.code,
+      params.cycleDays,
       params.active,
       params.createdAt,
     );
   }
 
-  edit(params: { name?: string; code?: string | null; active?: boolean }): void {
+  edit(params: {
+    name?: string;
+    code?: string | null;
+    cycleDays?: number | null;
+    active?: boolean;
+  }): void {
     if (params.name !== undefined) this._name = params.name.trim();
     if (params.code !== undefined) this._code = params.code?.trim() || null;
+    if (params.cycleDays !== undefined && params.cycleDays !== null) {
+      this._cycleDays = Math.max(1, Math.trunc(params.cycleDays));
+    }
     if (params.active !== undefined) this._active = params.active;
   }
 
@@ -65,6 +83,9 @@ export class Route extends AggregateRoot {
   }
   get code(): string | null {
     return this._code;
+  }
+  get cycleDays(): number {
+    return this._cycleDays;
   }
   get active(): boolean {
     return this._active;
