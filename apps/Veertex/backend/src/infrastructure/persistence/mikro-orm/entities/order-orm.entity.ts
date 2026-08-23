@@ -56,6 +56,13 @@ export class OrderOrmEntity extends TenantScopedOrmEntity {
   @Property({ type: 'timestamptz', nullable: true, fieldName: 'valid_until' })
   validUntil: Date | null = null;
 
+  /**
+   * Acréscimo/desconto EM REAIS no fechamento do pagamento (§4.1 do 02A — arredondamento de espécie,
+   * ex.: 189,78→189,80). **Dormente** até o PDV/TEF; nenhum fluxo grava ainda. Default 0.
+   */
+  @Property({ type: 'numeric', precision: 14, scale: 2, fieldName: 'payment_rounding' })
+  paymentRounding = '0';
+
   @OneToMany(() => OrderItemOrmEntity, (item) => item.order)
   items = new Collection<OrderItemOrmEntity>(this);
 }

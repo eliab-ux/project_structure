@@ -70,3 +70,10 @@ export class OrderProductInvalidException extends DomainException {
     super(message);
   }
 }
+
+/** Pagamento (§4.1 do 02A) com valor não-positivo. */
+export class InvalidPaymentAmountException extends DomainException {
+  constructor() {
+    super('O valor do pagamento deve ser maior que zero.');
+  }
+}

@@ -33,6 +33,7 @@ import { StockReservationOrmEntity } from './mikro-orm/entities/stock-reservatio
 import { StockLocationOrmEntity } from './mikro-orm/entities/stock-location-orm.entity';
 import { ProductComponentOrmEntity } from './mikro-orm/entities/product-component-orm.entity';
 import { PaymentConditionOrmEntity } from './mikro-orm/entities/payment-condition-orm.entity';
+import { OrderPaymentOrmEntity } from './mikro-orm/entities/order-payment-orm.entity';
 
 import { PlanMapper } from './mikro-orm/mappers/plan.mapper';
 import { AccountMapper } from './mikro-orm/mappers/account.mapper';
@@ -91,6 +92,9 @@ import { MikroOrmPaymentConditionRepository } from './mikro-orm/repositories/pay
       StockLocationOrmEntity,
       ProductComponentOrmEntity,
       PaymentConditionOrmEntity,
+      // Dormente (§4.1 do 02A): registrada para o schema/verify:isolation enxergarem a tabela; sem
+      // repositório/fluxo até o PDV/TEF existir.
+      OrderPaymentOrmEntity,
     ]),
   ],
   providers: [

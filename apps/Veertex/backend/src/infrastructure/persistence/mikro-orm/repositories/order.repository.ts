@@ -84,6 +84,8 @@ export class MikroOrmOrderRepository implements OrderRepositoryPort {
         notes: order.notes,
         referenceDate: order.referenceDate,
         validUntil: order.validUntil,
+        // Dormente (§4.1 do 02A): sempre 0 na criação; o fechamento de espécie chega com o PDV/TEF.
+        paymentRounding: '0',
         createdAt: order.createdAt,
         updatedAt: new Date(),
       });
