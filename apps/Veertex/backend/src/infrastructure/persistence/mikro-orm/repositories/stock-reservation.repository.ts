@@ -27,6 +27,25 @@ export class MikroOrmStockReservationRepository implements StockReservationRepos
     return rows.reduce((sum, row) => sum + Number(row.quantity), 0);
   }
 
+  async list(filter: {
+    companyId?: string | null;
+    productId?: string | null;
+    orderId?: string | null;
+    status?: string | null;
+  }): Promise<StockReservation[]> {
+    const rows = await this.em.find(
+      StockReservationOrmEntity,
+      {
+        ...(filter.companyId ? { companyId: filter.companyId } : {}),
+        ...(filter.productId ? { productId: filter.productId } : {}),
+        ...(filter.orderId ? { orderId: filter.orderId } : {}),
+        ...(filter.status ? { status: filter.status } : {}),
+      },
+      { orderBy: { createdAt: 'DESC' }, limit: 500 },
+    );
+    return rows.map((row) => this.mapper.toDomain(row));
+  }
+
   async findActiveByOrder(orderId: string): Promise<StockReservation[]> {
     const rows = await this.em.find(StockReservationOrmEntity, { orderId, status: 'active' });
     return rows.map((row) => this.mapper.toDomain(row));

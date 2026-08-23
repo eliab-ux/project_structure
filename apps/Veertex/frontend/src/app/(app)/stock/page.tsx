@@ -39,6 +39,7 @@ import stockService, {
   StockLocation,
   StockMovement,
   StockMovementType,
+  StockReservation,
 } from 'src/services/stockService';
 import { Company } from 'src/types/admin';
 import { Product } from 'src/types/product';
@@ -132,6 +133,7 @@ export default function StockPage() {
         <Tab label="Saldos" />
         <Tab label="Movimentos" />
         <Tab label="Localizações" />
+        <Tab label="Reservas" />
       </Tabs>
 
       {!companyId ? (
@@ -156,13 +158,15 @@ export default function StockPage() {
           productName={productName}
           locationName={locationName}
         />
-      ) : (
+      ) : tab === 2 ? (
         <LocationsTab
           companyId={companyId}
           locations={locations}
           canMove={canMove}
           onChanged={() => void loadLocations()}
         />
+      ) : (
+        <ReservationsTab companyId={companyId} productName={productName} />
       )}
     </Box>
   );
@@ -836,6 +840,132 @@ function LocationsTab({
                       label={location.active ? 'Ativa' : 'Inativa'}
                       color={location.active ? 'success' : 'default'}
                       variant={location.active ? 'filled' : 'outlined'}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+    </Stack>
+  );
+}
+
+// ── Reservas (02 §3.9) ───────────────────────────────────────────────────────────────────────────
+
+function ReservationsTab({
+  companyId,
+  productName,
+}: {
+  companyId: string;
+  productName: Map<string, string>;
+}) {
+  const [reservations, setReservations] = useState<StockReservation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setReservations(
+        await stockService.listReservations({
+          companyId,
+          status: statusFilter || undefined,
+        }),
+      );
+    } catch (requestError) {
+      setError(apiErrorMessage(requestError, 'Não foi possível carregar as reservas.'));
+    } finally {
+      setLoading(false);
+    }
+  }, [companyId, statusFilter]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const expired = reservations.filter(
+    (reservation) => reservation.releaseReason === 'expired',
+  );
+
+  return (
+    <Stack spacing={2}>
+      <TextField
+        select
+        label="Situação"
+        value={statusFilter}
+        onChange={(event) => setStatusFilter(event.target.value)}
+        size="small"
+        sx={{ maxWidth: 220 }}
+      >
+        <MenuItem value="">Todas</MenuItem>
+        <MenuItem value="active">Ativas</MenuItem>
+        <MenuItem value="released">Liberadas</MenuItem>
+      </TextField>
+
+      {expired.length > 0 ? (
+        <Alert severity="warning" role="alert">
+          {expired.length} reserva(s) EXPIRARAM sem faturamento — o disponível já voltou, mas o
+          pedido de origem pode precisar de atenção (o cliente pode cobrar a mercadoria).
+        </Alert>
+      ) : null}
+
+      {loading || error || reservations.length === 0 ? (
+        <DataState
+          loading={loading}
+          error={error}
+          empty={reservations.length === 0}
+          emptyMessage="Nenhuma reserva para este filtro."
+        />
+      ) : (
+        <TableContainer component={Paper} variant="outlined">
+          <Table size="small" aria-label="Reservas de estoque">
+            <TableHead>
+              <TableRow>
+                <TableCell>Produto</TableCell>
+                <TableCell>Pedido</TableCell>
+                <TableCell align="right">Quantidade</TableCell>
+                <TableCell>Expira em</TableCell>
+                <TableCell>Situação</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {reservations.map((reservation) => (
+                <TableRow key={reservation.id} hover>
+                  <TableCell>{productName.get(reservation.productId) ?? '—'}</TableCell>
+                  <TableCell>
+                    {reservation.orderId ? reservation.orderId.slice(0, 8) : '—'}
+                  </TableCell>
+                  <TableCell align="right">{formatQty(reservation.quantity)}</TableCell>
+                  <TableCell>
+                    {new Date(reservation.expiresAt).toLocaleString('pt-BR', {
+                      dateStyle: 'short',
+                      timeStyle: 'short',
+                    })}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      size="small"
+                      label={
+                        reservation.status === 'active'
+                          ? 'Ativa'
+                          : reservation.releaseReason === 'expired'
+                            ? 'Expirada'
+                            : reservation.releaseReason === 'invoiced'
+                              ? 'Faturada'
+                              : 'Cancelada'
+                      }
+                      color={
+                        reservation.status === 'active'
+                          ? 'info'
+                          : reservation.releaseReason === 'expired'
+                            ? 'warning'
+                            : 'default'
+                      }
+                      variant={reservation.expiredNow ? 'filled' : 'outlined'}
                     />
                   </TableCell>
                 </TableRow>

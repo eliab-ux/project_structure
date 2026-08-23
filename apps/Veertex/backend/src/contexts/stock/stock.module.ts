@@ -6,6 +6,7 @@ import { AccountModule } from '../account/account.module';
 import { STOCK_PRODUCT_LOOKUP } from './application/ports/output/stock-product-lookup.port';
 import { RegisterMovementUseCase } from './application/use-cases/register-movement/register-movement.use-case';
 import { GetStockBalanceUseCase } from './application/use-cases/get-stock-balance/get-stock-balance.use-case';
+import { ListStockReservationsUseCase } from './application/use-cases/list-stock-reservations/list-stock-reservations.use-case';
 import { ListMovementsUseCase } from './application/use-cases/list-movements/list-movements.use-case';
 import { TransferStockUseCase } from './application/use-cases/transfer-stock/transfer-stock.use-case';
 import { CreateStockLocationUseCase } from './application/use-cases/create-stock-location/create-stock-location.use-case';
@@ -26,6 +27,7 @@ import { ReleaseOrderReservationsUseCase } from './application/use-cases/release
     RegisterMovementUseCase,
     GetStockBalanceUseCase,
     ListMovementsUseCase,
+    ListStockReservationsUseCase,
     TransferStockUseCase,
     CreateStockLocationUseCase,
     ListStockLocationsUseCase,
@@ -36,6 +38,7 @@ import { ReleaseOrderReservationsUseCase } from './application/use-cases/release
     RegisterMovementUseCase,
     GetStockBalanceUseCase,
     ListMovementsUseCase,
+    ListStockReservationsUseCase,
     TransferStockUseCase,
     CreateStockLocationUseCase,
     ListStockLocationsUseCase,

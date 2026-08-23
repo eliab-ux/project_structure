@@ -4,6 +4,11 @@ import {
   RegisterMovementUseCase,
 } from '../../../../contexts/stock/application/use-cases/register-movement/register-movement.use-case';
 import {
+  ListStockReservationsQuery,
+  ListStockReservationsUseCase,
+  StockReservationDto,
+} from '../../../../contexts/stock/application/use-cases/list-stock-reservations/list-stock-reservations.use-case';
+import {
   GetStockBalanceQuery,
   GetStockBalanceUseCase,
 } from '../../../../contexts/stock/application/use-cases/get-stock-balance/get-stock-balance.use-case';
@@ -42,6 +47,7 @@ import { CurrentUser } from '../../../security/decorators/current-user.decorator
 import {
   CreateStockLocationRequestDto,
   ListMovementsQueryDto,
+  ListReservationsQueryDto,
   ListStockLocationsQueryDto,
   RegisterMovementRequestDto,
   StockBalanceQueryDto,
@@ -63,6 +69,7 @@ export class StockController {
     private readonly transferStockUseCase: TransferStockUseCase,
     private readonly createStockLocationUseCase: CreateStockLocationUseCase,
     private readonly listStockLocationsUseCase: ListStockLocationsUseCase,
+      private readonly listReservations: ListStockReservationsUseCase,
   ) {}
 
   @Get('balance')
@@ -70,6 +77,20 @@ export class StockController {
   async balance(@Query() query: StockBalanceQueryDto): Promise<StockBalanceDto> {
     return this.getStockBalanceUseCase.execute(
       new GetStockBalanceQuery(query.companyId, query.productId, query.locationId ?? null),
+    );
+  }
+
+  @Get('reservations')
+  @RequirePermission(PERMISSIONS.stock.read)
+  async reservations(@Query() query: ListReservationsQueryDto): Promise<StockReservationDto[]> {
+    // A leitura também EXPIRA visivelmente o que venceu (02 §3.9) — nunca TTL silencioso.
+    return this.listReservations.execute(
+      new ListStockReservationsQuery({
+        companyId: query.companyId ?? null,
+        productId: query.productId ?? null,
+        orderId: query.orderId ?? null,
+        status: query.status ?? null,
+      }),
     );
   }
 

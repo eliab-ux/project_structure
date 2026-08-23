@@ -129,6 +129,27 @@ async function registerMovement(payload: {
   return response.data;
 }
 
+export interface StockReservation {
+  id: string;
+  companyId: string;
+  productId: string;
+  orderId: string | null;
+  quantity: number;
+  status: string;
+  releaseReason: string | null;
+  expiresAt: string;
+  createdAt: string;
+  expiredNow: boolean;
+}
+
+/** A leitura também EXPIRA visivelmente o que venceu (02 §3.9) — nunca TTL silencioso. */
+async function listReservations(
+  params: { companyId?: string; productId?: string; orderId?: string; status?: string } = {},
+): Promise<StockReservation[]> {
+  const response = await api.get<StockReservation[]>('/stock/reservations', { params });
+  return response.data;
+}
+
 async function transfer(payload: {
   companyId: string;
   productId: string;
@@ -150,6 +171,7 @@ const stockService = {
   createLocation,
   listMovements,
   registerMovement,
+  listReservations,
   transfer,
 };
 

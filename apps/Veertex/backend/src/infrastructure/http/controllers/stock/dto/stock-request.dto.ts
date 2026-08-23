@@ -134,3 +134,21 @@ export class CreateStockLocationRequestDto {
   @Transform(trimmed)
   name!: string;
 }
+
+export class ListReservationsQueryDto {
+  @IsOptional()
+  @IsUUID()
+  companyId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  productId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  orderId?: string;
+
+  @IsOptional()
+  @IsIn(['active', 'released'])
+  status?: string;
+}
