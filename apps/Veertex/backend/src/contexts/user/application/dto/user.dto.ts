@@ -14,6 +14,7 @@ export class UserDto {
   phone!: string;
   roleId!: string;
   status!: string;
+  commissionModel!: string;
   lastLoginAt!: Date | null;
   createdAt!: Date;
 
@@ -25,6 +26,7 @@ export class UserDto {
     dto.phone = user.phone.value;
     dto.roleId = user.roleId;
     dto.status = user.status;
+    dto.commissionModel = user.commissionModel;
     dto.lastLoginAt = user.lastLoginAt;
     dto.createdAt = user.createdAt;
     // passwordHash nunca é mapeado — ausência intencional.

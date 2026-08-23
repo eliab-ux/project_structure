@@ -47,4 +47,8 @@ export class UserOrmEntity extends TenantScopedOrmEntity {
 
   @Property({ type: 'timestamptz', nullable: true, fieldName: 'last_login_at' })
   lastLoginAt: Date | null = null;
+
+  /** Modelo de comissão do vendedor (§2 do 02A). Dormente; default `none`. */
+  @Property({ length: 10, fieldName: 'commission_model' })
+  commissionModel = 'none';
 }

@@ -4,6 +4,7 @@ import { PhoneE164 } from '../../../../shared/domain/value-objects/phone-e164.vo
 import { User } from '../../../../contexts/user/domain/entities/user.entity';
 import { UserId } from '../../../../contexts/user/domain/value-objects/user-id.vo';
 import { AccessWindow } from '../../../../contexts/user/domain/value-objects/access-window.vo';
+import { CommissionModel } from '../../../../contexts/user/domain/commission-model';
 import { UserOrmEntity } from '../entities/user-orm.entity';
 
 @Injectable()
@@ -22,6 +23,7 @@ export class UserMapper {
       status: orm.status,
       accessWindows: orm.accessWindows?.map((window) => AccessWindow.create(window)) ?? null,
       lastLoginAt: orm.lastLoginAt,
+      commissionModel: orm.commissionModel as CommissionModel,
       createdAt: orm.createdAt,
     });
   }
@@ -38,6 +40,7 @@ export class UserMapper {
       status: user.status,
       accessWindows: user.accessWindows?.map((window) => window.toJSON()) ?? null,
       lastLoginAt: user.lastLoginAt,
+      commissionModel: user.commissionModel,
       createdAt: user.createdAt,
       updatedAt: new Date(),
       deletedAt: null,

@@ -16,6 +16,7 @@ export class UserResponseDto {
   phone!: string;
   roleId!: string;
   status!: string;
+  commissionModel!: string;
   lastLoginAt!: Date | null;
   createdAt!: Date;
 
@@ -27,6 +28,7 @@ export class UserResponseDto {
     dto.phone = user.phone;
     dto.roleId = user.roleId;
     dto.status = user.status;
+    dto.commissionModel = user.commissionModel;
     dto.lastLoginAt = user.lastLoginAt;
     dto.createdAt = user.createdAt;
     return dto;

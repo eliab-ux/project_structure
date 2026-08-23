@@ -4,6 +4,7 @@ import { PhoneE164 } from '../../../../shared/domain/value-objects/phone-e164.vo
 import { AccessWindow } from '../value-objects/access-window.vo';
 import { UserId } from '../value-objects/user-id.vo';
 import { UserStatus } from '../value-objects/user-status.vo';
+import { CommissionModel, DEFAULT_COMMISSION_MODEL } from '../commission-model';
 import { UserDisabledException } from '../exceptions/user-exceptions';
 
 /**
@@ -34,6 +35,7 @@ export class User extends AggregateRoot {
     private _status: UserStatus,
     private _accessWindows: AccessWindow[] | null,
     private _lastLoginAt: Date | null,
+    private _commissionModel: CommissionModel,
     private readonly _createdAt: Date,
   ) {
     super();
@@ -48,6 +50,7 @@ export class User extends AggregateRoot {
     passwordHash: string;
     roleId: string;
     id?: UserId;
+    commissionModel?: CommissionModel;
   }): User {
     return new User(
       params.id ?? UserId.generate(),
@@ -60,6 +63,7 @@ export class User extends AggregateRoot {
       UserStatus.ACTIVE,
       null,
       null,
+      params.commissionModel ?? DEFAULT_COMMISSION_MODEL,
       new Date(),
     );
   }
@@ -75,6 +79,7 @@ export class User extends AggregateRoot {
     status: UserStatus;
     accessWindows: AccessWindow[] | null;
     lastLoginAt: Date | null;
+    commissionModel?: CommissionModel;
     createdAt: Date;
   }): User {
     return new User(
@@ -88,6 +93,7 @@ export class User extends AggregateRoot {
       params.status,
       params.accessWindows,
       params.lastLoginAt,
+      params.commissionModel ?? DEFAULT_COMMISSION_MODEL,
       params.createdAt,
     );
   }
@@ -132,6 +138,11 @@ export class User extends AggregateRoot {
 
   get lastLoginAt(): Date | null {
     return this._lastLoginAt;
+  }
+
+  /** Modelo de comissão (§2 do 02A). Dormente: só a apuração sob demanda o usa hoje. */
+  get commissionModel(): CommissionModel {
+    return this._commissionModel;
   }
 
   get createdAt(): Date {
@@ -179,6 +190,10 @@ export class User extends AggregateRoot {
 
   changeRole(roleId: string): void {
     this._roleId = roleId;
+  }
+
+  changeCommissionModel(model: CommissionModel): void {
+    this._commissionModel = model;
   }
 
   changeAccessWindows(windows: AccessWindow[] | null): void {

@@ -19,6 +19,7 @@ import {
 } from '../../../domain/exceptions/user-exceptions';
 import { USER_REPOSITORY, UserRepositoryPort } from '../../ports/output/user-repository.port';
 import { UserDto } from '../../dto/user.dto';
+import { CommissionModel } from '../../../domain/commission-model';
 import { RoleAdministrationPolicy } from '../../../../role/application/policies/role-administration.policy';
 
 export class UpdateUserCommand {
@@ -28,6 +29,7 @@ export class UpdateUserCommand {
     public readonly email?: string,
     public readonly phone?: string,
     public readonly roleId?: string,
+    public readonly commissionModel?: CommissionModel,
   ) {}
 }
 
@@ -91,6 +93,10 @@ export class UpdateUserUseCase implements UseCase<UpdateUserCommand, UserDto> {
       });
 
       user.changeRole(role.id.value);
+    }
+
+    if (command.commissionModel !== undefined) {
+      user.changeCommissionModel(command.commissionModel);
     }
 
     return this.uow.execute(async () => {

@@ -22,6 +22,7 @@ import {
   SetUserStatusUseCase,
 } from '../../../../contexts/user/application/use-cases/set-user-status/set-user-status.use-case';
 import { AuthTokenPayload } from '../../../../contexts/auth/application/ports/output/token-service.port';
+import { CommissionModel } from '../../../../contexts/user/domain/commission-model';
 import { PERMISSIONS } from '../../../../contexts/role/domain/permissions.catalog';
 import { PermissionGuard } from '../../../security/guards/permission.guard';
 import { RequirePermission } from '../../../security/decorators/require-permission.decorator';
@@ -64,6 +65,7 @@ export class UserController {
         dto.phone,
         dto.password,
         dto.roleId,
+        dto.commissionModel as CommissionModel | undefined,
       ),
     );
     return UserResponseDto.from(user);
@@ -76,7 +78,14 @@ export class UserController {
     @Body() dto: UpdateUserRequestDto,
   ): Promise<UserResponseDto> {
     const user = await this.updateUserUseCase.execute(
-      new UpdateUserCommand(id, dto.name, dto.email, dto.phone, dto.roleId),
+      new UpdateUserCommand(
+        id,
+        dto.name,
+        dto.email,
+        dto.phone,
+        dto.roleId,
+        dto.commissionModel as CommissionModel | undefined,
+      ),
     );
     return UserResponseDto.from(user);
   }

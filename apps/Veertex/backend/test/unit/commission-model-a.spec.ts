@@ -30,6 +30,21 @@ describe('Comissão Modelo A — escala de meta, ao centavo (§2 do 02A)', () =>
     expect(r.commissionValue).toBe(4000);
   });
 
+  // Exemplos NUMÉRICOS do levantamento (Handoff §2), replicados literais como massa de aceite.
+  it('levantamento: meta 50.000, vendido 100.000 → 200% → 2% → 2.000,00', () => {
+    const r = computeModelACommission({ vendido: 100000, meta: 50000, tiers: TIERS });
+    expect(r.ratioPercent).toBe(200);
+    expect(r.appliedThresholdPercent).toBe(200);
+    expect(r.commissionValue).toBe(2000);
+  });
+
+  it('levantamento: vendido abaixo da menor faixa (meta 50.000, vendido 40.000 = 80%) → zero', () => {
+    const r = computeModelACommission({ vendido: 40000, meta: 50000, tiers: TIERS });
+    expect(r.ratioPercent).toBe(80);
+    expect(r.appliedThresholdPercent).toBeNull();
+    expect(r.commissionValue).toBe(0);
+  });
+
   it('entre faixas (175%) usa a faixa de baixo (150%) → 2.625,00', () => {
     const r = computeModelACommission({ vendido: 175000, meta: 100000, tiers: TIERS });
     expect(r.appliedThresholdPercent).toBe(150);

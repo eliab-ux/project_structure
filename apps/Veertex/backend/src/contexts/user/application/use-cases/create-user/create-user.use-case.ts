@@ -24,6 +24,7 @@ import {
 import { RoleId } from '../../../../role/domain/value-objects/role-id.vo';
 import { RoleNotFoundException } from '../../../../role/domain/exceptions/role-exceptions';
 import { User } from '../../../domain/entities/user.entity';
+import { CommissionModel } from '../../../domain/commission-model';
 import { UserAlreadyExistsException } from '../../../domain/exceptions/user-exceptions';
 import { USER_REPOSITORY, UserRepositoryPort } from '../../ports/output/user-repository.port';
 import { UserDto } from '../../dto/user.dto';
@@ -37,6 +38,7 @@ export class CreateUserCommand {
     public readonly phone: string,
     public readonly password: string,
     public readonly roleId: string,
+    public readonly commissionModel?: CommissionModel,
   ) {}
 }
 
@@ -83,6 +85,7 @@ export class CreateUserUseCase implements UseCase<CreateUserCommand, UserDto> {
       phone,
       passwordHash: await this.hasher.hash(command.password),
       roleId: role.id.value,
+      commissionModel: command.commissionModel,
     });
 
     return this.uow.execute(async () => {

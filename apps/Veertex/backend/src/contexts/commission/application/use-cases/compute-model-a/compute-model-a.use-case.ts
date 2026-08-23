@@ -16,8 +16,17 @@ import {
   COMMISSION_PAYABLE,
   CommissionPayablePort,
 } from '../../ports/output/commission-payable.port';
+import {
+  USER_REPOSITORY,
+  UserRepositoryPort,
+} from '../../../../user/application/ports/output/user-repository.port';
+import { UserId } from '../../../../user/domain/value-objects/user-id.vo';
 import { computeModelACommission } from '../../../domain/model-a';
 import { CommissionModelAResultDto } from '../../dto/commission.dto';
+import {
+  CommissionModelMismatchException,
+  CommissionSalesRepNotFoundException,
+} from '../../../domain/exceptions/commission-exceptions';
 
 export class ComputeModelACommissionQuery {
   constructor(
@@ -44,9 +53,20 @@ export class ComputeModelACommissionUseCase implements UseCase<
     @Inject(SALES_TARGET_REPOSITORY) private readonly targets: SalesTargetRepositoryPort,
     @Inject(COMMISSION_SALES_LOOKUP) private readonly sales: CommissionSalesLookupPort,
     @Inject(COMMISSION_PAYABLE) private readonly payable: CommissionPayablePort,
+    @Inject(USER_REPOSITORY) private readonly users: UserRepositoryPort,
   ) {}
 
   async execute(query: ComputeModelACommissionQuery): Promise<CommissionModelAResultDto> {
+    // O modelo é atributo do cadastro do vendedor (§2 do 02A): apurar A para um vendedor B/none
+    // recusa com mensagem clara — não devolve zero silencioso, que esconderia um cadastro errado.
+    const salesRep = await this.users.findById(UserId.from(query.salesRepId));
+    if (!salesRep) {
+      throw new CommissionSalesRepNotFoundException();
+    }
+    if (salesRep.commissionModel !== 'a') {
+      throw new CommissionModelMismatchException(salesRep.commissionModel);
+    }
+
     const tiers = await this.tiers.getForAccount();
     const target = await this.targets.findByUserPeriod(query.salesRepId, query.period);
     const vendido = await this.sales.sumSoldBySalesRep(query.salesRepId, query.period);

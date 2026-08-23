@@ -2,6 +2,7 @@ import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
+  IsIn,
   IsOptional,
   IsString,
   IsUUID,
@@ -10,6 +11,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { PASSWORD_POLICY } from '../../../../../contexts/auth/domain/password-policy';
+import { USER_COMMISSION_MODELS } from '../../../../../contexts/user/domain/commission-model';
 
 const trimmed = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
@@ -53,6 +55,11 @@ export class CreateUserRequestDto {
 
   @IsUUID('4', { message: 'Papel inválido.' })
   roleId!: string;
+
+  /** Modelo de comissão (§2 do 02A). Opcional; default `none`. */
+  @IsOptional()
+  @IsIn(USER_COMMISSION_MODELS as unknown as string[])
+  commissionModel?: string;
 }
 
 /** Partial update. `password` is absent: changing it has its own flow and its own proof of identity. */
@@ -79,6 +86,10 @@ export class UpdateUserRequestDto {
   @IsOptional()
   @IsUUID('4', { message: 'Papel inválido.' })
   roleId?: string;
+
+  @IsOptional()
+  @IsIn(USER_COMMISSION_MODELS as unknown as string[])
+  commissionModel?: string;
 }
 
 export class SetUserStatusRequestDto {

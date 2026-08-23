@@ -10,9 +10,22 @@ import {
   CommissionPayablePort,
 } from '../../src/contexts/commission/application/ports/output/commission-payable.port';
 import { SalesTarget } from '../../src/contexts/commission/domain/entities/sales-target.entity';
+import { UserRepositoryPort } from '../../src/contexts/user/application/ports/output/user-repository.port';
+import { User } from '../../src/contexts/user/domain/entities/user.entity';
+import { CommissionModel } from '../../src/contexts/user/domain/commission-model';
+import { CommissionModelMismatchException } from '../../src/contexts/commission/domain/exceptions/commission-exceptions';
 
 const CONTA = '11111111-1111-4111-8111-111111111111';
 const VENDEDOR = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+
+/** Fake mínimo: a apuração só lê `commissionModel` do vendedor. */
+function usersFalso(model: CommissionModel): UserRepositoryPort {
+  return {
+    findById: async () => ({ commissionModel: model }) as unknown as User,
+    findByEmail: async () => null,
+    save: async (u: User) => u,
+  } as unknown as UserRepositoryPort;
+}
 
 const tiersFalso: CommissionTierRepositoryPort = {
   getForAccount: async () => [
@@ -59,6 +72,7 @@ describe('ComputeModelACommission — apuração (§2 do 02A)', () => {
       metaFalso(100000),
       vendidoFalso(150000),
       port,
+      usersFalso('a'),
     );
     const r = await uc.execute(new ComputeModelACommissionQuery(VENDEDOR, '2026-08'));
     expect(r.vendido).toBe(150000);
@@ -74,6 +88,7 @@ describe('ComputeModelACommission — apuração (§2 do 02A)', () => {
       metaFalso(100000),
       vendidoFalso(90000),
       port,
+      usersFalso('a'),
     );
     const r = await uc.execute(new ComputeModelACommissionQuery(VENDEDOR, '2026-08'));
     expect(r.commissionValue).toBe(0);
@@ -87,10 +102,25 @@ describe('ComputeModelACommission — apuração (§2 do 02A)', () => {
       metaFalso(null),
       vendidoFalso(150000),
       port,
+      usersFalso('a'),
     );
     const r = await uc.execute(new ComputeModelACommissionQuery(VENDEDOR, '2026-08'));
     expect(r.meta).toBe(0);
     expect(r.commissionValue).toBe(0);
     expect(emitidos).toHaveLength(0);
+  });
+
+  it('vendedor que não é Modelo A é recusado com mensagem clara (não devolve zero)', async () => {
+    const { port } = payableEspiao();
+    const uc = new ComputeModelACommissionUseCase(
+      tiersFalso,
+      metaFalso(100000),
+      vendidoFalso(150000),
+      port,
+      usersFalso('none'),
+    );
+    await expect(uc.execute(new ComputeModelACommissionQuery(VENDEDOR, '2026-08'))).rejects.toThrow(
+      CommissionModelMismatchException,
+    );
   });
 });
