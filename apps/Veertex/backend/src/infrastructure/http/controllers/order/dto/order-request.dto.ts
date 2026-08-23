@@ -90,6 +90,11 @@ export class CreateOrderRequestDto {
   @IsUUID()
   paymentConditionId?: string | null;
 
+  /** Idempotência do sync do app de campo — uuid gerado no aparelho, único por conta. */
+  @IsOptional()
+  @IsUUID()
+  clientUuid?: string;
+
   @IsArray()
   @ArrayMinSize(1, { message: 'Informe ao menos um item.' })
   @ArrayMaxSize(200)

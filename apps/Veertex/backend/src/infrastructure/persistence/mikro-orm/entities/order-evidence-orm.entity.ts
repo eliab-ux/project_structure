@@ -38,4 +38,8 @@ export class OrderEvidenceOrmEntity extends TenantScopedOrmEntity {
 
   @Property({ type: 'timestamptz', fieldName: 'captured_at' })
   capturedAt: Date = new Date();
+  /** Idempotência do sync de campo — uuid gerado no aparelho; único por conta quando presente. */
+  @Property({ type: 'uuid', nullable: true, fieldName: 'client_uuid' })
+  clientUuid: string | null = null;
+
 }

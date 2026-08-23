@@ -30,6 +30,8 @@ export class RegisterOrderEvidenceCommand {
       fileBase64?: string | null;
       fileMimeType?: string | null;
       capturedAt?: Date | null;
+      /** Idempotência do sync de campo: reenvio com o MESMO uuid devolve a evidência existente. */
+      clientUuid?: string | null;
     },
   ) {}
 }
@@ -63,6 +65,14 @@ export class RegisterOrderEvidenceUseCase implements UseCase<
     return this.uow.execute(async () => {
       const { input } = command;
 
+      // Idempotência do sync: reenvio da outbox devolve a evidência já registrada.
+      if (input.clientUuid) {
+        const existing = await this.evidences.findByClientUuid?.(input.clientUuid);
+        if (existing) {
+          return { id: existing.id, type: existing.type, objectKey: existing.objectKey };
+        }
+      }
+
       // GPS é capturado UMA vez, na abertura (imutável). Alteração = ChangeOrderGps, auditada.
       if (input.type === 'gps') {
         const existing = await this.evidences.findCurrentGps(input.orderId);
@@ -92,7 +102,7 @@ export class RegisterOrderEvidenceUseCase implements UseCase<
         objectKey,
         capturedAt: input.capturedAt ?? null,
       });
-      const saved = await this.evidences.save(evidence);
+      const saved = await this.evidences.save(evidence, { clientUuid: input.clientUuid ?? null });
 
       // §3.1: o GPS da abertura é PROPAGADO ao cadastro da revendedora — preenche a coordenada do
       // endereço se o cadastro ainda não tem (overwrite=false: primeira visita georreferencia,

@@ -225,6 +225,7 @@ export class TripController {
     return this.registerReceipt.execute(
       new RegisterFieldReceiptCommand(actor.accountId, {
         tripId: id,
+        clientUuid: dto.clientUuid ?? null,
         titleId: dto.titleId ?? null,
         method: dto.method as FieldReceiptMethod,
         amount: dto.amount,
@@ -299,6 +300,7 @@ export class TripController {
     return this.registerExpense.execute(
       new RegisterTripExpenseCommand(actor.accountId, {
         tripId: id,
+        clientUuid: dto.clientUuid ?? null,
         category: dto.category as TripExpenseCategory,
         amount: dto.amount,
         note: dto.note ?? null,

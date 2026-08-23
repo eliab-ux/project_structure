@@ -18,6 +18,11 @@ const trimmed = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
 
 export class RegisterOrderEvidenceRequestDto {
+  /** Idempotência do sync do app de campo — uuid gerado no aparelho, único por conta. */
+  @IsOptional()
+  @IsUUID()
+  clientUuid?: string;
+
   @IsIn(EVIDENCE_TYPES as unknown as string[])
   type!: string;
 

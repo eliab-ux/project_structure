@@ -73,4 +73,8 @@ export class OrderOrmEntity extends TenantScopedOrmEntity {
 
   @OneToMany(() => OrderItemOrmEntity, (item) => item.order)
   items = new Collection<OrderItemOrmEntity>(this);
+  /** Idempotência do sync de campo — uuid gerado no aparelho; único por conta quando presente. */
+  @Property({ type: 'uuid', nullable: true, fieldName: 'client_uuid' })
+  clientUuid: string | null = null;
+
 }

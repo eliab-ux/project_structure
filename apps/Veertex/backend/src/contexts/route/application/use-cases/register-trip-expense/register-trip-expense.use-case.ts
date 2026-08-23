@@ -21,6 +21,8 @@ export class RegisterTripExpenseCommand {
       amount: number;
       note?: string | null;
       spentAt?: Date | null;
+      /** Idempotência do sync de campo: reenvio com o MESMO uuid devolve a despesa existente. */
+      clientUuid?: string | null;
     },
   ) {}
 }
@@ -45,6 +47,14 @@ export class RegisterTripExpenseUseCase implements UseCase<
 
   async execute(command: RegisterTripExpenseCommand): Promise<TripExpenseResult> {
     return this.uow.execute(async () => {
+      // Idempotência do sync: a outbox reenviou? Devolve o que já existe.
+      if (command.input.clientUuid) {
+        const existing = await this.expenses.findByClientUuid?.(command.input.clientUuid);
+        if (existing) {
+          return { id: existing.id, category: existing.category, amount: existing.amount };
+        }
+      }
+
       const trip = await this.trips.findById(command.input.tripId);
       if (!trip) {
         throw new TripNotFoundException();
@@ -57,7 +67,7 @@ export class RegisterTripExpenseUseCase implements UseCase<
         note: command.input.note ?? null,
         spentAt: command.input.spentAt ?? null,
       });
-      const saved = await this.expenses.save(expense);
+      const saved = await this.expenses.save(expense, { clientUuid: command.input.clientUuid ?? null });
       return { id: saved.id, category: saved.category, amount: saved.amount };
     });
   }

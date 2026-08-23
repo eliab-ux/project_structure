@@ -97,6 +97,11 @@ export class LoadTripCargoRequestDto {
 }
 
 export class RegisterFieldReceiptRequestDto {
+  /** Idempotência do sync do app de campo — uuid gerado no aparelho, único por conta. */
+  @IsOptional()
+  @IsUUID()
+  clientUuid?: string;
+
   /** Título cobrado (da carteira). Ausente = "outros recebimentos" (à vista, fora da carteira). */
   @IsOptional()
   @IsUUID()
@@ -164,6 +169,11 @@ export class ExchangeConsignedItemsRequestDto {
 }
 
 export class RegisterTripExpenseRequestDto {
+  /** Idempotência do sync do app de campo — uuid gerado no aparelho, único por conta. */
+  @IsOptional()
+  @IsUUID()
+  clientUuid?: string;
+
   @IsIn(TRIP_EXPENSE_CATEGORIES as unknown as string[])
   category!: string;
 

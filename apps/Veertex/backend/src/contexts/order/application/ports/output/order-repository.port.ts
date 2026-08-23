@@ -20,7 +20,16 @@ export interface ListOrdersFilter {
 export interface OrderRepositoryPort {
   findById(id: OrderId): Promise<Order | null>;
   list(filter: ListOrdersFilter): Promise<Order[]>;
-  save(order: Order): Promise<Order>;
+
+  /**
+   * Idempotência do SYNC do app de campo (proposta aprovada 23/08/2026, antecipada na Leva 2): o
+   * aparelho gera um `client_uuid` por mutação da outbox; reenvio após queda de rede ENCONTRA o
+   * registro em vez de duplicá-lo. Opcional no port: fakes de teste e chamadas da retaguarda (sem
+   * uuid) não precisam dele. Índice único parcial (account_id, client_uuid) é a rede contra
+   * corrida — a outbox reenvia sequencialmente, e o retry seguinte encontra o existente.
+   */
+  findByClientUuid?(clientUuid: string): Promise<Order | null>;
+  save(order: Order, options?: { clientUuid?: string | null }): Promise<Order>;
 
   /**
    * O próximo número de pedido da empresa (§2.6: numeração POR empresa). Concorrência-segura por

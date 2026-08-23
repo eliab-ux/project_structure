@@ -38,7 +38,15 @@ export class MikroOrmFieldReceiptRepository implements FieldReceiptRepositoryPor
     return rows.map((row) => this.toDomain(row));
   }
 
-  async save(receipt: FieldReceipt): Promise<FieldReceipt> {
+  async findByClientUuid(clientUuid: string): Promise<FieldReceipt | null> {
+    const orm = await this.em.findOne(FieldReceiptOrmEntity, { clientUuid });
+    return orm ? this.toDomain(orm) : null;
+  }
+
+  async save(
+    receipt: FieldReceipt,
+    options?: { clientUuid?: string | null },
+  ): Promise<FieldReceipt> {
     const existing = await this.em.findOne(FieldReceiptOrmEntity, { id: receipt.id });
     if (existing) {
       existing.status = receipt.status;
@@ -57,6 +65,7 @@ export class MikroOrmFieldReceiptRepository implements FieldReceiptRepositoryPor
       interest: receipt.interest.toFixed(2),
       insideWallet: receipt.insideWallet,
       status: receipt.status,
+      clientUuid: options?.clientUuid ?? null,
       effectuatedAt: receipt.effectuatedAt,
       createdAt: receipt.createdAt,
       updatedAt: new Date(),

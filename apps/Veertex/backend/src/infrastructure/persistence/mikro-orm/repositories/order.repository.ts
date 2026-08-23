@@ -61,7 +61,12 @@ export class MikroOrmOrderRepository implements OrderRepositoryPort {
    * padrão de Contato/Produto. Cada item novo recebe `account_id` explícito; sem ele o INSERT bate
    * na policy de RLS (comportamento correto da policy).
    */
-  async save(order: Order): Promise<Order> {
+  async findByClientUuid(clientUuid: string): Promise<Order | null> {
+    const orm = await this.em.findOne(OrderOrmEntity, { clientUuid }, { populate: ['items'] });
+    return orm ? this.mapper.toDomain(orm) : null;
+  }
+
+  async save(order: Order, options?: { clientUuid?: string | null }): Promise<Order> {
     let orm: OrderOrmEntity | null = await this.em.findOne(
       OrderOrmEntity,
       { id: order.id.value },
@@ -88,6 +93,7 @@ export class MikroOrmOrderRepository implements OrderRepositoryPort {
         validUntil: order.validUntil,
         // Dormente (§4.1 do 02A): sempre 0 na criação; o fechamento de espécie chega com o PDV/TEF.
         paymentRounding: '0',
+        clientUuid: options?.clientUuid ?? null,
         createdAt: order.createdAt,
         updatedAt: new Date(),
       });

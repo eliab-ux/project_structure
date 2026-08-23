@@ -42,6 +42,8 @@ export class CreateOrderCommand {
       tripId?: string | null;
       /** Condição de pagamento (§3.6). Ausente → herda o default do contato. */
       paymentConditionId?: string | null;
+      /** Idempotência do sync de campo: reenvio com o MESMO uuid devolve o pedido existente. */
+      clientUuid?: string | null;
       items: OrderItemInput[];
       discountPercent?: number | null;
       discountValue?: number | null;
@@ -73,6 +75,15 @@ export class CreateOrderUseCase implements UseCase<CreateOrderCommand, OrderDto>
   async execute(command: CreateOrderCommand): Promise<OrderDto> {
     return this.uow.execute(async () => {
       const { input } = command;
+
+      // Idempotência do sync (proposta do app, antecipada na Leva 2): a outbox reenviou? Devolve o
+      // que já existe — reenvio após queda de rede não pode virar segundo pedido.
+      if (input.clientUuid) {
+        const existing = await this.orders.findByClientUuid?.(input.clientUuid);
+        if (existing) {
+          return OrderDto.fromDomain(existing);
+        }
+      }
 
       if (!input.companyId) {
         throw new OrderCompanyRequiredException();
@@ -123,7 +134,9 @@ export class CreateOrderUseCase implements UseCase<CreateOrderCommand, OrderDto>
         throw new DiscountNotAllowedException();
       }
 
-      return OrderDto.fromDomain(await this.orders.save(order));
+      return OrderDto.fromDomain(
+        await this.orders.save(order, { clientUuid: input.clientUuid ?? null }),
+      );
     });
   }
 }

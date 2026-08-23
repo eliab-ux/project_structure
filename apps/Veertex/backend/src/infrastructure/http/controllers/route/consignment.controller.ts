@@ -55,6 +55,7 @@ export class ConsignmentController {
     return this.registerEvidence.execute(
       new RegisterOrderEvidenceCommand(actor.accountId, {
         orderId: id,
+        clientUuid: dto.clientUuid ?? null,
         tripId: dto.tripId ?? null,
         type: dto.type as EvidenceType,
         latitude: dto.latitude ?? null,

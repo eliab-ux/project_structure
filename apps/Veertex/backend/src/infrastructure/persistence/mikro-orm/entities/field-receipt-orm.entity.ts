@@ -33,4 +33,8 @@ export class FieldReceiptOrmEntity extends TenantScopedOrmEntity {
 
   @Property({ type: 'timestamptz', nullable: true, fieldName: 'effectuated_at' })
   effectuatedAt: Date | null = null;
+  /** Idempotência do sync de campo — uuid gerado no aparelho; único por conta quando presente. */
+  @Property({ type: 'uuid', nullable: true, fieldName: 'client_uuid' })
+  clientUuid: string | null = null;
+
 }

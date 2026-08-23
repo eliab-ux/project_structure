@@ -22,6 +22,8 @@ export class RegisterFieldReceiptCommand {
       method: FieldReceiptMethod;
       amount: number;
       interest?: number | null;
+      /** Idempotência do sync de campo: reenvio com o MESMO uuid devolve o lançamento existente. */
+      clientUuid?: string | null;
     },
   ) {}
 }
@@ -50,6 +52,14 @@ export class RegisterFieldReceiptUseCase implements UseCase<
 
   async execute(command: RegisterFieldReceiptCommand): Promise<FieldReceiptResult> {
     return this.uow.execute(async () => {
+      // Idempotência do sync: a outbox reenviou? Devolve o que já existe.
+      if (command.input.clientUuid) {
+        const existing = await this.receipts.findByClientUuid?.(command.input.clientUuid);
+        if (existing) {
+          return { id: existing.id, status: existing.status, insideWallet: existing.insideWallet };
+        }
+      }
+
       const trip = await this.trips.findById(command.input.tripId);
       if (!trip) {
         throw new TripNotFoundException();
@@ -62,7 +72,7 @@ export class RegisterFieldReceiptUseCase implements UseCase<
         amount: command.input.amount,
         interest: command.input.interest ?? null,
       });
-      const saved = await this.receipts.save(receipt);
+      const saved = await this.receipts.save(receipt, { clientUuid: command.input.clientUuid ?? null });
       return { id: saved.id, status: saved.status, insideWallet: saved.insideWallet };
     });
   }

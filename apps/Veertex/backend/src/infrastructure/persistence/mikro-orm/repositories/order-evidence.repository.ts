@@ -45,8 +45,17 @@ export class MikroOrmOrderEvidenceRepository implements OrderEvidenceRepositoryP
     return orm ? this.toDomain(orm) : null;
   }
 
-  async save(evidence: OrderEvidence): Promise<OrderEvidence> {
+  async findByClientUuid(clientUuid: string): Promise<OrderEvidence | null> {
+    const orm = await this.em.findOne(OrderEvidenceOrmEntity, { clientUuid });
+    return orm ? this.toDomain(orm) : null;
+  }
+
+  async save(
+    evidence: OrderEvidence,
+    options?: { clientUuid?: string | null },
+  ): Promise<OrderEvidence> {
     const orm = this.em.create(OrderEvidenceOrmEntity, {
+      clientUuid: options?.clientUuid ?? null,
       id: evidence.id,
       accountId: evidence.accountId,
       orderId: evidence.orderId,

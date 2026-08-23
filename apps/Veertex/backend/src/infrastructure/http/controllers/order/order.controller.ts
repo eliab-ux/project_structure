@@ -114,6 +114,7 @@ export class OrderController {
         originDetail: dto.originDetail ?? null,
         tripId: dto.tripId ?? null,
         paymentConditionId: dto.paymentConditionId ?? null,
+        clientUuid: dto.clientUuid ?? null,
         items: dto.items,
         discountPercent: dto.discountPercent ?? null,
         discountValue: dto.discountValue ?? null,

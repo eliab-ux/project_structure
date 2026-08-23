@@ -19,4 +19,8 @@ export class TripExpenseOrmEntity extends TenantScopedOrmEntity {
 
   @Property({ type: 'timestamptz', fieldName: 'spent_at' })
   spentAt: Date = new Date();
+  /** Idempotência do sync de campo — uuid gerado no aparelho; único por conta quando presente. */
+  @Property({ type: 'uuid', nullable: true, fieldName: 'client_uuid' })
+  clientUuid: string | null = null;
+
 }

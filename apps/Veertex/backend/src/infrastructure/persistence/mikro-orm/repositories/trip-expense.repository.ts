@@ -30,8 +30,17 @@ export class MikroOrmTripExpenseRepository implements TripExpenseRepositoryPort 
     return rows.map((row) => this.toDomain(row));
   }
 
-  async save(expense: TripExpense): Promise<TripExpense> {
+  async findByClientUuid(clientUuid: string): Promise<TripExpense | null> {
+    const orm = await this.em.findOne(TripExpenseOrmEntity, { clientUuid });
+    return orm ? this.toDomain(orm) : null;
+  }
+
+  async save(
+    expense: TripExpense,
+    options?: { clientUuid?: string | null },
+  ): Promise<TripExpense> {
     const orm = this.em.create(TripExpenseOrmEntity, {
+      clientUuid: options?.clientUuid ?? null,
       id: expense.id,
       accountId: expense.accountId,
       tripId: expense.tripId,
