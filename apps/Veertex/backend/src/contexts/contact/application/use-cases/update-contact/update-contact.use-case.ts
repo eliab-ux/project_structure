@@ -32,6 +32,7 @@ export class UpdateContactCommand {
       code?: string | null;
       creditLimit?: number | null;
       salesRepId?: string | null;
+      routeId?: string | null;
       notes?: string | null;
       municipalRegistration?: string | null;
       suframa?: string | null;

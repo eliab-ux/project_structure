@@ -106,6 +106,15 @@ export const PERMISSIONS = {
     payable: 'finance.payable.manage',
     settle: 'finance.settle',
   },
+  // Rota / Consignação (ROT, §04). `read` para ver rotas/viagens/carteiras; `settings` para o
+  // cadastro de rotas e a Regra Comercial do representante; `trip` para operar a viagem (abrir carga,
+  // conferir/efetivar acerto e fechamento na retaguarda). O app do representante (campo) é fatia
+  // futura com autorização própria. Área `rot` (primeiro segmento).
+  rot: {
+    read: 'rot.read',
+    settings: 'rot.settings',
+    trip: 'rot.trip.manage',
+  },
 } as const;
 
 /** Grants everything, present and future. Only the Admin role should hold it. */

@@ -113,6 +113,7 @@ export class MikroOrmContactRepository implements ContactRepositoryPort {
         code: contact.code,
         creditLimit: contact.creditLimit === null ? null : contact.creditLimit.toFixed(2),
         salesRepId: contact.salesRepId,
+        routeId: contact.routeId,
         notes: contact.notes,
         municipalRegistration: contact.optional.municipalRegistration,
         suframa: contact.optional.suframa,

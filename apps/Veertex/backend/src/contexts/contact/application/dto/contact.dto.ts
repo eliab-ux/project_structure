@@ -39,6 +39,7 @@ export class ContactDto {
   creditLimit!: number | null;
   /** Vendedor vinculado (carteirização, §2.3). `null` = sem carteira. */
   salesRepId!: string | null;
+  routeId!: string | null;
   notes!: string | null;
   municipalRegistration!: string | null;
   suframa!: string | null;
@@ -67,6 +68,7 @@ export class ContactDto {
     dto.code = contact.code;
     dto.creditLimit = contact.creditLimit;
     dto.salesRepId = contact.salesRepId;
+    dto.routeId = contact.routeId;
     dto.notes = contact.notes;
     dto.municipalRegistration = contact.optional.municipalRegistration;
     dto.suframa = contact.optional.suframa;

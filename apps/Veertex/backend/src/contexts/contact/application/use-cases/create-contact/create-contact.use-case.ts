@@ -31,6 +31,7 @@ export class CreateContactCommand {
       code?: string | null;
       creditLimit?: number | null;
       salesRepId?: string | null;
+      routeId?: string | null;
       notes?: string | null;
       municipalRegistration?: string | null;
       suframa?: string | null;
@@ -95,6 +96,7 @@ export class CreateContactUseCase implements UseCase<CreateContactCommand, Conta
         code: command.input.code,
         creditLimit: command.input.creditLimit,
         salesRepId: command.input.salesRepId,
+        routeId: command.input.routeId,
         notes: command.input.notes,
         optional: {
           municipalRegistration: command.input.municipalRegistration ?? null,

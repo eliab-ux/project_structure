@@ -88,6 +88,8 @@ export class Contact extends AggregateRoot {
     private _creditLimit: number | null,
     /** Vendedor vinculado (carteirização, §2.3 do 02). `null` = sem carteira. Ver ADR-0007. */
     private _salesRepId: string | null,
+    /** Rota da carteira do revendedor (§2 do 04). `null` = sem rota. Carteirização por rota+rep. */
+    private _routeId: string | null,
     private _notes: string | null,
     private _optional: ContactOptionalFields,
     private _emails: ContactEmailEntry[],
@@ -111,6 +113,7 @@ export class Contact extends AggregateRoot {
     code?: string | null;
     creditLimit?: number | null;
     salesRepId?: string | null;
+    routeId?: string | null;
     notes?: string | null;
     optional?: Partial<ContactOptionalFields>;
     emails?: readonly { email: string; label?: string | null }[];
@@ -135,6 +138,7 @@ export class Contact extends AggregateRoot {
       trimToNull(params.code),
       Contact.parseCreditLimit(params.creditLimit ?? null),
       trimToNull(params.salesRepId ?? null),
+      trimToNull(params.routeId ?? null),
       trimToNull(params.notes),
       normalizeOptional(params.optional),
       (params.emails ?? []).map((entry) => ({
@@ -171,6 +175,7 @@ export class Contact extends AggregateRoot {
     code: string | null;
     creditLimit: number | null;
     salesRepId: string | null;
+    routeId: string | null;
     notes: string | null;
     optional: ContactOptionalFields;
     emails: ContactEmailEntry[];
@@ -192,6 +197,7 @@ export class Contact extends AggregateRoot {
       params.code,
       params.creditLimit,
       params.salesRepId,
+      params.routeId,
       params.notes,
       params.optional,
       params.emails,
@@ -258,6 +264,7 @@ export class Contact extends AggregateRoot {
     code?: string | null;
     creditLimit?: number | null;
     salesRepId?: string | null;
+    routeId?: string | null;
     notes?: string | null;
     optional?: Partial<ContactOptionalFields>;
     emails?: readonly { email: string; label?: string | null }[];
@@ -297,6 +304,9 @@ export class Contact extends AggregateRoot {
     }
     if (params.salesRepId !== undefined) {
       this._salesRepId = trimToNull(params.salesRepId);
+    }
+    if (params.routeId !== undefined) {
+      this._routeId = trimToNull(params.routeId);
     }
     if (params.notes !== undefined) {
       this._notes = trimToNull(params.notes);
@@ -366,6 +376,10 @@ export class Contact extends AggregateRoot {
   }
   get salesRepId(): string | null {
     return this._salesRepId;
+  }
+
+  get routeId(): string | null {
+    return this._routeId;
   }
   get notes(): string | null {
     return this._notes;

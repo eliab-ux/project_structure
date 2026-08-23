@@ -121,6 +121,8 @@ export class CreateContactRequestDto {
   /** Vendedor vinculado (carteirização, §2.3). Id de usuário; a policy de `contacts` filtra por ele. */
   @IsOptional() @IsUUID() salesRepId?: string | null;
 
+  @IsOptional() @IsUUID() routeId?: string | null;
+
   /**
    * Limite de crédito. Aplicado na CONFIRMAÇÃO do pedido pelo VND. O teto de 999 milhões evita que um
    * erro de digitação vire um número que nenhuma tela consegue formatar.
@@ -192,6 +194,8 @@ export class UpdateContactRequestDto {
   creditLimit?: number | null;
 
   @IsOptional() @IsUUID() salesRepId?: string | null;
+
+  @IsOptional() @IsUUID() routeId?: string | null;
 
   @IsOptional() @IsString() @MaxLength(2000) @Transform(trimmed) notes?: string | null;
   @IsOptional() @IsString() @MaxLength(30) @Transform(trimmed) municipalRegistration?:

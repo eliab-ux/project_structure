@@ -22,6 +22,8 @@ import { FINANCIAL_ACCOUNT_REPOSITORY } from '../../contexts/finance/application
 import { FINANCIAL_CATEGORY_REPOSITORY } from '../../contexts/finance/application/ports/output/financial-category-repository.port';
 import { FINANCIAL_TITLE_REPOSITORY } from '../../contexts/finance/application/ports/output/financial-title-repository.port';
 import { LATE_CHARGE_PARAMS } from '../../contexts/finance/application/ports/output/late-charge-params.port';
+import { ROUTE_REPOSITORY } from '../../contexts/route/application/ports/output/route-repository.port';
+import { COMMERCIAL_RULE_REPOSITORY } from '../../contexts/route/application/ports/output/commercial-rule-repository.port';
 
 import { PlanOrmEntity } from './mikro-orm/entities/plan-orm.entity';
 import { AccountOrmEntity } from './mikro-orm/entities/account-orm.entity';
@@ -49,6 +51,8 @@ import { FinancialAccountOrmEntity } from './mikro-orm/entities/financial-accoun
 import { FinancialCategoryOrmEntity } from './mikro-orm/entities/financial-category-orm.entity';
 import { FinancialTitleOrmEntity } from './mikro-orm/entities/financial-title-orm.entity';
 import { TitleSettlementOrmEntity } from './mikro-orm/entities/title-settlement-orm.entity';
+import { RouteOrmEntity } from './mikro-orm/entities/route-orm.entity';
+import { CommercialRuleOrmEntity } from './mikro-orm/entities/commercial-rule-orm.entity';
 
 import { PlanMapper } from './mikro-orm/mappers/plan.mapper';
 import { AccountMapper } from './mikro-orm/mappers/account.mapper';
@@ -81,6 +85,8 @@ import { MikroOrmFinancialAccountRepository } from './mikro-orm/repositories/fin
 import { MikroOrmFinancialCategoryRepository } from './mikro-orm/repositories/financial-category.repository';
 import { MikroOrmFinancialTitleRepository } from './mikro-orm/repositories/financial-title.repository';
 import { LateChargeParamsReader } from './mikro-orm/repositories/late-charge-params.reader';
+import { MikroOrmRouteRepository } from './mikro-orm/repositories/route.repository';
+import { MikroOrmCommercialRuleRepository } from './mikro-orm/repositories/commercial-rule.repository';
 
 /**
  * Every repository, in one @Global module.
@@ -125,6 +131,8 @@ import { LateChargeParamsReader } from './mikro-orm/repositories/late-charge-par
       FinancialCategoryOrmEntity,
       FinancialTitleOrmEntity,
       TitleSettlementOrmEntity,
+      RouteOrmEntity,
+      CommercialRuleOrmEntity,
     ]),
   ],
   providers: [
@@ -161,6 +169,8 @@ import { LateChargeParamsReader } from './mikro-orm/repositories/late-charge-par
     { provide: FINANCIAL_CATEGORY_REPOSITORY, useClass: MikroOrmFinancialCategoryRepository },
     { provide: FINANCIAL_TITLE_REPOSITORY, useClass: MikroOrmFinancialTitleRepository },
     { provide: LATE_CHARGE_PARAMS, useClass: LateChargeParamsReader },
+    { provide: ROUTE_REPOSITORY, useClass: MikroOrmRouteRepository },
+    { provide: COMMERCIAL_RULE_REPOSITORY, useClass: MikroOrmCommercialRuleRepository },
   ],
   exports: [
     PLAN_REPOSITORY,
@@ -184,6 +194,8 @@ import { LateChargeParamsReader } from './mikro-orm/repositories/late-charge-par
     FINANCIAL_CATEGORY_REPOSITORY,
     FINANCIAL_TITLE_REPOSITORY,
     LATE_CHARGE_PARAMS,
+    ROUTE_REPOSITORY,
+    COMMERCIAL_RULE_REPOSITORY,
   ],
 })
 export class RepositoriesModule {}
