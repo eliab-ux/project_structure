@@ -184,6 +184,30 @@ export class OrderController {
     );
   }
 
+  /** consignado_aberto → em_acerto (a passagem seguinte chegou; §3.2 do 04). */
+  @Post(':id/start-settlement')
+  @RequirePermission(PERMISSIONS.rot.trip)
+  async startSettlement(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<OrderDto> {
+    return this.changeOrderStatusUseCase.execute(
+      new ChangeOrderStatusCommand(id, 'start_settlement', actor.modules ?? []),
+    );
+  }
+
+  /** em_acerto → fechado (o acerto efetivado — a venda consignada se conclui). */
+  @Post(':id/close-consignment')
+  @RequirePermission(PERMISSIONS.rot.trip)
+  async closeConsignment(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<OrderDto> {
+    return this.changeOrderStatusUseCase.execute(
+      new ChangeOrderStatusCommand(id, 'close_consignment', actor.modules ?? []),
+    );
+  }
+
   @Post(':id/cancel')
   @RequirePermission(PERMISSIONS.orders.cancel)
   async cancel(

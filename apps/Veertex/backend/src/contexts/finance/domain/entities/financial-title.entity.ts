@@ -27,6 +27,8 @@ export class FinancialTitle extends AggregateRoot {
     private _dueDate: Date,
     private readonly _origin: TitleOrigin,
     private _settlements: TitleSettlement[],
+    /** Sinalização MANUAL/automática que sobrepõe a derivação (perdida, renegociado — §3.4 do 04). */
+    private _flaggedStatus: 'renegotiated' | 'written_off_pending' | 'written_off' | null,
     private readonly _createdAt: Date,
   ) {
     super();
@@ -57,6 +59,7 @@ export class FinancialTitle extends AggregateRoot {
       params.dueDate,
       params.origin ?? 'manual',
       [],
+      null,
       new Date(),
     );
   }
@@ -76,6 +79,7 @@ export class FinancialTitle extends AggregateRoot {
       params.dueDate,
       params.origin,
       params.settlements ?? [],
+      params.flaggedStatus ?? null,
       params.createdAt,
     );
   }
@@ -91,9 +95,26 @@ export class FinancialTitle extends AggregateRoot {
   }
 
   get status(): TitleStatus {
-    if (this.settledPrincipal <= 0) return 'open';
+    // Quitação VENCE a sinalização: pagamento posterior de um título "perdido" é baixa normal (§3.4).
     if (this.settledPrincipal >= this._amount) return 'settled';
+    if (this._flaggedStatus) return this._flaggedStatus;
+    if (this.settledPrincipal <= 0) return 'open';
     return 'partial';
+  }
+
+  /**
+   * Política "perdida" (§3.4 do 04): após 1 cobrança + N recobranças sem recebimento, o título SAI
+   * da carteira (não viaja mais) mas PERMANECE no FIN até ação manual — cancelar ou write-off.
+   */
+  flagWrittenOffPending(): void {
+    if (this.status !== 'settled') {
+      this._flaggedStatus = 'written_off_pending';
+    }
+  }
+
+  /** Write-off manual (com permissão): baixa como despesa. Ação humana, nunca automática. */
+  flagWrittenOff(): void {
+    this._flaggedStatus = 'written_off';
   }
 
   /**

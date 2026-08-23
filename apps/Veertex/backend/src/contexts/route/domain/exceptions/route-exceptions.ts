@@ -31,3 +31,16 @@ export class TripMismatchException extends DomainException {
     super(message);
   }
 }
+
+/** Efetivar duas vezes efetivaria a baixa duas vezes (§3.3 do 04). */
+export class FieldReceiptAlreadyEffectuatedException extends DomainException {
+  constructor() {
+    super('Recebimento já efetivado.');
+  }
+}
+
+export class FieldReceiptNotFoundException extends DomainException {
+  constructor() {
+    super('Recebimento não encontrado.');
+  }
+}

@@ -25,6 +25,32 @@ import {
   LoadTripCargoCommand,
   LoadTripCargoUseCase,
 } from '../../../../contexts/route/application/use-cases/load-trip-cargo/load-trip-cargo.use-case';
+import {
+  BuildTripWalletCommand,
+  BuildTripWalletResult,
+  BuildTripWalletUseCase,
+} from '../../../../contexts/route/application/use-cases/build-trip-wallet/build-trip-wallet.use-case';
+import {
+  FieldReceiptResult,
+  RegisterFieldReceiptCommand,
+  RegisterFieldReceiptUseCase,
+} from '../../../../contexts/route/application/use-cases/register-field-receipt/register-field-receipt.use-case';
+import {
+  EffectuateFieldReceiptCommand,
+  EffectuateFieldReceiptResult,
+  EffectuateFieldReceiptUseCase,
+} from '../../../../contexts/route/application/use-cases/effectuate-field-receipt/effectuate-field-receipt.use-case';
+import {
+  ReturnConsignedItemsCommand,
+  ReturnConsignedItemsResult,
+  ReturnConsignedItemsUseCase,
+} from '../../../../contexts/route/application/use-cases/return-consigned-items/return-consigned-items.use-case';
+import {
+  ExchangeConsignedItemsCommand,
+  ExchangeConsignedItemsUseCase,
+  ExchangeResult,
+} from '../../../../contexts/route/application/use-cases/exchange-consigned-items/exchange-consigned-items.use-case';
+import { FieldReceiptMethod } from '../../../../contexts/route/domain/entities/field-receipt.entity';
 import { TripDto } from '../../../../contexts/route/application/dto/trip.dto';
 import { AuthTokenPayload } from '../../../../contexts/auth/application/ports/output/token-service.port';
 import { MODULES } from '../../../../contexts/module/domain/modules.catalog';
@@ -37,8 +63,12 @@ import { CurrentUser } from '../../../security/decorators/current-user.decorator
 import {
   ArriveTripRequestDto,
   CreateTripRequestDto,
+  EffectuateFieldReceiptRequestDto,
+  ExchangeConsignedItemsRequestDto,
   ListTripsQueryDto,
   LoadTripCargoRequestDto,
+  RegisterFieldReceiptRequestDto,
+  ReturnConsignedItemsRequestDto,
 } from './dto/trip-request.dto';
 
 /**
@@ -55,6 +85,11 @@ export class TripController {
     private readonly changeStatus: ChangeTripStatusUseCase,
     private readonly listTrips: ListTripsUseCase,
     private readonly loadCargo: LoadTripCargoUseCase,
+    private readonly buildWallet: BuildTripWalletUseCase,
+    private readonly registerReceipt: RegisterFieldReceiptUseCase,
+    private readonly effectuateReceipt: EffectuateFieldReceiptUseCase,
+    private readonly returnItems: ReturnConsignedItemsUseCase,
+    private readonly exchangeItems: ExchangeConsignedItemsUseCase,
   ) {}
 
   @Get()
@@ -124,5 +159,89 @@ export class TripController {
   @RequirePermission(PERMISSIONS.rot.trip)
   async cancel(@Param('id', ParseUUIDPipe) id: string): Promise<TripDto> {
     return this.changeStatus.execute(new ChangeTripStatusCommand(id, 'cancel'));
+  }
+
+  // ── Acerto (fatia 4, §3.2/§3.4 do 04) ─────────────────────────────────────────────────────────
+
+  /** Monta a CARTEIRA da viagem (cobrança/recobrança) e aplica a política "perdida". Idempotente. */
+  @Post(':id/wallet/build')
+  @RequirePermission(PERMISSIONS.rot.trip)
+  async wallet(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<BuildTripWalletResult> {
+    return this.buildWallet.execute(new BuildTripWalletCommand(actor.accountId, id));
+  }
+
+  /** LANÇA um recebimento (proposta — primeiro estágio; nada é baixado aqui). */
+  @Post(':id/receipts')
+  @HttpCode(201)
+  @RequirePermission(PERMISSIONS.rot.trip)
+  async addReceipt(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: RegisterFieldReceiptRequestDto,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<FieldReceiptResult> {
+    return this.registerReceipt.execute(
+      new RegisterFieldReceiptCommand(actor.accountId, {
+        tripId: id,
+        titleId: dto.titleId ?? null,
+        method: dto.method as FieldReceiptMethod,
+        amount: dto.amount,
+        interest: dto.interest ?? null,
+      }),
+    );
+  }
+
+  /** EFETIVA um recebimento (segundo estágio — a baixa acontece no FIN aqui). */
+  @Post('receipts/:receiptId/effectuate')
+  @RequirePermission(PERMISSIONS.rot.trip)
+  async effectuate(
+    @Param('receiptId', ParseUUIDPipe) receiptId: string,
+    @Body() dto: EffectuateFieldReceiptRequestDto,
+  ): Promise<EffectuateFieldReceiptResult> {
+    return this.effectuateReceipt.execute(
+      new EffectuateFieldReceiptCommand(receiptId, dto.financialAccountId),
+    );
+  }
+
+  /** Devolução do acerto: rep_load → depósito, ao custo da época da carga. */
+  @Post(':id/returns')
+  @RequirePermission(PERMISSIONS.rot.trip)
+  async returns(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ReturnConsignedItemsRequestDto,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<ReturnConsignedItemsResult> {
+    return this.returnItems.execute(
+      new ReturnConsignedItemsCommand(
+        actor.accountId,
+        id,
+        dto.toLocationId,
+        dto.orderId ?? null,
+        dto.lines,
+      ),
+    );
+  }
+
+  /** Troca do acerto: par vinculado exchange_in/exchange_out na carga. */
+  @Post(':id/exchanges')
+  @RequirePermission(PERMISSIONS.rot.trip)
+  async exchanges(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ExchangeConsignedItemsRequestDto,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<ExchangeResult> {
+    return this.exchangeItems.execute(
+      new ExchangeConsignedItemsCommand(
+        actor.accountId,
+        id,
+        dto.orderId ?? null,
+        dto.returnedProductId,
+        dto.returnedQuantity,
+        dto.takenProductId,
+        dto.takenQuantity,
+      ),
+    );
   }
 }

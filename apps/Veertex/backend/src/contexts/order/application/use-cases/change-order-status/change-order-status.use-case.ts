@@ -20,7 +20,14 @@ import {
 } from '../../../domain/exceptions/order-exceptions';
 
 export type OrderStatusAction =
-  'quote' | 'confirm' | 'complete' | 'cancel' | 'invoice' | 'open_consignment';
+  | 'quote'
+  | 'confirm'
+  | 'complete'
+  | 'cancel'
+  | 'invoice'
+  | 'open_consignment'
+  | 'start_settlement'
+  | 'close_consignment';
 
 export class ChangeOrderStatusCommand {
   constructor(
@@ -85,6 +92,14 @@ export class ChangeOrderStatusUseCase implements UseCase<ChangeOrderStatusComman
           // Efetivação da retaguarda sobre a proposta do campo (§3.3 do 04). Sem reserva nem
           // crédito: consignação não é venda ainda — a venda se conclui no acerto.
           order.openConsignment();
+          break;
+        case 'start_settlement':
+          order.startSettlement();
+          break;
+        case 'close_consignment':
+          // A venda se conclui aqui (§3.2 do 04). A emissão da "venda de consignado" (FIS) e a
+          // baixa do estoque vendido entram pelo fechamento da viagem (fatia 5) — fronteira 07 §2.
+          order.closeConsignment();
           break;
       }
 

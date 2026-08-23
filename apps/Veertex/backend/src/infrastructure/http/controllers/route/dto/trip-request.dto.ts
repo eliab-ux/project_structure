@@ -12,6 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { TRIP_STATUSES } from '../../../../../contexts/route/domain/entities/trip.entity';
+import { FIELD_RECEIPT_METHODS } from '../../../../../contexts/route/domain/entities/field-receipt.entity';
 
 export class CreateTripRequestDto {
   @IsUUID()
@@ -89,4 +90,71 @@ export class LoadTripCargoRequestDto {
   @ValidateNested({ each: true })
   @Type(() => CargoLineRequestDto)
   lines!: CargoLineRequestDto[];
+}
+
+export class RegisterFieldReceiptRequestDto {
+  /** Título cobrado (da carteira). Ausente = "outros recebimentos" (à vista, fora da carteira). */
+  @IsOptional()
+  @IsUUID()
+  titleId?: string | null;
+
+  @IsIn(FIELD_RECEIPT_METHODS as unknown as string[])
+  method!: string;
+
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0.01)
+  @Max(9_999_999)
+  amount!: number;
+
+  /** Juros de atraso cobrados em campo (§3.2 do 04) — recebimento classificado. */
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(9_999_999)
+  interest?: number;
+}
+
+export class EffectuateFieldReceiptRequestDto {
+  /** Conta financeira que recebe (caixa da viagem, banco...) — a retaguarda escolhe. */
+  @IsUUID()
+  financialAccountId!: string;
+}
+
+export class ReturnConsignedItemsRequestDto {
+  /** Depósito (warehouse) que recebe a devolução. */
+  @IsUUID()
+  toLocationId!: string;
+
+  @IsOptional()
+  @IsUUID()
+  orderId?: string | null;
+
+  @IsArray()
+  @ArrayMinSize(1, { message: 'Informe ao menos um item.' })
+  @ArrayMaxSize(500)
+  @ValidateNested({ each: true })
+  @Type(() => CargoLineRequestDto)
+  lines!: CargoLineRequestDto[];
+}
+
+export class ExchangeConsignedItemsRequestDto {
+  @IsOptional()
+  @IsUUID()
+  orderId?: string | null;
+
+  @IsUUID()
+  returnedProductId!: string;
+
+  @IsNumber({ maxDecimalPlaces: 3 })
+  @Min(0.001)
+  @Max(9_999_999)
+  returnedQuantity!: number;
+
+  @IsUUID()
+  takenProductId!: string;
+
+  @IsNumber({ maxDecimalPlaces: 3 })
+  @Min(0.001)
+  @Max(9_999_999)
+  takenQuantity!: number;
 }

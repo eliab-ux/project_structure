@@ -48,6 +48,10 @@ export class MikroOrmFinancialTitleRepository implements FinancialTitleRepositor
       dueDate: orm.dueDate,
       origin: orm.origin as TitleOrigin,
       settlements,
+      // A sinalização persistida volta ao agregado; open/partial/settled são derivados das baixas.
+      flaggedStatus: ['renegotiated', 'written_off_pending', 'written_off'].includes(orm.status)
+        ? orm.status
+        : null,
       createdAt: orm.createdAt,
     });
   }

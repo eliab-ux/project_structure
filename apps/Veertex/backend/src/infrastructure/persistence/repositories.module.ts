@@ -25,6 +25,8 @@ import { LATE_CHARGE_PARAMS } from '../../contexts/finance/application/ports/out
 import { ROUTE_REPOSITORY } from '../../contexts/route/application/ports/output/route-repository.port';
 import { COMMERCIAL_RULE_REPOSITORY } from '../../contexts/route/application/ports/output/commercial-rule-repository.port';
 import { TRIP_REPOSITORY } from '../../contexts/route/application/ports/output/trip-repository.port';
+import { TRIP_COLLECTION_REPOSITORY } from '../../contexts/route/application/ports/output/trip-collection-repository.port';
+import { FIELD_RECEIPT_REPOSITORY } from '../../contexts/route/application/ports/output/field-receipt-repository.port';
 
 import { PlanOrmEntity } from './mikro-orm/entities/plan-orm.entity';
 import { AccountOrmEntity } from './mikro-orm/entities/account-orm.entity';
@@ -55,6 +57,8 @@ import { TitleSettlementOrmEntity } from './mikro-orm/entities/title-settlement-
 import { RouteOrmEntity } from './mikro-orm/entities/route-orm.entity';
 import { CommercialRuleOrmEntity } from './mikro-orm/entities/commercial-rule-orm.entity';
 import { TripOrmEntity } from './mikro-orm/entities/trip-orm.entity';
+import { TripCollectionOrmEntity } from './mikro-orm/entities/trip-collection-orm.entity';
+import { FieldReceiptOrmEntity } from './mikro-orm/entities/field-receipt-orm.entity';
 
 import { PlanMapper } from './mikro-orm/mappers/plan.mapper';
 import { AccountMapper } from './mikro-orm/mappers/account.mapper';
@@ -90,6 +94,8 @@ import { LateChargeParamsReader } from './mikro-orm/repositories/late-charge-par
 import { MikroOrmRouteRepository } from './mikro-orm/repositories/route.repository';
 import { MikroOrmCommercialRuleRepository } from './mikro-orm/repositories/commercial-rule.repository';
 import { MikroOrmTripRepository } from './mikro-orm/repositories/trip.repository';
+import { MikroOrmTripCollectionRepository } from './mikro-orm/repositories/trip-collection.repository';
+import { MikroOrmFieldReceiptRepository } from './mikro-orm/repositories/field-receipt.repository';
 
 /**
  * Every repository, in one @Global module.
@@ -137,6 +143,8 @@ import { MikroOrmTripRepository } from './mikro-orm/repositories/trip.repository
       RouteOrmEntity,
       CommercialRuleOrmEntity,
       TripOrmEntity,
+      TripCollectionOrmEntity,
+      FieldReceiptOrmEntity,
     ]),
   ],
   providers: [
@@ -176,6 +184,8 @@ import { MikroOrmTripRepository } from './mikro-orm/repositories/trip.repository
     { provide: ROUTE_REPOSITORY, useClass: MikroOrmRouteRepository },
     { provide: COMMERCIAL_RULE_REPOSITORY, useClass: MikroOrmCommercialRuleRepository },
     { provide: TRIP_REPOSITORY, useClass: MikroOrmTripRepository },
+    { provide: TRIP_COLLECTION_REPOSITORY, useClass: MikroOrmTripCollectionRepository },
+    { provide: FIELD_RECEIPT_REPOSITORY, useClass: MikroOrmFieldReceiptRepository },
   ],
   exports: [
     PLAN_REPOSITORY,
@@ -202,6 +212,8 @@ import { MikroOrmTripRepository } from './mikro-orm/repositories/trip.repository
     ROUTE_REPOSITORY,
     COMMERCIAL_RULE_REPOSITORY,
     TRIP_REPOSITORY,
+    TRIP_COLLECTION_REPOSITORY,
+    FIELD_RECEIPT_REPOSITORY,
   ],
 })
 export class RepositoriesModule {}

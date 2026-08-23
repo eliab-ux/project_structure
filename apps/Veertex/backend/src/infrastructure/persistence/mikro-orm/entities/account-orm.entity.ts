@@ -80,6 +80,10 @@ export class AccountOrmEntity {
   @Property({ type: 'numeric', precision: 6, scale: 2, fieldName: 'fin_fine_percent' })
   finFinePercent = '0';
 
+  /** Limiar de RECOBRANÇAS antes da "perdida" (§3.4 do 04 — "1+3", o 3 configurável). */
+  @Property({ type: 'int', fieldName: 'rot_recollection_limit' })
+  rotRecollectionLimit = 3;
+
   @Property({ type: 'timestamptz', fieldName: 'created_at' })
   createdAt: Date = new Date();
 
