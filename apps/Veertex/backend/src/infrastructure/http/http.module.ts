@@ -30,6 +30,7 @@ import { PriceListController } from './controllers/price-list/price-list.control
 import { CommissionController } from './controllers/commission/commission.controller';
 import { FinanceController } from './controllers/finance/finance.controller';
 import { RouteController } from './controllers/route/route.controller';
+import { TripController } from './controllers/route/trip.controller';
 import { ModuleController } from './controllers/module/module.controller';
 import { RoleController } from './controllers/role/role.controller';
 import { UserController } from './controllers/user/user.controller';
@@ -89,6 +90,7 @@ import { IntentModule } from '../../contexts/intent/intent.module';
     CommissionController,
     FinanceController,
     RouteController,
+    TripController,
     ModuleController,
     RoleController,
     UserController,

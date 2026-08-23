@@ -77,3 +77,10 @@ export class InvalidPaymentAmountException extends DomainException {
     super('O valor do pagamento deve ser maior que zero.');
   }
 }
+
+/** Ciclo consignado (§3.1 do 04) só existe para pedido de ROTA. */
+export class NotAConsignmentOrderException extends DomainException {
+  constructor(origin: string) {
+    super(`O ciclo de consignação é exclusivo de pedidos de rota (origem atual: "${origin}").`);
+  }
+}

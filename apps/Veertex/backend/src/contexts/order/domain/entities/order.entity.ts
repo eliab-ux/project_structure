@@ -7,6 +7,7 @@ import {
   EmptyOrderException,
   InvalidStatusTransitionException,
   InvoicingNotAvailableException,
+  NotAConsignmentOrderException,
 } from '../exceptions/order-exceptions';
 
 /**
@@ -34,6 +35,8 @@ export class Order extends AggregateRoot {
     private _origin: OrderOrigin,
     private _deliveryMode: DeliveryMode,
     private _originDetail: string | null,
+    /** Viagem da consignação (§3.1 do 04). Só pedidos de rota têm; null nos demais. */
+    private _tripId: string | null,
     private _status: OrderStatus,
     private _items: OrderItem[],
     private _discountPercent: number,
@@ -55,6 +58,7 @@ export class Order extends AggregateRoot {
     origin: OrderOrigin;
     deliveryMode?: DeliveryMode | null;
     originDetail?: string | null;
+    tripId?: string | null;
     items: OrderItem[];
     discountPercent?: number | null;
     discountValue?: number | null;
@@ -72,6 +76,7 @@ export class Order extends AggregateRoot {
       params.origin,
       params.deliveryMode ?? DEFAULT_DELIVERY_MODE,
       params.originDetail?.trim() || null,
+      params.tripId ?? null,
       'rascunho',
       params.items,
       Math.max(0, Math.min(100, params.discountPercent ?? 0)),
@@ -95,6 +100,7 @@ export class Order extends AggregateRoot {
       params.origin,
       params.deliveryMode ?? DEFAULT_DELIVERY_MODE,
       params.originDetail ?? null,
+      params.tripId ?? null,
       params.status,
       params.items,
       params.discountPercent ?? 0,
@@ -132,6 +138,9 @@ export class Order extends AggregateRoot {
   }
   get originDetail(): string | null {
     return this._originDetail;
+  }
+  get tripId(): string | null {
+    return this._tripId;
   }
   get status(): OrderStatus {
     return this._status;
@@ -231,6 +240,30 @@ export class Order extends AggregateRoot {
 
   complete(): void {
     this.transitionTo('concluido');
+  }
+
+  /**
+   * rascunho → consignado_aberto (§3.1/§3.3 do 04): a EFETIVAÇÃO da retaguarda sobre a proposta que
+   * o campo lançou. Só pedido de ROTA entra no ciclo consignado — o guard é do domínio.
+   */
+  openConsignment(): void {
+    if (this._origin !== 'rota') {
+      throw new NotAConsignmentOrderException(this._origin);
+    }
+    if (this._items.length === 0) {
+      throw new EmptyOrderException();
+    }
+    this.transitionTo('consignado_aberto');
+  }
+
+  /** consignado_aberto → em_acerto: a passagem seguinte chegou e o acerto começou (§3.2 do 04). */
+  startSettlement(): void {
+    this.transitionTo('em_acerto');
+  }
+
+  /** em_acerto → fechado: o acerto foi efetivado pela retaguarda — a venda se conclui aqui. */
+  closeConsignment(): void {
+    this.transitionTo('fechado');
   }
 
   cancel(): void {

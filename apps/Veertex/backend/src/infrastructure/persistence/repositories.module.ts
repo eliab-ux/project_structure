@@ -24,6 +24,7 @@ import { FINANCIAL_TITLE_REPOSITORY } from '../../contexts/finance/application/p
 import { LATE_CHARGE_PARAMS } from '../../contexts/finance/application/ports/output/late-charge-params.port';
 import { ROUTE_REPOSITORY } from '../../contexts/route/application/ports/output/route-repository.port';
 import { COMMERCIAL_RULE_REPOSITORY } from '../../contexts/route/application/ports/output/commercial-rule-repository.port';
+import { TRIP_REPOSITORY } from '../../contexts/route/application/ports/output/trip-repository.port';
 
 import { PlanOrmEntity } from './mikro-orm/entities/plan-orm.entity';
 import { AccountOrmEntity } from './mikro-orm/entities/account-orm.entity';
@@ -53,6 +54,7 @@ import { FinancialTitleOrmEntity } from './mikro-orm/entities/financial-title-or
 import { TitleSettlementOrmEntity } from './mikro-orm/entities/title-settlement-orm.entity';
 import { RouteOrmEntity } from './mikro-orm/entities/route-orm.entity';
 import { CommercialRuleOrmEntity } from './mikro-orm/entities/commercial-rule-orm.entity';
+import { TripOrmEntity } from './mikro-orm/entities/trip-orm.entity';
 
 import { PlanMapper } from './mikro-orm/mappers/plan.mapper';
 import { AccountMapper } from './mikro-orm/mappers/account.mapper';
@@ -87,6 +89,7 @@ import { MikroOrmFinancialTitleRepository } from './mikro-orm/repositories/finan
 import { LateChargeParamsReader } from './mikro-orm/repositories/late-charge-params.reader';
 import { MikroOrmRouteRepository } from './mikro-orm/repositories/route.repository';
 import { MikroOrmCommercialRuleRepository } from './mikro-orm/repositories/commercial-rule.repository';
+import { MikroOrmTripRepository } from './mikro-orm/repositories/trip.repository';
 
 /**
  * Every repository, in one @Global module.
@@ -133,6 +136,7 @@ import { MikroOrmCommercialRuleRepository } from './mikro-orm/repositories/comme
       TitleSettlementOrmEntity,
       RouteOrmEntity,
       CommercialRuleOrmEntity,
+      TripOrmEntity,
     ]),
   ],
   providers: [
@@ -171,6 +175,7 @@ import { MikroOrmCommercialRuleRepository } from './mikro-orm/repositories/comme
     { provide: LATE_CHARGE_PARAMS, useClass: LateChargeParamsReader },
     { provide: ROUTE_REPOSITORY, useClass: MikroOrmRouteRepository },
     { provide: COMMERCIAL_RULE_REPOSITORY, useClass: MikroOrmCommercialRuleRepository },
+    { provide: TRIP_REPOSITORY, useClass: MikroOrmTripRepository },
   ],
   exports: [
     PLAN_REPOSITORY,
@@ -196,6 +201,7 @@ import { MikroOrmCommercialRuleRepository } from './mikro-orm/repositories/comme
     LATE_CHARGE_PARAMS,
     ROUTE_REPOSITORY,
     COMMERCIAL_RULE_REPOSITORY,
+    TRIP_REPOSITORY,
   ],
 })
 export class RepositoriesModule {}

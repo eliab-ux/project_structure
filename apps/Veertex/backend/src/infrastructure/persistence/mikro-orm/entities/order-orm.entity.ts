@@ -35,6 +35,11 @@ export class OrderOrmEntity extends TenantScopedOrmEntity {
   @Property({ type: 'text', nullable: true, fieldName: 'origin_detail' })
   originDetail: string | null = null;
 
+  /** Viagem da consignação (§3.1 do 04) — só pedidos de rota. */
+  @Index()
+  @Property({ type: 'uuid', nullable: true, fieldName: 'trip_id' })
+  tripId: string | null = null;
+
   @Index()
   @Property({ length: 20 })
   status!: string;

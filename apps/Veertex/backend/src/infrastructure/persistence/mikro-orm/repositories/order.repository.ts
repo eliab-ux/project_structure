@@ -78,6 +78,7 @@ export class MikroOrmOrderRepository implements OrderRepositoryPort {
         origin: order.origin,
         deliveryMode: order.deliveryMode,
         originDetail: order.originDetail,
+        tripId: order.tripId,
         status: order.status,
         discountPercent: order.discountPercent.toFixed(2),
         discountValue: order.discountValue.toFixed(2),

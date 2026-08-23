@@ -80,6 +80,11 @@ export class CreateOrderRequestDto {
   @Transform(trimmed)
   originDetail?: string | null;
 
+  /** Viagem da consignação (§3.1 do 04) — obrigatória quando origin='rota' (validado no use case). */
+  @IsOptional()
+  @IsUUID()
+  tripId?: string | null;
+
   @IsArray()
   @ArrayMinSize(1, { message: 'Informe ao menos um item.' })
   @ArrayMaxSize(200)

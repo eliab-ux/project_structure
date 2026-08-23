@@ -28,6 +28,12 @@ export const ORDER_STATUSES = [
   'faturado',
   'concluido',
   'cancelado',
+  // ── Ciclo PRÓPRIO da consignação (§3.1 do 04) — só para pedidos com origin='rota' ────────────
+  // O campo LANÇA (rascunho = proposta); a retaguarda EFETIVA (→ consignado_aberto). A venda só se
+  // conclui no acerto: em_acerto durante a passagem seguinte, fechado quando o acerto é efetivado.
+  'consignado_aberto',
+  'em_acerto',
+  'fechado',
 ] as const;
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
@@ -39,11 +45,16 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   faturado: 'Faturado',
   concluido: 'Concluído',
   cancelado: 'Cancelado',
+  consignado_aberto: 'Consignado aberto',
+  em_acerto: 'Em acerto',
+  fechado: 'Fechado (acertado)',
 };
 
 /** Transições permitidas. `faturado` é alvo válido no mapa, mas o use case o bloqueia no V1. */
 const ALLOWED_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
-  rascunho: ['orcamento', 'confirmado', 'cancelado'],
+  // O rascunho de um pedido de ROTA vai para consignado_aberto (efetivação da retaguarda, §3.3 do
+  // 04); a entidade guarda que só origin='rota' entra nesse ramo.
+  rascunho: ['orcamento', 'confirmado', 'consignado_aberto', 'cancelado'],
   // Orçamento é proposta emitida: converte em pedido (confirmado) ou é cancelado. Não volta a
   // rascunho — reabrir para edição é outra operação (revisar o orçamento gera um novo).
   orcamento: ['confirmado', 'cancelado'],
@@ -51,6 +62,9 @@ const ALLOWED_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
   faturado: ['concluido', 'cancelado'],
   concluido: [],
   cancelado: [],
+  consignado_aberto: ['em_acerto', 'cancelado'],
+  em_acerto: ['fechado', 'cancelado'],
+  fechado: [],
 };
 
 /** Estados cuja transição de ENTRADA exige módulos que não existem no V1 (EST/FIN/FIS). */

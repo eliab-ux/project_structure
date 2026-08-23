@@ -39,6 +39,7 @@ export class CreateOrderCommand {
       origin: OrderOrigin;
       deliveryMode?: DeliveryMode | null;
       originDetail?: string | null;
+      tripId?: string | null;
       items: OrderItemInput[];
       discountPercent?: number | null;
       discountValue?: number | null;
@@ -102,6 +103,7 @@ export class CreateOrderUseCase implements UseCase<CreateOrderCommand, OrderDto>
         origin: input.origin,
         deliveryMode: input.deliveryMode,
         originDetail: input.originDetail,
+        tripId: input.tripId,
         items,
         discountPercent: input.discountPercent,
         discountValue: input.discountValue,

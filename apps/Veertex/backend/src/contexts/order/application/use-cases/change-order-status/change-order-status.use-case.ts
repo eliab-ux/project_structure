@@ -19,7 +19,8 @@ import {
   OrderNotFoundException,
 } from '../../../domain/exceptions/order-exceptions';
 
-export type OrderStatusAction = 'quote' | 'confirm' | 'complete' | 'cancel' | 'invoice';
+export type OrderStatusAction =
+  'quote' | 'confirm' | 'complete' | 'cancel' | 'invoice' | 'open_consignment';
 
 export class ChangeOrderStatusCommand {
   constructor(
@@ -79,6 +80,11 @@ export class ChangeOrderStatusUseCase implements UseCase<ChangeOrderStatusComman
           break;
         case 'invoice':
           order.invoice(); // sempre lança no V1 — depende de EST/FIN/FIS
+          break;
+        case 'open_consignment':
+          // Efetivação da retaguarda sobre a proposta do campo (§3.3 do 04). Sem reserva nem
+          // crédito: consignação não é venda ainda — a venda se conclui no acerto.
+          order.openConsignment();
           break;
       }
 

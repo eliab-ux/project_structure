@@ -100,6 +100,7 @@ export class OrderController {
         origin: dto.origin as OrderOrigin,
         deliveryMode: (dto.deliveryMode as DeliveryMode | undefined) ?? null,
         originDetail: dto.originDetail ?? null,
+        tripId: dto.tripId ?? null,
         items: dto.items,
         discountPercent: dto.discountPercent ?? null,
         discountValue: dto.discountValue ?? null,
@@ -165,6 +166,21 @@ export class OrderController {
   ): Promise<OrderDto> {
     return this.changeOrderStatusUseCase.execute(
       new ChangeOrderStatusCommand(id, 'complete', actor.modules ?? []),
+    );
+  }
+
+  /**
+   * rascunho → consignado_aberto (§3.1/§3.3 do 04): EFETIVA a proposta consignada do campo. Exige
+   * `rot.trip.manage` — é operação da retaguarda da rota, não de quem só opera pedido.
+   */
+  @Post(':id/open-consignment')
+  @RequirePermission(PERMISSIONS.rot.trip)
+  async openConsignment(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<OrderDto> {
+    return this.changeOrderStatusUseCase.execute(
+      new ChangeOrderStatusCommand(id, 'open_consignment', actor.modules ?? []),
     );
   }
 
