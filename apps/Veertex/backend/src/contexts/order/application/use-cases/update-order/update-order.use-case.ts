@@ -10,7 +10,7 @@ import {
   OrderProductLookupPort,
 } from '../../ports/output/order-product-lookup.port';
 import { OrderId } from '../../../domain/value-objects/order-id.vo';
-import { OrderOrigin } from '../../../domain/order-origin';
+import { DeliveryMode, OrderOrigin } from '../../../domain/order-origin';
 import { OrderDto } from '../../dto/order.dto';
 import { buildOrderItems, OrderItemInput } from '../../build-items';
 import {
@@ -25,12 +25,15 @@ export class UpdateOrderCommand {
     public readonly canGrantDiscount: boolean,
     public readonly input: {
       origin?: OrderOrigin;
+      deliveryMode?: DeliveryMode;
+      originDetail?: string | null;
       salesRepId?: string | null;
       items?: OrderItemInput[];
       discountPercent?: number | null;
       discountValue?: number | null;
       notes?: string | null;
       referenceDate?: Date | null;
+      validUntil?: Date | null;
     },
   ) {}
 }
@@ -64,11 +67,14 @@ export class UpdateOrderUseCase implements UseCase<UpdateOrderCommand, OrderDto>
 
       order.editHeader({
         origin: command.input.origin,
+        deliveryMode: command.input.deliveryMode,
+        originDetail: command.input.originDetail,
         salesRepId: command.input.salesRepId,
         discountPercent: command.input.discountPercent,
         discountValue: command.input.discountValue,
         notes: command.input.notes,
         referenceDate: command.input.referenceDate,
+        validUntil: command.input.validUntil,
       });
 
       if (command.input.items !== undefined) {

@@ -1,7 +1,7 @@
 import { Order } from '../../domain/entities/order.entity';
 import { OrderItem } from '../../domain/entities/order-item.entity';
 import { ORDER_STATUS_LABEL, OrderStatus } from '../../domain/order-status';
-import { ORDER_ORIGIN_LABEL } from '../../domain/order-origin';
+import { DELIVERY_MODE_LABEL, DeliveryMode, ORDER_ORIGIN_LABEL } from '../../domain/order-origin';
 
 export class OrderItemDto {
   productId!: string;
@@ -33,6 +33,9 @@ export class OrderDto {
   number!: number;
   origin!: string;
   originLabel!: string;
+  deliveryMode!: string;
+  deliveryModeLabel!: string;
+  originDetail!: string | null;
   status!: string;
   statusLabel!: string;
   items!: OrderItemDto[];
@@ -43,6 +46,7 @@ export class OrderDto {
   total!: number;
   notes!: string | null;
   referenceDate!: Date;
+  validUntil!: Date | null;
   createdAt!: Date;
 
   static fromDomain(order: Order): OrderDto {
@@ -54,6 +58,10 @@ export class OrderDto {
     dto.number = order.number;
     dto.origin = order.origin;
     dto.originLabel = ORDER_ORIGIN_LABEL[order.origin] ?? order.origin;
+    dto.deliveryMode = order.deliveryMode;
+    dto.deliveryModeLabel =
+      DELIVERY_MODE_LABEL[order.deliveryMode as DeliveryMode] ?? order.deliveryMode;
+    dto.originDetail = order.originDetail;
     dto.status = order.status;
     dto.statusLabel = ORDER_STATUS_LABEL[order.status as OrderStatus] ?? order.status;
     dto.items = order.items.map(OrderItemDto.fromDomain);
@@ -64,6 +72,7 @@ export class OrderDto {
     dto.total = order.total;
     dto.notes = order.notes;
     dto.referenceDate = order.referenceDate;
+    dto.validUntil = order.validUntil;
     dto.createdAt = order.createdAt;
     return dto;
   }

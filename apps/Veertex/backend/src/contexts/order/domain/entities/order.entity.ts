@@ -1,7 +1,7 @@
 import { AggregateRoot } from '@gitspread/domain-primitives';
 import { OrderId } from '../value-objects/order-id.vo';
 import { OrderItem, round2 } from './order-item.entity';
-import { OrderOrigin } from '../order-origin';
+import { DEFAULT_DELIVERY_MODE, DeliveryMode, OrderOrigin } from '../order-origin';
 import { canTransition, OrderStatus, STATUSES_REQUIRING_MODULES } from '../order-status';
 import {
   EmptyOrderException,
@@ -32,12 +32,15 @@ export class Order extends AggregateRoot {
     private _salesRepId: string | null,
     private readonly _number: number,
     private _origin: OrderOrigin,
+    private _deliveryMode: DeliveryMode,
+    private _originDetail: string | null,
     private _status: OrderStatus,
     private _items: OrderItem[],
     private _discountPercent: number,
     private _discountValue: number,
     private _notes: string | null,
     private _referenceDate: Date,
+    private _validUntil: Date | null,
     private readonly _createdAt: Date,
   ) {
     super();
@@ -50,11 +53,14 @@ export class Order extends AggregateRoot {
     salesRepId?: string | null;
     number: number;
     origin: OrderOrigin;
+    deliveryMode?: DeliveryMode | null;
+    originDetail?: string | null;
     items: OrderItem[];
     discountPercent?: number | null;
     discountValue?: number | null;
     notes?: string | null;
     referenceDate?: Date | null;
+    validUntil?: Date | null;
   }): Order {
     return new Order(
       OrderId.generate(),
@@ -64,12 +70,15 @@ export class Order extends AggregateRoot {
       params.salesRepId ?? null,
       params.number,
       params.origin,
+      params.deliveryMode ?? DEFAULT_DELIVERY_MODE,
+      params.originDetail?.trim() || null,
       'rascunho',
       params.items,
       Math.max(0, Math.min(100, params.discountPercent ?? 0)),
       Math.max(0, round2(params.discountValue ?? 0)),
       params.notes?.trim() || null,
       params.referenceDate ?? new Date(),
+      params.validUntil ?? null,
       new Date(),
     );
   }
@@ -84,12 +93,15 @@ export class Order extends AggregateRoot {
       params.salesRepId ?? null,
       params.number,
       params.origin,
+      params.deliveryMode ?? DEFAULT_DELIVERY_MODE,
+      params.originDetail ?? null,
       params.status,
       params.items,
       params.discountPercent ?? 0,
       params.discountValue ?? 0,
       params.notes ?? null,
       params.referenceDate,
+      params.validUntil ?? null,
       params.createdAt,
     );
   }
@@ -115,6 +127,12 @@ export class Order extends AggregateRoot {
   get origin(): OrderOrigin {
     return this._origin;
   }
+  get deliveryMode(): DeliveryMode {
+    return this._deliveryMode;
+  }
+  get originDetail(): string | null {
+    return this._originDetail;
+  }
   get status(): OrderStatus {
     return this._status;
   }
@@ -132,6 +150,9 @@ export class Order extends AggregateRoot {
   }
   get referenceDate(): Date {
     return this._referenceDate;
+  }
+  get validUntil(): Date | null {
+    return this._validUntil;
   }
   get createdAt(): Date {
     return this._createdAt;
@@ -166,13 +187,18 @@ export class Order extends AggregateRoot {
 
   editHeader(params: {
     origin?: OrderOrigin;
+    deliveryMode?: DeliveryMode;
+    originDetail?: string | null;
     salesRepId?: string | null;
     discountPercent?: number | null;
     discountValue?: number | null;
     notes?: string | null;
     referenceDate?: Date | null;
+    validUntil?: Date | null;
   }): void {
     if (params.origin !== undefined) this._origin = params.origin;
+    if (params.deliveryMode !== undefined) this._deliveryMode = params.deliveryMode;
+    if (params.originDetail !== undefined) this._originDetail = params.originDetail?.trim() || null;
     if (params.salesRepId !== undefined) this._salesRepId = params.salesRepId;
     if (params.discountPercent !== undefined) {
       this._discountPercent = Math.max(0, Math.min(100, params.discountPercent ?? 0));
@@ -184,9 +210,18 @@ export class Order extends AggregateRoot {
     if (params.referenceDate !== undefined && params.referenceDate) {
       this._referenceDate = params.referenceDate;
     }
+    if (params.validUntil !== undefined) this._validUntil = params.validUntil;
   }
 
-  /** rascunho → confirmado. O limite de crédito é conferido no use case ANTES de chamar isto. */
+  /** rascunho → orcamento. Proposta emitida ao cliente (§3.3 do 02A); não pode estar vazia. */
+  quote(): void {
+    if (this._items.length === 0) {
+      throw new EmptyOrderException();
+    }
+    this.transitionTo('orcamento');
+  }
+
+  /** rascunho|orcamento → confirmado. O limite de crédito é conferido no use case ANTES disto. */
   confirm(): void {
     if (this._items.length === 0) {
       throw new EmptyOrderException();

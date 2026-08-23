@@ -61,6 +61,7 @@ interface Refs {
 
 const STATUS_CHIP: Record<OrderStatus, 'default' | 'info' | 'success' | 'warning'> = {
   rascunho: 'default',
+  orcamento: 'info',
   confirmado: 'info',
   faturado: 'warning',
   concluido: 'success',
@@ -442,7 +443,7 @@ function OrderFormDialog({
   const [companyId, setCompanyId] = useState(editing?.companyId ?? '');
   const [contactId, setContactId] = useState(editing?.contactId ?? '');
   const [salesRepId, setSalesRepId] = useState(editing?.salesRepId ?? '');
-  const [origin, setOrigin] = useState<OrderOrigin>((editing?.origin as OrderOrigin) ?? 'balcao');
+  const [origin, setOrigin] = useState<OrderOrigin>((editing?.origin as OrderOrigin) ?? 'pdv');
   const [referenceDate, setReferenceDate] = useState(
     (editing?.referenceDate ?? new Date().toISOString()).slice(0, 10),
   );

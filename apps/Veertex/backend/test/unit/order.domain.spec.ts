@@ -26,7 +26,7 @@ function order(items: OrderItem[], overrides: Record<string, unknown> = {}) {
     companyId: EMPRESA,
     contactId: CLIENTE,
     number: 1,
-    origin: 'balcao',
+    origin: 'pdv',
     items,
     ...overrides,
   });
@@ -103,5 +103,44 @@ describe('Order — situações (§3.2)', () => {
     confirmado.confirm();
     confirmado.cancel();
     expect(confirmado.status).toBe('cancelado');
+  });
+});
+
+describe('Order — estágio orçamento (§3.3 do 02A)', () => {
+  it('rascunho → orcamento com itens', () => {
+    const o = order([item()]);
+    o.quote();
+    expect(o.status).toBe('orcamento');
+  });
+
+  it('emitir orçamento de pedido vazio é recusado', () => {
+    expect(() => order([]).quote()).toThrow(EmptyOrderException);
+  });
+
+  it('orcamento → confirmado (conversão em pedido)', () => {
+    const o = order([item()]);
+    o.quote();
+    o.confirm();
+    expect(o.status).toBe('confirmado');
+  });
+
+  it('orcamento → cancelado', () => {
+    const o = order([item()]);
+    o.quote();
+    o.cancel();
+    expect(o.status).toBe('cancelado');
+  });
+
+  it('concluir direto de orcamento é recusado (precisa confirmar antes)', () => {
+    const o = order([item()]);
+    o.quote();
+    expect(() => o.complete()).toThrow(InvalidStatusTransitionException);
+  });
+
+  it('delivery_mode default é retirada; origin_detail e validUntil são opcionais', () => {
+    const o = order([item()]);
+    expect(o.deliveryMode).toBe('retirada');
+    expect(o.originDetail).toBeNull();
+    expect(o.validUntil).toBeNull();
   });
 });

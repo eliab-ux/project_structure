@@ -27,6 +27,14 @@ export class OrderOrmEntity extends TenantScopedOrmEntity {
   @Property({ length: 20 })
   origin!: string;
 
+  /** Modo de entrega (§3.1 do 02A). Default `retirada`. */
+  @Property({ length: 20, fieldName: 'delivery_mode' })
+  deliveryMode = 'retirada';
+
+  /** Granularidade fina de origem que o enum canônico não guarda (ex.: "telefone"). */
+  @Property({ type: 'text', nullable: true, fieldName: 'origin_detail' })
+  originDetail: string | null = null;
+
   @Index()
   @Property({ length: 20 })
   status!: string;
@@ -43,6 +51,10 @@ export class OrderOrmEntity extends TenantScopedOrmEntity {
   /** Data de referência para "vendas do período" (§2.7) — pode diferir da criação. */
   @Property({ type: 'timestamptz', fieldName: 'reference_date' })
   referenceDate: Date = new Date();
+
+  /** Validade do orçamento (§3.3 do 02A) — só faz sentido no estágio `orcamento`; opcional. */
+  @Property({ type: 'timestamptz', nullable: true, fieldName: 'valid_until' })
+  validUntil: Date | null = null;
 
   @OneToMany(() => OrderItemOrmEntity, (item) => item.order)
   items = new Collection<OrderItemOrmEntity>(this);

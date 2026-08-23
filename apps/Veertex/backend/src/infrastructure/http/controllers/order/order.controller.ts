@@ -30,7 +30,7 @@ import {
   ListOrdersUseCase,
 } from '../../../../contexts/order/application/use-cases/list-orders/list-orders.use-case';
 import { OrderDto } from '../../../../contexts/order/application/dto/order.dto';
-import { OrderOrigin } from '../../../../contexts/order/domain/order-origin';
+import { DeliveryMode, OrderOrigin } from '../../../../contexts/order/domain/order-origin';
 import { AuthTokenPayload } from '../../../../contexts/auth/application/ports/output/token-service.port';
 import { MODULES } from '../../../../contexts/module/domain/modules.catalog';
 import { grants, PERMISSIONS } from '../../../../contexts/role/domain/permissions.catalog';
@@ -98,11 +98,14 @@ export class OrderController {
         contactId: dto.contactId,
         salesRepId: dto.salesRepId ?? null,
         origin: dto.origin as OrderOrigin,
+        deliveryMode: (dto.deliveryMode as DeliveryMode | undefined) ?? null,
+        originDetail: dto.originDetail ?? null,
         items: dto.items,
         discountPercent: dto.discountPercent ?? null,
         discountValue: dto.discountValue ?? null,
         notes: dto.notes ?? null,
         referenceDate: dto.referenceDate ? new Date(dto.referenceDate) : null,
+        validUntil: dto.validUntil ? new Date(dto.validUntil) : null,
       }),
     );
   }
@@ -117,13 +120,28 @@ export class OrderController {
     return this.updateOrderUseCase.execute(
       new UpdateOrderCommand(id, this.canDiscount(actor), {
         origin: dto.origin as OrderOrigin | undefined,
+        deliveryMode: dto.deliveryMode as DeliveryMode | undefined,
+        originDetail: dto.originDetail,
         salesRepId: dto.salesRepId,
         items: dto.items,
         discountPercent: dto.discountPercent,
         discountValue: dto.discountValue,
         notes: dto.notes,
         referenceDate: dto.referenceDate ? new Date(dto.referenceDate) : undefined,
+        validUntil: dto.validUntil ? new Date(dto.validUntil) : undefined,
       }),
+    );
+  }
+
+  @Post(':id/quote')
+  @RequirePermission(PERMISSIONS.orders.update)
+  async quote(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<OrderDto> {
+    // Emite o orçamento (§3.3 do 02A). Não reserva estoque nem checa crédito — é proposta.
+    return this.changeOrderStatusUseCase.execute(
+      new ChangeOrderStatusCommand(id, 'quote', actor.modules ?? []),
     );
   }
 

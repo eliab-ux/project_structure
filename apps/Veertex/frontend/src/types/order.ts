@@ -1,10 +1,13 @@
 /** Espelha o `OrderDto` do backend (VND, §02). */
 
-export type OrderStatus = 'rascunho' | 'confirmado' | 'faturado' | 'concluido' | 'cancelado';
-export type OrderOrigin = 'balcao' | 'representante' | 'telefone' | 'importacao';
+export type OrderStatus =
+  'rascunho' | 'orcamento' | 'confirmado' | 'faturado' | 'concluido' | 'cancelado';
+export type OrderOrigin = 'erp' | 'pdv' | 'rota' | 'vitrine' | 'marketplace';
+export type DeliveryMode = 'retirada' | 'envio' | 'rota_entrega';
 
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   rascunho: 'Rascunho',
+  orcamento: 'Orçamento',
   confirmado: 'Confirmado',
   faturado: 'Faturado',
   concluido: 'Concluído',
@@ -12,13 +15,22 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
 };
 
 export const ORDER_ORIGIN_LABEL: Record<OrderOrigin, string> = {
-  balcao: 'Balcão',
-  representante: 'Representante',
-  telefone: 'Telefone',
-  importacao: 'Importação',
+  erp: 'ERP',
+  pdv: 'PDV',
+  rota: 'Rota',
+  vitrine: 'Vitrine',
+  marketplace: 'Marketplace',
 };
 
-export const ORDER_ORIGINS: OrderOrigin[] = ['balcao', 'representante', 'telefone', 'importacao'];
+export const ORDER_ORIGINS: OrderOrigin[] = ['erp', 'pdv', 'rota', 'vitrine', 'marketplace'];
+
+export const DELIVERY_MODE_LABEL: Record<DeliveryMode, string> = {
+  retirada: 'Retirada',
+  envio: 'Envio',
+  rota_entrega: 'Entrega na rota',
+};
+
+export const DELIVERY_MODES: DeliveryMode[] = ['retirada', 'envio', 'rota_entrega'];
 
 export interface OrderItem {
   productId: string;
@@ -38,6 +50,9 @@ export interface Order {
   number: number;
   origin: string;
   originLabel: string;
+  deliveryMode: string;
+  deliveryModeLabel: string;
+  originDetail: string | null;
   status: OrderStatus;
   statusLabel: string;
   items: OrderItem[];
@@ -48,6 +63,7 @@ export interface Order {
   total: number;
   notes: string | null;
   referenceDate: string;
+  validUntil: string | null;
   createdAt: string;
 }
 
@@ -65,11 +81,14 @@ export interface CreateOrderPayload {
   contactId: string;
   salesRepId?: string | null;
   origin: OrderOrigin;
+  deliveryMode?: DeliveryMode;
+  originDetail?: string | null;
   items: OrderItemPayload[];
   discountPercent?: number | null;
   discountValue?: number | null;
   notes?: string | null;
   referenceDate?: string;
+  validUntil?: string;
 }
 
 export type UpdateOrderPayload = Partial<Omit<CreateOrderPayload, 'companyId' | 'contactId'>>;

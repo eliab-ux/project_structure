@@ -1,5 +1,14 @@
 # 02_Veertex_Vnd.md — Módulo VND (Vendas)
 
+> 🔁 **COMPLEMENTADO POR `02A_Veertex_Vnd_Complemento.md` (definitivo, validado contra o
+> `Veertex_Handoff_Requisitos.md`).** Onde o 02A conflitar com este documento, **vale o 02A**.
+> Já implementado deste complemento (change requests): **origem canônica**
+> `{erp,pdv,rota,vitrine,marketplace}` + `delivery_mode` + `origin_detail` (§3.1) e o **estágio
+> `orcamento`** de primeira classe com `valid_until` (§3.3). Ainda pendentes do 02A (próxima leva):
+> `price_list`/`price_list_item` + resolução por prioridade (§3.2), `order_payment` TEF-ready (§4.1),
+> condições de pagamento nomeadas (§4.2), motor de comissão Modelo A (§2 — o B só com o ROT). A
+> comissão A/B foi **fechada** no 02A (a pendência §3.1 do 02 deixou de existir).
+
 > ⚠️ **LEIA ANTES DE IMPLEMENTAR.** Este documento **não é baselinado**. Diferente do
 > `00` e do `01`, ele não foi escrito a partir de levantamento com o Eliab — foi montado
 > a partir das **referências a VND espalhadas no `01_Veertex_Core.md`** mais decisões de

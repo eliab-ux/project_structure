@@ -19,7 +19,7 @@ import {
   OrderNotFoundException,
 } from '../../../domain/exceptions/order-exceptions';
 
-export type OrderStatusAction = 'confirm' | 'complete' | 'cancel' | 'invoice';
+export type OrderStatusAction = 'quote' | 'confirm' | 'complete' | 'cancel' | 'invoice';
 
 export class ChangeOrderStatusCommand {
   constructor(
@@ -56,6 +56,11 @@ export class ChangeOrderStatusUseCase implements UseCase<ChangeOrderStatusComman
       }
 
       switch (command.action) {
+        case 'quote':
+          // Orçamento é proposta emitida (§3.3 do 02A) — não reserva estoque nem checa crédito
+          // (isso é da confirmação). Só valida que há itens e emite.
+          order.quote();
+          break;
         case 'confirm': {
           await this.assertWithinCreditLimit(order.contactId, order.total);
           // Reserva ANTES de mudar a situação: falta de disponível recusa a confirmação (a mensagem,

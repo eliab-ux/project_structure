@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Order } from '../../../../contexts/order/domain/entities/order.entity';
 import { OrderItem } from '../../../../contexts/order/domain/entities/order-item.entity';
-import { OrderOrigin } from '../../../../contexts/order/domain/order-origin';
+import { DeliveryMode, OrderOrigin } from '../../../../contexts/order/domain/order-origin';
 import { OrderStatus } from '../../../../contexts/order/domain/order-status';
 import { OrderOrmEntity } from '../entities/order-orm.entity';
 
@@ -28,12 +28,15 @@ export class OrderMapper {
       salesRepId: orm.salesRepId,
       number: orm.number,
       origin: orm.origin as OrderOrigin,
+      deliveryMode: orm.deliveryMode as DeliveryMode,
+      originDetail: orm.originDetail,
       status: orm.status as OrderStatus,
       items,
       discountPercent: Number(orm.discountPercent),
       discountValue: Number(orm.discountValue),
       notes: orm.notes,
       referenceDate: orm.referenceDate,
+      validUntil: orm.validUntil,
       createdAt: orm.createdAt,
     });
   }
@@ -42,11 +45,14 @@ export class OrderMapper {
   applyScalars(orm: OrderOrmEntity, order: Order): void {
     orm.salesRepId = order.salesRepId;
     orm.origin = order.origin;
+    orm.deliveryMode = order.deliveryMode;
+    orm.originDetail = order.originDetail;
     orm.status = order.status;
     orm.discountPercent = order.discountPercent.toFixed(2);
     orm.discountValue = order.discountValue.toFixed(2);
     orm.notes = order.notes;
     orm.referenceDate = order.referenceDate;
+    orm.validUntil = order.validUntil;
     orm.updatedAt = new Date();
   }
 }

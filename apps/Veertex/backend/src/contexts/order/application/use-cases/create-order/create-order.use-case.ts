@@ -16,7 +16,7 @@ import {
   OrderProductLookupPort,
 } from '../../ports/output/order-product-lookup.port';
 import { Order } from '../../../domain/entities/order.entity';
-import { OrderOrigin } from '../../../domain/order-origin';
+import { DeliveryMode, OrderOrigin } from '../../../domain/order-origin';
 import { OrderDto } from '../../dto/order.dto';
 import { buildOrderItems, OrderItemInput } from '../../build-items';
 import {
@@ -37,11 +37,14 @@ export class CreateOrderCommand {
       contactId: string;
       salesRepId?: string | null;
       origin: OrderOrigin;
+      deliveryMode?: DeliveryMode | null;
+      originDetail?: string | null;
       items: OrderItemInput[];
       discountPercent?: number | null;
       discountValue?: number | null;
       notes?: string | null;
       referenceDate?: Date | null;
+      validUntil?: Date | null;
     },
   ) {}
 }
@@ -97,11 +100,14 @@ export class CreateOrderUseCase implements UseCase<CreateOrderCommand, OrderDto>
         salesRepId: input.salesRepId ?? command.actorUserId,
         number,
         origin: input.origin,
+        deliveryMode: input.deliveryMode,
+        originDetail: input.originDetail,
         items,
         discountPercent: input.discountPercent,
         discountValue: input.discountValue,
         notes: input.notes,
         referenceDate: input.referenceDate,
+        validUntil: input.validUntil,
       });
 
       if (order.hasAnyDiscount && !command.canGrantDiscount) {

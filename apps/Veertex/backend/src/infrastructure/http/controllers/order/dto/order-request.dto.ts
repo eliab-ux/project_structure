@@ -15,7 +15,8 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { ORDER_ORIGINS } from '../../../../../contexts/order/domain/order-origin';
+import { DELIVERY_MODES, ORDER_ORIGINS } from '../../../../../contexts/order/domain/order-origin';
+import { ORDER_STATUSES } from '../../../../../contexts/order/domain/order-status';
 
 const trimmed = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
@@ -69,6 +70,16 @@ export class CreateOrderRequestDto {
   @IsIn(ORDER_ORIGINS as unknown as string[])
   origin!: string;
 
+  @IsOptional()
+  @IsIn(DELIVERY_MODES as unknown as string[])
+  deliveryMode?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  @Transform(trimmed)
+  originDetail?: string | null;
+
   @IsArray()
   @ArrayMinSize(1, { message: 'Informe ao menos um item.' })
   @ArrayMaxSize(200)
@@ -97,12 +108,27 @@ export class CreateOrderRequestDto {
   @IsOptional()
   @IsISO8601()
   referenceDate?: string;
+
+  /** Validade do orçamento (§3.3 do 02A) — opcional, só usada quando vira `orcamento`. */
+  @IsOptional()
+  @IsISO8601()
+  validUntil?: string;
 }
 
 export class UpdateOrderRequestDto {
   @IsOptional()
   @IsIn(ORDER_ORIGINS as unknown as string[])
   origin?: string;
+
+  @IsOptional()
+  @IsIn(DELIVERY_MODES as unknown as string[])
+  deliveryMode?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  @Transform(trimmed)
+  originDetail?: string | null;
 
   @IsOptional()
   @IsUUID()
@@ -137,11 +163,15 @@ export class UpdateOrderRequestDto {
   @IsOptional()
   @IsISO8601()
   referenceDate?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  validUntil?: string;
 }
 
 export class ListOrdersQueryDto {
   @IsOptional()
-  @IsIn(['rascunho', 'confirmado', 'faturado', 'concluido', 'cancelado'])
+  @IsIn(ORDER_STATUSES as unknown as string[])
   status?: string;
 
   @IsOptional()

@@ -83,7 +83,7 @@ function criar(over: Record<string, unknown> = {}, canDiscount = true) {
   return new CreateOrderCommand(CONTA, ATOR, canDiscount, {
     companyId: EMPRESA,
     contactId: CLIENTE,
-    origin: 'balcao',
+    origin: 'pdv',
     items: [itemInput()],
     ...over,
   });
@@ -172,7 +172,7 @@ describe('ChangeOrderStatusUseCase — crédito na confirmação (§2.2)', () =>
       companyId: EMPRESA,
       contactId: CLIENTE,
       number: 1,
-      origin: 'balcao',
+      origin: 'pdv',
       items: [
         OrderItem.create({ productId: PRODUTO, description: 'X', quantity: 1, unitPrice: total }),
       ],
