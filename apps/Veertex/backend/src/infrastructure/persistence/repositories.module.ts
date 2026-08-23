@@ -16,6 +16,8 @@ import { STOCK_LOCATION_REPOSITORY } from '../../contexts/stock/application/port
 import { PRODUCT_COMPONENT_REPOSITORY } from '../../contexts/product/application/ports/output/product-component-repository.port';
 import { PAYMENT_CONDITION_REPOSITORY } from '../../contexts/payment-condition/application/ports/output/payment-condition-repository.port';
 import { PRICE_LIST_REPOSITORY } from '../../contexts/price-list/application/ports/output/price-list-repository.port';
+import { COMMISSION_TIER_REPOSITORY } from '../../contexts/commission/application/ports/output/commission-tier-repository.port';
+import { SALES_TARGET_REPOSITORY } from '../../contexts/commission/application/ports/output/sales-target-repository.port';
 
 import { PlanOrmEntity } from './mikro-orm/entities/plan-orm.entity';
 import { AccountOrmEntity } from './mikro-orm/entities/account-orm.entity';
@@ -37,6 +39,8 @@ import { PaymentConditionOrmEntity } from './mikro-orm/entities/payment-conditio
 import { OrderPaymentOrmEntity } from './mikro-orm/entities/order-payment-orm.entity';
 import { PriceListOrmEntity } from './mikro-orm/entities/price-list-orm.entity';
 import { PriceListItemOrmEntity } from './mikro-orm/entities/price-list-item-orm.entity';
+import { CommissionATierOrmEntity } from './mikro-orm/entities/commission-a-tier-orm.entity';
+import { SalesTargetOrmEntity } from './mikro-orm/entities/sales-target-orm.entity';
 
 import { PlanMapper } from './mikro-orm/mappers/plan.mapper';
 import { AccountMapper } from './mikro-orm/mappers/account.mapper';
@@ -63,6 +67,8 @@ import { MikroOrmStockLocationRepository } from './mikro-orm/repositories/stock-
 import { MikroOrmProductComponentRepository } from './mikro-orm/repositories/product-component.repository';
 import { MikroOrmPaymentConditionRepository } from './mikro-orm/repositories/payment-condition.repository';
 import { MikroOrmPriceListRepository } from './mikro-orm/repositories/price-list.repository';
+import { MikroOrmCommissionTierRepository } from './mikro-orm/repositories/commission-tier.repository';
+import { MikroOrmSalesTargetRepository } from './mikro-orm/repositories/sales-target.repository';
 
 /**
  * Every repository, in one @Global module.
@@ -101,6 +107,8 @@ import { MikroOrmPriceListRepository } from './mikro-orm/repositories/price-list
       OrderPaymentOrmEntity,
       PriceListOrmEntity,
       PriceListItemOrmEntity,
+      CommissionATierOrmEntity,
+      SalesTargetOrmEntity,
     ]),
   ],
   providers: [
@@ -131,6 +139,8 @@ import { MikroOrmPriceListRepository } from './mikro-orm/repositories/price-list
     { provide: PRODUCT_COMPONENT_REPOSITORY, useClass: MikroOrmProductComponentRepository },
     { provide: PAYMENT_CONDITION_REPOSITORY, useClass: MikroOrmPaymentConditionRepository },
     { provide: PRICE_LIST_REPOSITORY, useClass: MikroOrmPriceListRepository },
+    { provide: COMMISSION_TIER_REPOSITORY, useClass: MikroOrmCommissionTierRepository },
+    { provide: SALES_TARGET_REPOSITORY, useClass: MikroOrmSalesTargetRepository },
   ],
   exports: [
     PLAN_REPOSITORY,
@@ -148,6 +158,8 @@ import { MikroOrmPriceListRepository } from './mikro-orm/repositories/price-list
     PRODUCT_COMPONENT_REPOSITORY,
     PAYMENT_CONDITION_REPOSITORY,
     PRICE_LIST_REPOSITORY,
+    COMMISSION_TIER_REPOSITORY,
+    SALES_TARGET_REPOSITORY,
   ],
 })
 export class RepositoriesModule {}
