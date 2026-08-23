@@ -38,11 +38,14 @@ export class CommissionModelAResultDto {
   appliedThresholdPercent!: number | null;
   commissionPercent!: number;
   commissionValue!: number;
+  /** Id do título a pagar gerado quando a comissão é MATERIALIZADA (POST). `null` na apuração (GET). */
+  payableTitleId!: string | null;
 
   static build(
     salesRepId: string,
     period: string,
     result: ModelAResult,
+    payableTitleId: string | null = null,
   ): CommissionModelAResultDto {
     const dto = new CommissionModelAResultDto();
     dto.salesRepId = salesRepId;
@@ -53,6 +56,7 @@ export class CommissionModelAResultDto {
     dto.appliedThresholdPercent = result.appliedThresholdPercent;
     dto.commissionPercent = result.commissionPercent;
     dto.commissionValue = result.commissionValue;
+    dto.payableTitleId = payableTitleId;
     return dto;
   }
 }

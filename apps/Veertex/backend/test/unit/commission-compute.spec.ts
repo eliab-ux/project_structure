@@ -2,12 +2,16 @@ import {
   ComputeModelACommissionQuery,
   ComputeModelACommissionUseCase,
 } from '../../src/contexts/commission/application/use-cases/compute-model-a/compute-model-a.use-case';
+import {
+  GenerateCommissionPayableCommand,
+  GenerateCommissionPayableUseCase,
+} from '../../src/contexts/commission/application/use-cases/generate-commission-payable/generate-commission-payable.use-case';
 import { CommissionTierRepositoryPort } from '../../src/contexts/commission/application/ports/output/commission-tier-repository.port';
 import { SalesTargetRepositoryPort } from '../../src/contexts/commission/application/ports/output/sales-target-repository.port';
 import { CommissionSalesLookupPort } from '../../src/contexts/commission/application/ports/output/commission-sales-lookup.port';
 import {
-  CommissionPayable,
   CommissionPayablePort,
+  CommissionPayableRequest,
 } from '../../src/contexts/commission/application/ports/output/commission-payable.port';
 import { SalesTarget } from '../../src/contexts/commission/domain/entities/sales-target.entity';
 import { UserRepositoryPort } from '../../src/contexts/user/application/ports/output/user-repository.port';
@@ -17,6 +21,7 @@ import { CommissionModelMismatchException } from '../../src/contexts/commission/
 
 const CONTA = '11111111-1111-4111-8111-111111111111';
 const VENDEDOR = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+const EMPRESA = '22222222-2222-4222-8222-222222222222';
 
 /** Fake mínimo: a apuração só lê `commissionModel` do vendedor. */
 function usersFalso(model: CommissionModel): UserRepositoryPort {
@@ -58,69 +63,82 @@ function vendidoFalso(vendido: number): CommissionSalesLookupPort {
   return { sumSoldBySalesRep: async () => vendido };
 }
 
-function payableEspiao() {
-  const emitidos: CommissionPayable[] = [];
-  const port: CommissionPayablePort = { emit: (p) => emitidos.push(p) };
-  return { port, emitidos };
+function computeUC(meta: number | null, vendido: number, model: CommissionModel = 'a') {
+  return new ComputeModelACommissionUseCase(
+    tiersFalso,
+    metaFalso(meta),
+    vendidoFalso(vendido),
+    usersFalso(model),
+  );
 }
 
-describe('ComputeModelACommission — apuração (§2 do 02A)', () => {
-  it('150% da meta → 1,5% sobre o vendido, e emite conta a pagar', async () => {
-    const { port, emitidos } = payableEspiao();
-    const uc = new ComputeModelACommissionUseCase(
-      tiersFalso,
-      metaFalso(100000),
-      vendidoFalso(150000),
-      port,
-      usersFalso('a'),
+describe('ComputeModelACommission — apuração pura (§2 do 02A)', () => {
+  it('150% da meta → 1,5% sobre o vendido, sem efeito colateral', async () => {
+    const r = await computeUC(100000, 150000).execute(
+      new ComputeModelACommissionQuery(VENDEDOR, '2026-08'),
     );
-    const r = await uc.execute(new ComputeModelACommissionQuery(VENDEDOR, '2026-08'));
     expect(r.vendido).toBe(150000);
     expect(r.commissionValue).toBe(2250);
-    expect(emitidos).toHaveLength(1);
-    expect(emitidos[0].amount).toBe(2250);
+    expect(r.payableTitleId).toBeNull();
   });
 
-  it('abaixo da meta → comissão zero e NÃO emite conta a pagar', async () => {
-    const { port, emitidos } = payableEspiao();
-    const uc = new ComputeModelACommissionUseCase(
-      tiersFalso,
-      metaFalso(100000),
-      vendidoFalso(90000),
-      port,
-      usersFalso('a'),
+  it('abaixo da meta → comissão zero', async () => {
+    const r = await computeUC(100000, 90000).execute(
+      new ComputeModelACommissionQuery(VENDEDOR, '2026-08'),
     );
-    const r = await uc.execute(new ComputeModelACommissionQuery(VENDEDOR, '2026-08'));
     expect(r.commissionValue).toBe(0);
-    expect(emitidos).toHaveLength(0);
   });
 
   it('sem meta cadastrada → comissão zero (Modelo A não se apura sem meta)', async () => {
-    const { port, emitidos } = payableEspiao();
-    const uc = new ComputeModelACommissionUseCase(
-      tiersFalso,
-      metaFalso(null),
-      vendidoFalso(150000),
-      port,
-      usersFalso('a'),
+    const r = await computeUC(null, 150000).execute(
+      new ComputeModelACommissionQuery(VENDEDOR, '2026-08'),
     );
-    const r = await uc.execute(new ComputeModelACommissionQuery(VENDEDOR, '2026-08'));
     expect(r.meta).toBe(0);
     expect(r.commissionValue).toBe(0);
-    expect(emitidos).toHaveLength(0);
   });
 
-  it('vendedor que não é Modelo A é recusado com mensagem clara (não devolve zero)', async () => {
-    const { port } = payableEspiao();
-    const uc = new ComputeModelACommissionUseCase(
-      tiersFalso,
-      metaFalso(100000),
-      vendidoFalso(150000),
-      port,
-      usersFalso('none'),
+  it('vendedor que não é Modelo A é recusado com mensagem clara', async () => {
+    await expect(
+      computeUC(100000, 150000, 'none').execute(
+        new ComputeModelACommissionQuery(VENDEDOR, '2026-08'),
+      ),
+    ).rejects.toThrow(CommissionModelMismatchException);
+  });
+});
+
+describe('GenerateCommissionPayable — materializa a conta a pagar (§2.2 do 05)', () => {
+  function payableEspiao() {
+    const requests: CommissionPayableRequest[] = [];
+    const port: CommissionPayablePort = {
+      materialize: async (req) => {
+        requests.push(req);
+        return 'title-1';
+      },
+    };
+    return { port, requests };
+  }
+
+  it('comissão > 0 gera título a pagar na empresa escolhida', async () => {
+    const { port, requests } = payableEspiao();
+    const uc = new GenerateCommissionPayableUseCase(computeUC(100000, 150000), port);
+    const r = await uc.execute(
+      new GenerateCommissionPayableCommand(CONTA, VENDEDOR, '2026-08', EMPRESA),
     );
-    await expect(uc.execute(new ComputeModelACommissionQuery(VENDEDOR, '2026-08'))).rejects.toThrow(
-      CommissionModelMismatchException,
+    expect(r.commissionValue).toBe(2250);
+    expect(r.payableTitleId).toBe('title-1');
+    expect(requests).toHaveLength(1);
+    expect(requests[0].amount).toBe(2250);
+    expect(requests[0].companyId).toBe(EMPRESA);
+  });
+
+  it('comissão zero NÃO gera título', async () => {
+    const { port, requests } = payableEspiao();
+    const uc = new GenerateCommissionPayableUseCase(computeUC(100000, 90000), port);
+    const r = await uc.execute(
+      new GenerateCommissionPayableCommand(CONTA, VENDEDOR, '2026-08', EMPRESA),
     );
+    expect(r.commissionValue).toBe(0);
+    expect(r.payableTitleId).toBeNull();
+    expect(requests).toHaveLength(0);
   });
 });

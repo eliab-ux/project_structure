@@ -57,3 +57,15 @@ export class ComputeCommissionQueryDto {
   @Matches(PERIOD, { message: 'Período deve ser YYYY-MM.' })
   period!: string;
 }
+
+export class GenerateCommissionPayableRequestDto {
+  @IsUUID()
+  salesRepId!: string;
+
+  @Matches(PERIOD, { message: 'Período deve ser YYYY-MM.' })
+  period!: string;
+
+  /** Empresa que PAGA a comissão — o operador escolhe (o título pertence a uma empresa, §2.6). */
+  @IsUUID()
+  companyId!: string;
+}

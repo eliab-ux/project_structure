@@ -13,10 +13,6 @@ import {
   CommissionSalesLookupPort,
 } from '../../ports/output/commission-sales-lookup.port';
 import {
-  COMMISSION_PAYABLE,
-  CommissionPayablePort,
-} from '../../ports/output/commission-payable.port';
-import {
   USER_REPOSITORY,
   UserRepositoryPort,
 } from '../../../../user/application/ports/output/user-repository.port';
@@ -40,8 +36,8 @@ export class ComputeModelACommissionQuery {
  * meta do `(vendedor, período)`, soma o vendido, e roda o motor puro. Sem meta cadastrada → vendido
  * ÷ 0 → comissão zero (o motor trata).
  *
- * O resultado é EMITIDO ao `CommissionPayablePort` (conta a pagar no FIN, §2 do 02A) — fire-and-forget,
- * hoje no-op (o FIN não existe: fronteira declarada). Só emite quando há valor > 0.
+ * É LEITURA pura (apuração). Materializar a comissão como conta a pagar no FIN é o
+ * `GenerateCommissionPayable` (um POST explícito) — um GET não tem efeito no financeiro.
  */
 @Injectable()
 export class ComputeModelACommissionUseCase implements UseCase<
@@ -52,7 +48,6 @@ export class ComputeModelACommissionUseCase implements UseCase<
     @Inject(COMMISSION_TIER_REPOSITORY) private readonly tiers: CommissionTierRepositoryPort,
     @Inject(SALES_TARGET_REPOSITORY) private readonly targets: SalesTargetRepositoryPort,
     @Inject(COMMISSION_SALES_LOOKUP) private readonly sales: CommissionSalesLookupPort,
-    @Inject(COMMISSION_PAYABLE) private readonly payable: CommissionPayablePort,
     @Inject(USER_REPOSITORY) private readonly users: UserRepositoryPort,
   ) {}
 
@@ -77,17 +72,8 @@ export class ComputeModelACommissionUseCase implements UseCase<
       tiers,
     });
 
-    if (result.commissionValue > 0) {
-      // Fire-and-forget: no-op até o FIN existir (ver CommissionPayablePort).
-      this.payable.emit({
-        accountId: target?.accountId ?? '',
-        salesRepId: query.salesRepId,
-        period: query.period,
-        amount: result.commissionValue,
-        reference: `commission:model_a:${query.salesRepId}:${query.period}`,
-      });
-    }
-
+    // Apuração é LEITURA pura — não materializa título (isso é `GenerateCommissionPayable`, um POST
+    // explícito). Um GET não deve ter efeito colateral no FIN.
     return CommissionModelAResultDto.build(query.salesRepId, query.period, result);
   }
 }

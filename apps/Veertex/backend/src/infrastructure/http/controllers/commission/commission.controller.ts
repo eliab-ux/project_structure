@@ -17,6 +17,10 @@ import {
   ComputeModelACommissionUseCase,
 } from '../../../../contexts/commission/application/use-cases/compute-model-a/compute-model-a.use-case';
 import {
+  GenerateCommissionPayableCommand,
+  GenerateCommissionPayableUseCase,
+} from '../../../../contexts/commission/application/use-cases/generate-commission-payable/generate-commission-payable.use-case';
+import {
   CommissionModelAResultDto,
   CommissionTierDto,
   SalesTargetDto,
@@ -31,6 +35,7 @@ import { RequirePermission } from '../../../security/decorators/require-permissi
 import { CurrentUser } from '../../../security/decorators/current-user.decorator';
 import {
   ComputeCommissionQueryDto,
+  GenerateCommissionPayableRequestDto,
   PeriodQueryDto,
   SetCommissionTiersRequestDto,
   SetSalesTargetRequestDto,
@@ -51,6 +56,7 @@ export class CommissionController {
     private readonly setTarget: SetSalesTargetUseCase,
     private readonly listTargets: ListSalesTargetsUseCase,
     private readonly computeModelA: ComputeModelACommissionUseCase,
+    private readonly generatePayable: GenerateCommissionPayableUseCase,
   ) {}
 
   @Get('tiers')
@@ -92,6 +98,26 @@ export class CommissionController {
   ): Promise<CommissionModelAResultDto> {
     return this.computeModelA.execute(
       new ComputeModelACommissionQuery(query.salesRepId, query.period),
+    );
+  }
+
+  /**
+   * Materializa a comissão apurada como conta a pagar no FIN (§2.2 do 05). POST porque TEM efeito —
+   * cria um título. Exige `finance.payable` (criar conta a pagar), não só ver comissão.
+   */
+  @Post('model-a/payable')
+  @RequirePermission(PERMISSIONS.finance.payable)
+  async gerarContaAPagar(
+    @Body() dto: GenerateCommissionPayableRequestDto,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<CommissionModelAResultDto> {
+    return this.generatePayable.execute(
+      new GenerateCommissionPayableCommand(
+        actor.accountId,
+        dto.salesRepId,
+        dto.period,
+        dto.companyId,
+      ),
     );
   }
 }

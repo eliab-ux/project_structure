@@ -46,6 +46,10 @@ import {
   ListFinancialTitlesUseCase,
 } from '../../../../contexts/finance/application/use-cases/list-financial-titles/list-financial-titles.use-case';
 import {
+  CreateRecurringPayableCommand,
+  CreateRecurringPayableUseCase,
+} from '../../../../contexts/finance/application/use-cases/create-recurring-payable/create-recurring-payable.use-case';
+import {
   FinancialAccountDto,
   FinancialCategoryDto,
   FinancialTitleDto,
@@ -64,6 +68,7 @@ import { CurrentUser } from '../../../security/decorators/current-user.decorator
 import {
   CreateFinancialAccountRequestDto,
   CreateFinancialCategoryRequestDto,
+  CreateRecurringPayableRequestDto,
   CreateTitleRequestDto,
   ListFinanceQueryDto,
   ListTitlesQueryDto,
@@ -90,6 +95,7 @@ export class FinanceController {
     private readonly createTitle: CreateFinancialTitleUseCase,
     private readonly settleTitle: SettleTitleUseCase,
     private readonly listTitles: ListFinancialTitlesUseCase,
+    private readonly createRecurringPayable: CreateRecurringPayableUseCase,
   ) {}
 
   @Get('accounts')
@@ -221,6 +227,58 @@ export class FinanceController {
         interest: dto.interest ?? null,
         fine: dto.fine ?? null,
         discount: dto.discount ?? null,
+      }),
+    );
+  }
+
+  // ── Títulos a pagar (§2.2 do 05) — lançamento manual + recorrência simples ────────────────────
+
+  @Get('payables')
+  @RequirePermission(PERMISSIONS.finance.read)
+  async payables(@Query() query: ListTitlesQueryDto): Promise<FinancialTitleDto[]> {
+    return this.listTitles.execute(
+      new ListFinancialTitlesQuery('payable', {
+        companyId: query.companyId ?? null,
+        contactId: query.contactId ?? null,
+        status: query.status ?? null,
+      }),
+    );
+  }
+
+  @Post('payables')
+  @RequirePermission(PERMISSIONS.finance.payable)
+  async addPayable(
+    @Body() dto: CreateTitleRequestDto,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<FinancialTitleDto> {
+    return this.createTitle.execute(
+      new CreateFinancialTitleCommand(actor.accountId, 'payable', {
+        companyId: dto.companyId,
+        contactId: dto.contactId ?? null,
+        categoryId: dto.categoryId ?? null,
+        description: dto.description,
+        amount: dto.amount,
+        issueDate: dto.issueDate ? new Date(dto.issueDate) : null,
+        dueDate: new Date(dto.dueDate),
+      }),
+    );
+  }
+
+  @Post('payables/recurring')
+  @RequirePermission(PERMISSIONS.finance.payable)
+  async addRecurringPayable(
+    @Body() dto: CreateRecurringPayableRequestDto,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<FinancialTitleDto[]> {
+    return this.createRecurringPayable.execute(
+      new CreateRecurringPayableCommand(actor.accountId, {
+        companyId: dto.companyId,
+        contactId: dto.contactId ?? null,
+        categoryId: dto.categoryId ?? null,
+        description: dto.description,
+        amount: dto.amount,
+        firstDueDate: new Date(dto.firstDueDate),
+        occurrences: dto.occurrences,
       }),
     );
   }

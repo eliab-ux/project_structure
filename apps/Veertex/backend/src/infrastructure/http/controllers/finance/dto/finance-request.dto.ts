@@ -204,3 +204,36 @@ export class ListTitlesQueryDto {
   @IsIn(TITLE_STATUSES as unknown as string[])
   status?: string;
 }
+
+export class CreateRecurringPayableRequestDto {
+  @IsUUID()
+  companyId!: string;
+
+  @IsOptional()
+  @IsUUID()
+  contactId?: string | null;
+
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string | null;
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(200)
+  @Transform(trimmed)
+  description!: string;
+
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0.01)
+  @Max(999_999_999)
+  amount!: number;
+
+  @IsISO8601()
+  firstDueDate!: string;
+
+  /** Quantas parcelas mensais gerar (aluguel, energia). 1–60. */
+  @IsNumber()
+  @Min(1)
+  @Max(60)
+  occurrences!: number;
+}
