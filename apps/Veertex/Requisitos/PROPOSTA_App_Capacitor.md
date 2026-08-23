@@ -1,6 +1,7 @@
 # PROPOSTA — Estrutura do App do Representante (Ionic React + Capacitor)
 
-**Status: PROPOSTA para aprovação do Eliab — nenhuma linha de código do app foi escrita.**
+**Status: APROVADA em 23/08/2026 (Eliab) — as 4 perguntas do §8 estão respondidas; ver a nota
+datada no fim do §8. Nenhuma linha de código do app foi escrita ainda (a fatia aguarda a fila).**
 Data: 23/08/2026 · Origem: 04 §4 (requisitos do app) e a decisão de stack registrada no 04 §4
 (23/08/2026: Ionic React + Capacitor, racional térmica/GPS/SQLite). Item obrigatório do relatório
 da Leva 1.
@@ -99,7 +100,7 @@ silenciosa de dado em merge). Fica registrada como alternativa consciente.
 
 | Necessidade | Plugin | Observações |
 |---|---|---|
-| **Térmica Bluetooth** (comprovante + promissória, ESC/POS) | `capacitor-thermal-printer` (BT clássico/BLE) com wrapper próprio em `native/printer.ts` | O wrapper expõe `printReceipt(model)` e `printPromissory(model)`; o layout ESC/POS vive em `packages/veertex-contracts` (o EXP vai reusar no futuro, 04 §4). **Reimpressão sempre**: os modelos impressos ficam no SQLite — 2ª via não depende de rede |
+| **Impressão em campo** (comprovante + promissória) | **V1 = PDF local** (decisão do Eliab, 23/08/2026 — não há térmica definida): PDF gerado NO APARELHO com template embarcado (offline inegociável), compartilhado pelo share nativo do Capacitor (WhatsApp/salvar/serviço de impressão do Android). O app expõe um **`FieldPrintPort`** — implementação V1 = PDF/share; a térmica ESC/POS Bluetooth entra futuramente como ADAPTER, sem refatoração. Layout já desenhado para **bobina 58/80mm além do A4** (template estreito serve aos dois mundos). **Reimpressão sempre**: os modelos ficam no SQLite — 2ª via não depende de rede |
 | **GPS em segundo plano** ligado ao status da viagem | `@capacitor/geolocation` (captura pontual no pedido) + `@capacitor-community/background-geolocation` (rastreio contínuo) | Rastreio LIGA na saída da viagem e DESLIGA no fechamento — nunca fora; consentimento explícito na primeira ativação, revogável, registrado (LGPD, 04 §4). Captura pontual do pedido é INDEPENDENTE do rastreio (funciona com consentimento negado) |
 | **Câmera** (foto-comprovante, foto da promissória assinada) | `@capacitor/camera` | Compressão NO APARELHO antes de guardar (04 §3.1); binário fica no SQLite/filesystem até o push → MinIO via endpoint de evidência existente |
 
@@ -135,12 +136,25 @@ de produção — sem plugin, a ação FALHA visível, não finge).
 6. Térmica: comprovante + promissória (extenso compartilhado) + 2ª via.
 7. Rastreio de fundo ligado ao status da viagem + consentimento LGPD.
 
-## 8. Perguntas para a aprovação
+## 8. Perguntas para a aprovação — TODAS RESPONDIDAS (Eliab, 23/08/2026)
 
-1. **`packages/veertex-contracts` ou `apps/Veertex/shared/`** para o código compartilhado?
-2. O `client_uuid` de idempotência nos endpoints de campo (retoque pequeno de backend) pode
-   entrar já na próxima leva de backend, antes do app, para o contrato nascer pronto?
-3. Rastreio de fundo: intervalo de captura (sugestão: 1 ponto a cada 5 min em viagem) e
-   retenção (sugestão: pontos da viagem ficam 90 dias) — números a ratificar.
-4. Impressora-alvo da homologação da térmica (marca/modelo real da operação) — preciso do
-   hardware que o representante usa hoje.
+1. **Código compartilhado: DENTRO de `apps/Veertex/`** (ex.: `apps/Veertex/shared/` ou
+   `apps/Veertex/packages/contract`). Os `packages/*` da raiz são para código compartilhado entre
+   PROJETOS do monorepo; contrato Veertex-específico não sobe para lá.
+2. **`client_uuid` antecipado: SIM, já na Leva 2** — idempotência das mutações de campo é fundação
+   do sync; retrofit depois custa caro. Aplicado nas rotas de proposta (lançamentos de campo), com
+   unicidade por conta.
+3. **Rastreio: default 5 min em viagem, retenção default 90 dias — ambos configuráveis por
+   conta.** Documentado como dado pessoal (LGPD): coleta só com viagem em andamento, consentimento
+   registrado no primeiro uso do app.
+4. **Impressão em campo: PDF na V1** (não há impressora térmica definida). PDF gerado localmente
+   no aparelho (template embarcado — offline inegociável), share nativo (WhatsApp/salvar/imprimir
+   pelo serviço do Android); o backend já gera a promissória com extenso e o app renderiza/reusa.
+   A térmica vira camada futura atrás do **`FieldPrintPort`** (V1 = PDF/share; futuro = ESC/POS
+   Bluetooth 58/80mm) — chegada de hardware é plug de adapter, não refatoração. Enquanto não há
+   modelo definido, o alvo de projeto é ESC/POS Bluetooth genérica 58/80mm, e a validação com o
+   hardware real entra como critério de aceite do app.
+
+> **Nota datada (23/08/2026):** decisões 1–3 ratificadas pelo Eliab na revisão da Leva 1; decisão 4
+> (PDF na V1, sem térmica definida) tomada pelo Eliab na mesma data. Com isto a proposta está
+> APROVADA e a fatia do app aguarda apenas a posição na fila (após as levas 2–5).
