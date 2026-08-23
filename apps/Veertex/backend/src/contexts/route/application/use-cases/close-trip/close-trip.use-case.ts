@@ -14,6 +14,8 @@ import {
   DEFAULT_MODEL_B_TIERS,
 } from '../../../../commission/application/ports/output/commission-b-tier-repository.port';
 import { computeModelBCommission } from '../../../../commission/domain/model-b';
+import { commissionDueDate } from '../../../../commission/domain/commission-due';
+import { AccountPreferencesReader } from '../../../../account/application/account-preferences.reader';
 import { round2 } from '../../../../commission/domain/model-a';
 import { TRIP_REPOSITORY, TripRepositoryPort } from '../../ports/output/trip-repository.port';
 import {
@@ -107,6 +109,7 @@ export class CloseTripUseCase implements UseCase<CloseTripCommand, TripClosureSu
     @Inject(COMMISSION_B_TIER_REPOSITORY)
     private readonly bTiers: CommissionBTierRepositoryPort,
     private readonly createTitle: CreateFinancialTitleUseCase,
+    private readonly preferences: AccountPreferencesReader,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
   ) {}
 
@@ -179,8 +182,13 @@ export class CloseTripUseCase implements UseCase<CloseTripCommand, TripClosureSu
       const helperAmount = round2(Math.max(0, command.payroll.helperAmount ?? 0));
 
       // ── Contas a pagar no FIN (a EMPRESA vem da viagem) ───────────────────────────────────────
+      // Vencimento pela regra da conta (commission_due_rule) sobre o MÊS DO FECHAMENTO — a mesma
+      // função do Modelo A; duas cópias divergiriam no primeiro ajuste.
       const payableTitleIds: string[] = [];
-      const dueDate = new Date();
+      const dueDate = commissionDueDate(
+        new Date(),
+        await this.preferences.forAccount(command.accountId),
+      );
       const emit = async (description: string, amount: number) => {
         if (amount <= 0) return;
         const title = await this.createTitle.execute(

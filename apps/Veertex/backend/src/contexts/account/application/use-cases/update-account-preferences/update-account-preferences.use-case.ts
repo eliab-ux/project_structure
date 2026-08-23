@@ -18,6 +18,8 @@ export class UpdateAccountPreferencesCommand {
   constructor(
     public readonly accountId: string,
     public readonly changes: {
+      commissionDueRule?: 'last_day_of_period' | 'day_n_next_month';
+      commissionDueDay?: number;
       allowDuplicateDocument?: boolean;
       contactCodeMode?: CodeNumberingMode;
       productSkuMode?: CodeNumberingMode;

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { COMMISSION_SALES_LOOKUP } from './application/ports/output/commission-sales-lookup.port';
 import { COMMISSION_PAYABLE } from './application/ports/output/commission-payable.port';
 import { CommissionSalesLookup } from '../../infrastructure/persistence/mikro-orm/repositories/commission-sales.lookup';
+import { AccountModule } from '../account/account.module';
 import { CommissionPayableViaFinance } from '../../infrastructure/persistence/mikro-orm/repositories/commission-payable-via-finance.adapter';
 import { FinanceModule } from '../finance/finance.module';
 import { SetCommissionTiersUseCase } from './application/use-cases/set-commission-tiers/set-commission-tiers.use-case';
@@ -18,7 +19,7 @@ import { GenerateCommissionPayableUseCase } from './application/use-cases/genera
  * import do `FinanceModule`). Só o Modelo A nasce agora; o B espera o ROT (viagem/carteira/acerto).
  */
 @Module({
-  imports: [FinanceModule],
+  imports: [FinanceModule, AccountModule],
   providers: [
     { provide: COMMISSION_SALES_LOOKUP, useClass: CommissionSalesLookup },
     { provide: COMMISSION_PAYABLE, useClass: CommissionPayableViaFinance },

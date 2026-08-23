@@ -12,6 +12,8 @@ import {
   FinancialCategoryRepositoryPort,
 } from '../../../../contexts/finance/application/ports/output/financial-category-repository.port';
 import { Inject } from '@nestjs/common';
+import { AccountPreferencesReader } from '../../../../contexts/account/application/account-preferences.reader';
+import { commissionDueDate } from '../../../../contexts/commission/domain/commission-due';
 
 /**
  * Materializa a comissão como conta a pagar no FIN (§2.2 do 05) — o adapter que TIROU o port do
@@ -24,14 +26,16 @@ export class CommissionPayableViaFinance implements CommissionPayablePort {
     private readonly createTitle: CreateFinancialTitleUseCase,
     @Inject(FINANCIAL_CATEGORY_REPOSITORY)
     private readonly categories: FinancialCategoryRepositoryPort,
+    private readonly preferences: AccountPreferencesReader,
   ) {}
 
   async materialize(request: CommissionPayableRequest): Promise<string> {
     const category = await this.categories.findByDefaultOperation('commission');
 
-    // Vencimento = último dia do mês do período (YYYY-MM).
-    const [year, month] = request.period.split('-').map(Number);
-    const dueDate = new Date(Date.UTC(year, month, 0));
+    // Vencimento pela REGRA DA CONTA (commission_due_rule): último dia do período (default) ou
+    // dia N do mês seguinte — mesma função do fechamento de viagem (commission-due.ts).
+    const prefs = await this.preferences.forAccount(request.accountId);
+    const dueDate = commissionDueDate(request.period, prefs);
 
     const title = await this.createTitle.execute(
       new CreateFinancialTitleCommand(request.accountId, 'payable', {

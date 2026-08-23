@@ -5,6 +5,18 @@ export type CodeNumberingMode = 'manual' | 'sequential';
 
 export const CODE_NUMBERING_MODES: readonly CodeNumberingMode[] = ['manual', 'sequential'];
 
+/**
+ * Vencimento das comissões materializadas como conta a pagar (registro de 23/08/2026):
+ * `last_day_of_period` = último dia do mês apurado (comportamento original, sem breaking);
+ * `day_n_next_month` = dia N do mês SEGUINTE (padrão de mercado — folha paga no início do mês).
+ */
+export type CommissionDueRule = 'last_day_of_period' | 'day_n_next_month';
+
+export const COMMISSION_DUE_RULES: readonly CommissionDueRule[] = [
+  'last_day_of_period',
+  'day_n_next_month',
+];
+
 export interface AccountPreferencesProps {
   /**
    * Permitir dois cadastros com o mesmo CPF/CNPJ na conta (§3.4). Default **não permitir** — decisão
@@ -27,6 +39,10 @@ export interface AccountPreferencesProps {
    * inventário).
    */
   stockAllowNegative: boolean;
+  /** Regra de vencimento das comissões (§2.2 do 05). Default = comportamento original. */
+  commissionDueRule: CommissionDueRule;
+  /** O dia N da regra `day_n_next_month` (1–28 — 29+ não existe em todo mês). Default 5. */
+  commissionDueDay: number;
 }
 
 /**
@@ -59,6 +75,8 @@ export class AccountPreferences extends ValueObject<AccountPreferencesProps> {
     productSkuMode: 'manual',
     contactCarteirizacao: false,
     stockAllowNegative: false,
+    commissionDueRule: 'last_day_of_period',
+    commissionDueDay: 5,
   };
 
   private constructor(props: AccountPreferencesProps) {
@@ -86,6 +104,13 @@ export class AccountPreferences extends ValueObject<AccountPreferencesProps> {
         partial?.contactCarteirizacao ?? AccountPreferences.DEFAULTS.contactCarteirizacao,
       stockAllowNegative:
         partial?.stockAllowNegative ?? AccountPreferences.DEFAULTS.stockAllowNegative,
+      commissionDueRule:
+        partial?.commissionDueRule === 'day_n_next_month'
+          ? 'day_n_next_month'
+          : partial?.commissionDueRule === 'last_day_of_period'
+            ? 'last_day_of_period'
+            : AccountPreferences.DEFAULTS.commissionDueRule,
+      commissionDueDay: clampDueDay(partial?.commissionDueDay),
     });
   }
 
@@ -109,6 +134,18 @@ export class AccountPreferences extends ValueObject<AccountPreferencesProps> {
   get stockAllowNegative(): boolean {
     return this.props.stockAllowNegative;
   }
+  get commissionDueRule(): CommissionDueRule {
+    return this.props.commissionDueRule;
+  }
+  get commissionDueDay(): number {
+    return this.props.commissionDueDay;
+  }
+}
+
+/** 1–28: dia 29+ não existe em todo mês, e a regra de vencimento não pode depender do calendário. */
+function clampDueDay(value: unknown): number {
+  const day = typeof value === 'number' && Number.isFinite(value) ? Math.trunc(value) : 5;
+  return Math.min(28, Math.max(1, day));
 }
 
 function normalizeMode(value: unknown, fallback: CodeNumberingMode): CodeNumberingMode {

@@ -1,6 +1,16 @@
 import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
 import {
   GetCurrentAccountQuery,
   GetCurrentAccountUseCase,
@@ -83,6 +93,16 @@ export class UpdateAccountPreferencesRequestDto {
   @IsOptional()
   @IsBoolean()
   stockAllowNegative?: boolean;
+
+  @IsOptional()
+  @IsIn(['last_day_of_period', 'day_n_next_month'])
+  commissionDueRule?: 'last_day_of_period' | 'day_n_next_month';
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(28)
+  commissionDueDay?: number;
 }
 
 export class PlanResponseDto {
@@ -164,6 +184,8 @@ export class AccountController {
         productSkuMode: dto.productSkuMode as CodeNumberingMode | undefined,
         contactCarteirizacao: dto.contactCarteirizacao,
         stockAllowNegative: dto.stockAllowNegative,
+        commissionDueRule: dto.commissionDueRule,
+        commissionDueDay: dto.commissionDueDay,
       }),
     );
     return AccountResponseDto.from(account);

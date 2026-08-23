@@ -72,6 +72,12 @@ export class AccountOrmEntity {
   @Property({ fieldName: 'stock_allow_negative' })
   stockAllowNegative: boolean = false;
 
+  @Property({ length: 30, fieldName: 'commission_due_rule' })
+  commissionDueRule: string = 'last_day_of_period';
+
+  @Property({ fieldName: 'commission_due_day' })
+  commissionDueDay: number = 5;
+
   /** Juros ao mês (%) por atraso — parâmetro da conta (§2.1 do 05). Default 0. */
   @Property({ type: 'numeric', precision: 6, scale: 2, fieldName: 'fin_monthly_interest_percent' })
   finMonthlyInterestPercent = '0';

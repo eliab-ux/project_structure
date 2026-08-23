@@ -24,6 +24,14 @@ const VENDEDOR = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 
 const uowFalso: UnitOfWorkPort = { execute: async (fn) => fn() } as UnitOfWorkPort;
 
+/** Preferências da conta com a regra de vencimento DEFAULT (último dia do período). */
+const prefsFalso = {
+  forAccount: async () => ({
+    commissionDueRule: 'last_day_of_period',
+    commissionDueDay: 5,
+  }),
+} as never;
+
 function viagemEmFechamento(initialCash = 0): Trip {
   const trip = Trip.create({
     accountId: CONTA,
@@ -116,6 +124,7 @@ function fakes(params: {
     expenses,
     bTiers,
     createTitle,
+    prefsFalso,
     uowFalso,
   );
   return { uc, created };
@@ -283,7 +292,16 @@ describe('CloseTrip — comparativo com a viagem anterior (§3.5 do 04)', () => 
     const createTitle = {
       execute: async () => ({ id: 'title-x', status: 'open' }),
     } as unknown as CreateFinancialTitleUseCase;
-    return new CloseTripUseCase(trips, collections, receipts, expenses, bTiers, createTitle, uowFalso);
+    return new CloseTripUseCase(
+      trips,
+      collections,
+      receipts,
+      expenses,
+      bTiers,
+      createTitle,
+      prefsFalso,
+      uowFalso,
+    );
   }
 
   it('recomputa a anterior das próprias cobranças/recebimentos e entrega os deltas', async () => {

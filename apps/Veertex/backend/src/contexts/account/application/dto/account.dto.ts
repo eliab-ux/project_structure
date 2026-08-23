@@ -8,6 +8,8 @@ export class AccountPreferencesDto {
   productSkuMode!: CodeNumberingMode;
   contactCarteirizacao!: boolean;
   stockAllowNegative!: boolean;
+  commissionDueRule!: string;
+  commissionDueDay!: number;
 
   static fromDomain(account: Account): AccountPreferencesDto {
     const dto = new AccountPreferencesDto();
@@ -16,6 +18,8 @@ export class AccountPreferencesDto {
     dto.productSkuMode = account.preferences.productSkuMode;
     dto.contactCarteirizacao = account.preferences.contactCarteirizacao;
     dto.stockAllowNegative = account.preferences.stockAllowNegative;
+    dto.commissionDueRule = account.preferences.commissionDueRule;
+    dto.commissionDueDay = account.preferences.commissionDueDay;
     return dto;
   }
 }

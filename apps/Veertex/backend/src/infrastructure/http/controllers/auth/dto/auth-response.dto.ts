@@ -42,6 +42,8 @@ export class AccountPreferencesResponseDto {
   productSkuMode!: string;
   contactCarteirizacao!: boolean;
   stockAllowNegative!: boolean;
+  commissionDueRule!: string;
+  commissionDueDay!: number;
 }
 
 export class AccountResponseDto {
@@ -67,6 +69,8 @@ export class AccountResponseDto {
       productSkuMode: account.preferences.productSkuMode,
       contactCarteirizacao: account.preferences.contactCarteirizacao,
       stockAllowNegative: account.preferences.stockAllowNegative,
+      commissionDueRule: account.preferences.commissionDueRule,
+      commissionDueDay: account.preferences.commissionDueDay,
     };
     return dto;
   }

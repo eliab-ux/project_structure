@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Document } from '../../../../shared/domain/value-objects/document.vo';
 import { Account } from '../../../../contexts/account/domain/entities/account.entity';
 import { AccountId } from '../../../../contexts/account/domain/value-objects/account-id.vo';
+import { CommissionDueRule } from '../../../../contexts/account/domain/value-objects/account-preferences.vo';
 import {
   AccountPreferences,
   CodeNumberingMode,
@@ -28,6 +29,8 @@ export class AccountMapper {
         productSkuMode: orm.productSkuMode as CodeNumberingMode,
         contactCarteirizacao: orm.contactCarteirizacao,
         stockAllowNegative: orm.stockAllowNegative,
+        commissionDueRule: orm.commissionDueRule as CommissionDueRule,
+        commissionDueDay: orm.commissionDueDay,
       }),
       createdAt: orm.createdAt,
     });
@@ -50,6 +53,8 @@ export class AccountMapper {
       productSkuMode: account.preferences.productSkuMode,
       contactCarteirizacao: account.preferences.contactCarteirizacao,
       stockAllowNegative: account.preferences.stockAllowNegative,
+      commissionDueRule: account.preferences.commissionDueRule,
+      commissionDueDay: account.preferences.commissionDueDay,
       createdAt: account.createdAt,
       updatedAt: new Date(),
     };

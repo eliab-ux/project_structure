@@ -31,8 +31,9 @@ export class CreateRecurringPayableCommand {
  * títulos a pagar de uma vez, com o vencimento avançando um mês por parcela e a descrição marcando
  * `(i/N)`. Sem OFX/agendador — é a recorrência do V1: títulos concretos, editáveis um a um depois.
  *
- * O dia do vencimento segue `firstDueDate`; meses mais curtos rolam pelo comportamento do `Date`
- * (ex.: 31/jan + 1 mês cai em 02/03) — aceito no V1, ajustável na edição do título.
+ * O dia do vencimento segue `firstDueDate`, com CLAMP para o último dia em mês mais curto
+ * (31/jan + 1 mês → 28/29-fev — decisão de 23/08/2026): o estouro do `Date` para 02/03 é surpresa
+ * para quem esperava "todo dia 31"; o último dia do mês é a expectativa de quem dita aluguel.
  */
 @Injectable()
 export class CreateRecurringPayableUseCase implements UseCase<
@@ -51,8 +52,16 @@ export class CreateRecurringPayableUseCase implements UseCase<
     return this.uow.execute(async () => {
       const created: FinancialTitleDto[] = [];
       for (let i = 0; i < occurrences; i += 1) {
+        // Clamp: o dia pretendido nunca passa do último dia do mês-alvo (dia 0 do mês seguinte).
+        const lastDayOfTarget = new Date(
+          Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + i + 1, 0),
+        ).getUTCDate();
         const dueDate = new Date(
-          Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + i, first.getUTCDate()),
+          Date.UTC(
+            first.getUTCFullYear(),
+            first.getUTCMonth() + i,
+            Math.min(first.getUTCDate(), lastDayOfTarget),
+          ),
         );
         const title = FinancialTitle.create({
           accountId: command.accountId,

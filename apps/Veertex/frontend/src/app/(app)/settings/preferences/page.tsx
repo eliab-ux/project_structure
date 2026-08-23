@@ -9,6 +9,7 @@ import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
 import Paper from '@mui/material/Paper';
 import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
@@ -39,6 +40,12 @@ export default function PreferencesPage() {
     prefs?.contactCarteirizacao ?? false,
   );
   const [stockAllowNegative, setStockAllowNegative] = useState(prefs?.stockAllowNegative ?? false);
+  const [commissionDueRule, setCommissionDueRule] = useState(
+    prefs?.commissionDueRule ?? 'last_day_of_period',
+  );
+  const [commissionDueDay, setCommissionDueDay] = useState(
+    String(prefs?.commissionDueDay ?? 5),
+  );
   const [saving, setSaving] = useState(false);
 
   async function save() {
@@ -49,6 +56,8 @@ export default function PreferencesPage() {
         productSkuMode,
         contactCarteirizacao,
         stockAllowNegative,
+        commissionDueRule,
+        commissionDueDay: Math.min(28, Math.max(1, Number(commissionDueDay) || 5)),
       });
       await refreshSession();
       enqueueSnackbar('Preferências salvas.', { variant: 'success' });
@@ -155,6 +164,48 @@ export default function PreferencesPage() {
             }
             label={stockAllowNegative ? 'Permitido' : 'Bloqueado'}
           />
+        </Paper>
+
+        {/* Vencimento das comissões (registro de 23/08/2026) — vale para o Modelo A e para a folha
+            da viagem (Modelo B). */}
+        <Paper variant="outlined" sx={{ p: 2.5 }}>
+          <Typography variant="body1" sx={{ fontWeight: 600 }}>
+            Vencimento das comissões
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Quando a comissão apurada (loja ou viagem) vence como conta a pagar: no fim do próprio
+            período (padrão) ou num dia fixo do mês seguinte — o formato de folha.
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 1.5 }}>
+            <TextField
+              select
+              label="Regra"
+              value={commissionDueRule}
+              onChange={(event) =>
+                setCommissionDueRule(
+                  event.target.value as 'last_day_of_period' | 'day_n_next_month',
+                )
+              }
+              size="small"
+              sx={{ minWidth: 260 }}
+              disabled={!canEdit}
+            >
+              <MenuItem value="last_day_of_period">Último dia do período apurado</MenuItem>
+              <MenuItem value="day_n_next_month">Dia fixo do mês seguinte</MenuItem>
+            </TextField>
+            {commissionDueRule === 'day_n_next_month' ? (
+              <TextField
+                label="Dia (1–28)"
+                type="number"
+                value={commissionDueDay}
+                onChange={(event) => setCommissionDueDay(event.target.value)}
+                inputProps={{ min: 1, max: 28 }}
+                size="small"
+                sx={{ width: 120 }}
+                disabled={!canEdit}
+              />
+            ) : null}
+          </Stack>
         </Paper>
 
         {canEdit ? (

@@ -19,6 +19,9 @@ export interface AccountPreferences {
   contactCarteirizacao: boolean;
   /** Estoque negativo permitido (§3.2 do 03). Default bloquear. */
   stockAllowNegative: boolean;
+  /** Vencimento das comissões: fim do período apurado (default) ou dia N do mês seguinte. */
+  commissionDueRule: 'last_day_of_period' | 'day_n_next_month';
+  commissionDueDay: number;
 }
 
 export interface AuthAccount {
