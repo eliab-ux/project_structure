@@ -96,9 +96,15 @@ Impressão térmica portátil (comprovante + promissória; ZPL/ESC-POS compartil
 EXP) **e/ou** comprovante por WhatsApp/PDF. **Reimpressão/2ª via sempre** (caso real:
 acabou a bobina). Rastreamento do representante **ligado ao status da viagem** (inicia na
 saída, cessa no fechamento), com consentimento explícito (LGPD).
-**⚠️ DECISÃO PENDENTE (a única do módulo): stack do app** — Ionic React+Capacitor
-(melhor p/ impressora térmica/GPS/câmera; stack já dominada no portfólio) × PWA.
-Recomendação: Capacitor. Decidir com o Eliab antes da fatia do app.
+
+**✅ DECIDIDO (23/08/2026, Eliab): stack do app = Ionic React + Capacitor.** Racional:
+impressora térmica Bluetooth via plugin nativo, GPS em segundo plano vinculado ao status
+da viagem, e SQLite local para o offline-first robusto — o PWA falharia justamente nos
+três pontos críticos do dia de campo. Stack já dominada no monorepo (LouvorApp). A fatia
+do app entra na fila DEPOIS da revisão do relatório da retaguarda; o primeiro passo será
+a **proposta de estrutura** (app no monorepo em `apps/Veertex/mobile/`? compartilhamento
+de código com o frontend web? estratégia de sync offline → propostas de dois estágios),
+para aprovação antes de código.
 
 ## 5. Entidades (conceitual, inglês)
 
