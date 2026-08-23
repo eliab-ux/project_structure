@@ -95,6 +95,7 @@ const produtoFalso: StockProductLookupPort = {
 };
 
 const reservasFalso: StockReservationRepositoryPort = {
+  list: async () => [],
   sumActiveReserved: async () => 0,
   findActiveByOrder: async () => [],
   save: async () => undefined,

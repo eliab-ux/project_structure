@@ -50,6 +50,7 @@ describe('Kit — disponível derivado dos componentes (§2.5)', () => {
     list: async () => [],
   };
   const reservations: StockReservationRepositoryPort = {
+    list: async () => [],
     sumActiveReserved: async () => 0,
     findActiveByOrder: async () => [],
     save: async () => undefined,
