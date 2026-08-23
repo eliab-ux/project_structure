@@ -29,6 +29,8 @@ import { TRIP_COLLECTION_REPOSITORY } from '../../contexts/route/application/por
 import { FIELD_RECEIPT_REPOSITORY } from '../../contexts/route/application/ports/output/field-receipt-repository.port';
 import { TRIP_EXPENSE_REPOSITORY } from '../../contexts/route/application/ports/output/trip-expense-repository.port';
 import { COMMISSION_B_TIER_REPOSITORY } from '../../contexts/commission/application/ports/output/commission-b-tier-repository.port';
+import { ORDER_EVIDENCE_REPOSITORY } from '../../contexts/route/application/ports/output/order-evidence-repository.port';
+import { PROMISSORY_NOTE_REPOSITORY } from '../../contexts/route/application/ports/output/promissory-note-repository.port';
 
 import { PlanOrmEntity } from './mikro-orm/entities/plan-orm.entity';
 import { AccountOrmEntity } from './mikro-orm/entities/account-orm.entity';
@@ -63,6 +65,8 @@ import { TripCollectionOrmEntity } from './mikro-orm/entities/trip-collection-or
 import { FieldReceiptOrmEntity } from './mikro-orm/entities/field-receipt-orm.entity';
 import { TripExpenseOrmEntity } from './mikro-orm/entities/trip-expense-orm.entity';
 import { CommissionBTierOrmEntity } from './mikro-orm/entities/commission-b-tier-orm.entity';
+import { OrderEvidenceOrmEntity } from './mikro-orm/entities/order-evidence-orm.entity';
+import { PromissoryNoteOrmEntity } from './mikro-orm/entities/promissory-note-orm.entity';
 
 import { PlanMapper } from './mikro-orm/mappers/plan.mapper';
 import { AccountMapper } from './mikro-orm/mappers/account.mapper';
@@ -102,6 +106,8 @@ import { MikroOrmTripCollectionRepository } from './mikro-orm/repositories/trip-
 import { MikroOrmFieldReceiptRepository } from './mikro-orm/repositories/field-receipt.repository';
 import { MikroOrmTripExpenseRepository } from './mikro-orm/repositories/trip-expense.repository';
 import { MikroOrmCommissionBTierRepository } from './mikro-orm/repositories/commission-b-tier.repository';
+import { MikroOrmOrderEvidenceRepository } from './mikro-orm/repositories/order-evidence.repository';
+import { MikroOrmPromissoryNoteRepository } from './mikro-orm/repositories/promissory-note.repository';
 
 /**
  * Every repository, in one @Global module.
@@ -153,6 +159,8 @@ import { MikroOrmCommissionBTierRepository } from './mikro-orm/repositories/comm
       FieldReceiptOrmEntity,
       TripExpenseOrmEntity,
       CommissionBTierOrmEntity,
+      OrderEvidenceOrmEntity,
+      PromissoryNoteOrmEntity,
     ]),
   ],
   providers: [
@@ -196,6 +204,8 @@ import { MikroOrmCommissionBTierRepository } from './mikro-orm/repositories/comm
     { provide: FIELD_RECEIPT_REPOSITORY, useClass: MikroOrmFieldReceiptRepository },
     { provide: TRIP_EXPENSE_REPOSITORY, useClass: MikroOrmTripExpenseRepository },
     { provide: COMMISSION_B_TIER_REPOSITORY, useClass: MikroOrmCommissionBTierRepository },
+    { provide: ORDER_EVIDENCE_REPOSITORY, useClass: MikroOrmOrderEvidenceRepository },
+    { provide: PROMISSORY_NOTE_REPOSITORY, useClass: MikroOrmPromissoryNoteRepository },
   ],
   exports: [
     PLAN_REPOSITORY,
@@ -226,6 +236,8 @@ import { MikroOrmCommissionBTierRepository } from './mikro-orm/repositories/comm
     FIELD_RECEIPT_REPOSITORY,
     TRIP_EXPENSE_REPOSITORY,
     COMMISSION_B_TIER_REPOSITORY,
+    ORDER_EVIDENCE_REPOSITORY,
+    PROMISSORY_NOTE_REPOSITORY,
   ],
 })
 export class RepositoriesModule {}

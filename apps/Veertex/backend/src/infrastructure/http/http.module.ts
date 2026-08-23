@@ -31,6 +31,7 @@ import { CommissionController } from './controllers/commission/commission.contro
 import { FinanceController } from './controllers/finance/finance.controller';
 import { RouteController } from './controllers/route/route.controller';
 import { TripController } from './controllers/route/trip.controller';
+import { ConsignmentController } from './controllers/route/consignment.controller';
 import { ModuleController } from './controllers/module/module.controller';
 import { RoleController } from './controllers/role/role.controller';
 import { UserController } from './controllers/user/user.controller';
@@ -91,6 +92,7 @@ import { IntentModule } from '../../contexts/intent/intent.module';
     FinanceController,
     RouteController,
     TripController,
+    ConsignmentController,
     ModuleController,
     RoleController,
     UserController,

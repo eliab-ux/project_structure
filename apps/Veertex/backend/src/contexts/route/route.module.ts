@@ -27,6 +27,13 @@ import { ReturnConsignedItemsUseCase } from './application/use-cases/return-cons
 import { ExchangeConsignedItemsUseCase } from './application/use-cases/exchange-consigned-items/exchange-consigned-items.use-case';
 import { RegisterTripExpenseUseCase } from './application/use-cases/register-trip-expense/register-trip-expense.use-case';
 import { CloseTripUseCase } from './application/use-cases/close-trip/close-trip.use-case';
+import { RegisterOrderEvidenceUseCase } from './application/use-cases/register-order-evidence/register-order-evidence.use-case';
+import { ChangeOrderGpsUseCase } from './application/use-cases/change-order-gps/change-order-gps.use-case';
+import { GeneratePromissoryNoteUseCase } from './application/use-cases/generate-promissory-note/generate-promissory-note.use-case';
+import { EVIDENCE_STORAGE } from './application/ports/output/evidence-storage.port';
+import { PROMISSORY_DEBTOR_LOOKUP } from './application/ports/output/promissory-debtor-lookup.port';
+import { NoopEvidenceStorage } from '../../infrastructure/observability/noop-evidence-storage';
+import { PromissoryDebtorLookup } from '../../infrastructure/persistence/mikro-orm/repositories/promissory-debtor.lookup';
 
 /**
  * ROT — Rota/Consignação (§04). Fatia 2: rotas + Regra Comercial. Fatia 3: viagem + carga/romaneio +
@@ -41,6 +48,8 @@ import { CloseTripUseCase } from './application/use-cases/close-trip/close-trip.
     { provide: CONSIGNMENT_FISCAL, useClass: NoopConsignmentFiscal },
     { provide: WALLET_TITLE_LOOKUP, useClass: WalletTitleLookup },
     { provide: ROT_WALLET_PARAMS, useClass: RotWalletParamsReader },
+    { provide: EVIDENCE_STORAGE, useClass: NoopEvidenceStorage },
+    { provide: PROMISSORY_DEBTOR_LOOKUP, useClass: PromissoryDebtorLookup },
     CreateRouteUseCase,
     ListRoutesUseCase,
     UpdateRouteUseCase,
@@ -57,6 +66,9 @@ import { CloseTripUseCase } from './application/use-cases/close-trip/close-trip.
     ExchangeConsignedItemsUseCase,
     RegisterTripExpenseUseCase,
     CloseTripUseCase,
+    RegisterOrderEvidenceUseCase,
+    ChangeOrderGpsUseCase,
+    GeneratePromissoryNoteUseCase,
   ],
   exports: [
     CreateRouteUseCase,
@@ -75,6 +87,9 @@ import { CloseTripUseCase } from './application/use-cases/close-trip/close-trip.
     ExchangeConsignedItemsUseCase,
     RegisterTripExpenseUseCase,
     CloseTripUseCase,
+    RegisterOrderEvidenceUseCase,
+    ChangeOrderGpsUseCase,
+    GeneratePromissoryNoteUseCase,
   ],
 })
 export class RouteModule {}
