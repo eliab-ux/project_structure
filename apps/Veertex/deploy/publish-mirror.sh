@@ -60,6 +60,8 @@ PATHS=(
   "tsconfig.json"
   "tsconfig.base.json"
   ".dockerignore"
+  ".prettierrc"
+  ".prettierignore"
   "packages"
   "apps/Veertex"
 )
@@ -86,6 +88,7 @@ git archive "$SOURCE_SHA" -- "${PATHS[@]}" | tar -x -C "$STAGE"
 # Sanidade: sem estes, o build falha no servidor — longe de quem publicou.
 for obrigatorio in \
   "package.json" "package-lock.json" "tsconfig.json" "tsconfig.base.json" \
+  ".prettierrc" ".prettierignore" \
   "packages/domain-primitives" "packages/shared-kernel" \
   "apps/Veertex/backend/Dockerfile" "apps/Veertex/frontend/Dockerfile"; do
   if [[ ! -e "$STAGE/$obrigatorio" ]]; then
