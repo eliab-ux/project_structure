@@ -7,6 +7,7 @@ import { ProductModule } from '../../contexts/product/product.module';
 import { FieldConfigModule } from '../../contexts/field-config/field-config.module';
 import { OrderModule } from '../../contexts/order/order.module';
 import { StockModule } from '../../contexts/stock/stock.module';
+import { PaymentConditionModule } from '../../contexts/payment-condition/payment-condition.module';
 import { ModuleModule } from '../../contexts/module/module.module';
 import { PlanModule } from '../../contexts/plan/plan.module';
 import { RoleModule } from '../../contexts/role/role.module';
@@ -20,6 +21,7 @@ import { ProductController } from './controllers/product/product.controller';
 import { FieldConfigController } from './controllers/field-config/field-config.controller';
 import { OrderController } from './controllers/order/order.controller';
 import { StockController } from './controllers/stock/stock.controller';
+import { PaymentConditionController } from './controllers/payment-condition/payment-condition.controller';
 import { ModuleController } from './controllers/module/module.controller';
 import { RoleController } from './controllers/role/role.controller';
 import { UserController } from './controllers/user/user.controller';
@@ -53,6 +55,7 @@ import { IntentModule } from '../../contexts/intent/intent.module';
     FieldConfigModule,
     OrderModule,
     StockModule,
+    PaymentConditionModule,
     ModuleModule,
     PlanModule,
     RoleModule,
@@ -69,6 +72,7 @@ import { IntentModule } from '../../contexts/intent/intent.module';
     FieldConfigController,
     OrderController,
     StockController,
+    PaymentConditionController,
     ModuleController,
     RoleController,
     UserController,

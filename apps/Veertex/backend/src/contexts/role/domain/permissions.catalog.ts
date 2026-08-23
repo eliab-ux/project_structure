@@ -85,6 +85,16 @@ export const PERMISSIONS = {
     read: 'stock.read',
     move: 'stock.move',
   },
+  // Configuração comercial (VND — §4.2 e §3.2 do 02A). Área PRÓPRIA, separada de `orders.*` por
+  // decisão do Eliab: operar pedido ≠ configurar comércio. Cobre as condições de pagamento nomeadas
+  // e as tabelas de preço (price_lists). Granularidade estilo Bling: `read` para consultar, `manage`
+  // para criar/editar/desativar. A CHAVE da área é `sales` (o primeiro segmento da permissão) — é o
+  // que o agrupamento da tela usa (`permission.startsWith(area + '.')`); os valores carregam o
+  // sub-escopo `sales.settings.*`, que o `grants()` resolve por wildcard segmento a segmento.
+  sales: {
+    settingsRead: 'sales.settings.read',
+    settingsManage: 'sales.settings.manage',
+  },
 } as const;
 
 /** Grants everything, present and future. Only the Admin role should hold it. */

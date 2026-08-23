@@ -14,6 +14,7 @@ import { STOCK_MOVEMENT_REPOSITORY } from '../../contexts/stock/application/port
 import { STOCK_RESERVATION_REPOSITORY } from '../../contexts/stock/application/ports/output/stock-reservation-repository.port';
 import { STOCK_LOCATION_REPOSITORY } from '../../contexts/stock/application/ports/output/stock-location-repository.port';
 import { PRODUCT_COMPONENT_REPOSITORY } from '../../contexts/product/application/ports/output/product-component-repository.port';
+import { PAYMENT_CONDITION_REPOSITORY } from '../../contexts/payment-condition/application/ports/output/payment-condition-repository.port';
 
 import { PlanOrmEntity } from './mikro-orm/entities/plan-orm.entity';
 import { AccountOrmEntity } from './mikro-orm/entities/account-orm.entity';
@@ -31,6 +32,7 @@ import { StockMovementOrmEntity } from './mikro-orm/entities/stock-movement-orm.
 import { StockReservationOrmEntity } from './mikro-orm/entities/stock-reservation-orm.entity';
 import { StockLocationOrmEntity } from './mikro-orm/entities/stock-location-orm.entity';
 import { ProductComponentOrmEntity } from './mikro-orm/entities/product-component-orm.entity';
+import { PaymentConditionOrmEntity } from './mikro-orm/entities/payment-condition-orm.entity';
 
 import { PlanMapper } from './mikro-orm/mappers/plan.mapper';
 import { AccountMapper } from './mikro-orm/mappers/account.mapper';
@@ -55,6 +57,7 @@ import { MikroOrmStockMovementRepository } from './mikro-orm/repositories/stock-
 import { MikroOrmStockReservationRepository } from './mikro-orm/repositories/stock-reservation.repository';
 import { MikroOrmStockLocationRepository } from './mikro-orm/repositories/stock-location.repository';
 import { MikroOrmProductComponentRepository } from './mikro-orm/repositories/product-component.repository';
+import { MikroOrmPaymentConditionRepository } from './mikro-orm/repositories/payment-condition.repository';
 
 /**
  * Every repository, in one @Global module.
@@ -87,6 +90,7 @@ import { MikroOrmProductComponentRepository } from './mikro-orm/repositories/pro
       StockReservationOrmEntity,
       StockLocationOrmEntity,
       ProductComponentOrmEntity,
+      PaymentConditionOrmEntity,
     ]),
   ],
   providers: [
@@ -115,6 +119,7 @@ import { MikroOrmProductComponentRepository } from './mikro-orm/repositories/pro
     { provide: STOCK_RESERVATION_REPOSITORY, useClass: MikroOrmStockReservationRepository },
     { provide: STOCK_LOCATION_REPOSITORY, useClass: MikroOrmStockLocationRepository },
     { provide: PRODUCT_COMPONENT_REPOSITORY, useClass: MikroOrmProductComponentRepository },
+    { provide: PAYMENT_CONDITION_REPOSITORY, useClass: MikroOrmPaymentConditionRepository },
   ],
   exports: [
     PLAN_REPOSITORY,
@@ -130,6 +135,7 @@ import { MikroOrmProductComponentRepository } from './mikro-orm/repositories/pro
     STOCK_RESERVATION_REPOSITORY,
     STOCK_LOCATION_REPOSITORY,
     PRODUCT_COMPONENT_REPOSITORY,
+    PAYMENT_CONDITION_REPOSITORY,
   ],
 })
 export class RepositoriesModule {}
