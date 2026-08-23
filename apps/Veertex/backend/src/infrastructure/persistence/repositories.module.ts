@@ -15,6 +15,7 @@ import { STOCK_RESERVATION_REPOSITORY } from '../../contexts/stock/application/p
 import { STOCK_LOCATION_REPOSITORY } from '../../contexts/stock/application/ports/output/stock-location-repository.port';
 import { PRODUCT_COMPONENT_REPOSITORY } from '../../contexts/product/application/ports/output/product-component-repository.port';
 import { PAYMENT_CONDITION_REPOSITORY } from '../../contexts/payment-condition/application/ports/output/payment-condition-repository.port';
+import { PRICE_LIST_REPOSITORY } from '../../contexts/price-list/application/ports/output/price-list-repository.port';
 
 import { PlanOrmEntity } from './mikro-orm/entities/plan-orm.entity';
 import { AccountOrmEntity } from './mikro-orm/entities/account-orm.entity';
@@ -34,6 +35,8 @@ import { StockLocationOrmEntity } from './mikro-orm/entities/stock-location-orm.
 import { ProductComponentOrmEntity } from './mikro-orm/entities/product-component-orm.entity';
 import { PaymentConditionOrmEntity } from './mikro-orm/entities/payment-condition-orm.entity';
 import { OrderPaymentOrmEntity } from './mikro-orm/entities/order-payment-orm.entity';
+import { PriceListOrmEntity } from './mikro-orm/entities/price-list-orm.entity';
+import { PriceListItemOrmEntity } from './mikro-orm/entities/price-list-item-orm.entity';
 
 import { PlanMapper } from './mikro-orm/mappers/plan.mapper';
 import { AccountMapper } from './mikro-orm/mappers/account.mapper';
@@ -59,6 +62,7 @@ import { MikroOrmStockReservationRepository } from './mikro-orm/repositories/sto
 import { MikroOrmStockLocationRepository } from './mikro-orm/repositories/stock-location.repository';
 import { MikroOrmProductComponentRepository } from './mikro-orm/repositories/product-component.repository';
 import { MikroOrmPaymentConditionRepository } from './mikro-orm/repositories/payment-condition.repository';
+import { MikroOrmPriceListRepository } from './mikro-orm/repositories/price-list.repository';
 
 /**
  * Every repository, in one @Global module.
@@ -95,6 +99,8 @@ import { MikroOrmPaymentConditionRepository } from './mikro-orm/repositories/pay
       // Dormente (§4.1 do 02A): registrada para o schema/verify:isolation enxergarem a tabela; sem
       // repositório/fluxo até o PDV/TEF existir.
       OrderPaymentOrmEntity,
+      PriceListOrmEntity,
+      PriceListItemOrmEntity,
     ]),
   ],
   providers: [
@@ -124,6 +130,7 @@ import { MikroOrmPaymentConditionRepository } from './mikro-orm/repositories/pay
     { provide: STOCK_LOCATION_REPOSITORY, useClass: MikroOrmStockLocationRepository },
     { provide: PRODUCT_COMPONENT_REPOSITORY, useClass: MikroOrmProductComponentRepository },
     { provide: PAYMENT_CONDITION_REPOSITORY, useClass: MikroOrmPaymentConditionRepository },
+    { provide: PRICE_LIST_REPOSITORY, useClass: MikroOrmPriceListRepository },
   ],
   exports: [
     PLAN_REPOSITORY,
@@ -140,6 +147,7 @@ import { MikroOrmPaymentConditionRepository } from './mikro-orm/repositories/pay
     STOCK_LOCATION_REPOSITORY,
     PRODUCT_COMPONENT_REPOSITORY,
     PAYMENT_CONDITION_REPOSITORY,
+    PRICE_LIST_REPOSITORY,
   ],
 })
 export class RepositoriesModule {}
