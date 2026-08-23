@@ -123,6 +123,9 @@ export class CreateContactRequestDto {
 
   @IsOptional() @IsUUID() routeId?: string | null;
 
+  /** Condição de pagamento default (§3.6 do 02) — o pedido herda na criação. */
+  @IsOptional() @IsUUID() defaultPaymentConditionId?: string | null;
+
   /**
    * Limite de crédito. Aplicado na CONFIRMAÇÃO do pedido pelo VND. O teto de 999 milhões evita que um
    * erro de digitação vire um número que nenhuma tela consegue formatar.
@@ -196,6 +199,8 @@ export class UpdateContactRequestDto {
   @IsOptional() @IsUUID() salesRepId?: string | null;
 
   @IsOptional() @IsUUID() routeId?: string | null;
+
+  @IsOptional() @IsUUID() defaultPaymentConditionId?: string | null;
 
   @IsOptional() @IsString() @MaxLength(2000) @Transform(trimmed) notes?: string | null;
   @IsOptional() @IsString() @MaxLength(30) @Transform(trimmed) municipalRegistration?:

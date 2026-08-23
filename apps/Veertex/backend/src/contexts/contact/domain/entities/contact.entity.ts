@@ -16,9 +16,9 @@ export interface ContactAddressEntry {
   purpose: AddressPurpose;
   address: Address;
   /**
-   * Preenchidas pela geocodificação, que **não existe nesta fatia** — ela exige BullMQ e Redis
-   * (dependências novas) e o §3.4 a define como *best effort*. Nulo aqui é dado ausente, não
-   * promessa de recurso: nenhuma tela oferece mapa, nenhum job está registrado.
+   * Preenchidas pela PROPAGAÇÃO do GPS do pedido de rota (§3.1 do 04, via `ContactGeoPort`): a
+   * captura da abertura preenche quando vazias; a alteração explícita auditada corrige. A
+   * geocodificação por endereço (§3.4, BullMQ) continua não existindo. Nulo = nunca visitado.
    */
   latitude: number | null;
   longitude: number | null;
@@ -90,6 +90,8 @@ export class Contact extends AggregateRoot {
     private _salesRepId: string | null,
     /** Rota da carteira do revendedor (§2 do 04). `null` = sem rota. Carteirização por rota+rep. */
     private _routeId: string | null,
+    /** Condição de pagamento default (§3.6 do 02) — o pedido herda na criação e pode editar. */
+    private _defaultPaymentConditionId: string | null,
     private _notes: string | null,
     private _optional: ContactOptionalFields,
     private _emails: ContactEmailEntry[],
@@ -114,6 +116,7 @@ export class Contact extends AggregateRoot {
     creditLimit?: number | null;
     salesRepId?: string | null;
     routeId?: string | null;
+    defaultPaymentConditionId?: string | null;
     notes?: string | null;
     optional?: Partial<ContactOptionalFields>;
     emails?: readonly { email: string; label?: string | null }[];
@@ -139,6 +142,7 @@ export class Contact extends AggregateRoot {
       Contact.parseCreditLimit(params.creditLimit ?? null),
       trimToNull(params.salesRepId ?? null),
       trimToNull(params.routeId ?? null),
+      trimToNull(params.defaultPaymentConditionId ?? null),
       trimToNull(params.notes),
       normalizeOptional(params.optional),
       (params.emails ?? []).map((entry) => ({
@@ -176,6 +180,7 @@ export class Contact extends AggregateRoot {
     creditLimit: number | null;
     salesRepId: string | null;
     routeId: string | null;
+    defaultPaymentConditionId: string | null;
     notes: string | null;
     optional: ContactOptionalFields;
     emails: ContactEmailEntry[];
@@ -198,6 +203,7 @@ export class Contact extends AggregateRoot {
       params.creditLimit,
       params.salesRepId,
       params.routeId,
+      params.defaultPaymentConditionId,
       params.notes,
       params.optional,
       params.emails,
@@ -265,6 +271,7 @@ export class Contact extends AggregateRoot {
     creditLimit?: number | null;
     salesRepId?: string | null;
     routeId?: string | null;
+    defaultPaymentConditionId?: string | null;
     notes?: string | null;
     optional?: Partial<ContactOptionalFields>;
     emails?: readonly { email: string; label?: string | null }[];
@@ -308,6 +315,9 @@ export class Contact extends AggregateRoot {
     if (params.routeId !== undefined) {
       this._routeId = trimToNull(params.routeId);
     }
+    if (params.defaultPaymentConditionId !== undefined) {
+      this._defaultPaymentConditionId = trimToNull(params.defaultPaymentConditionId);
+    }
     if (params.notes !== undefined) {
       this._notes = trimToNull(params.notes);
     }
@@ -328,11 +338,14 @@ export class Contact extends AggregateRoot {
       }));
     }
     if (params.addresses !== undefined) {
+      // Coordenadas propagadas do GPS do pedido (§3.1 do 04) sobrevivem à edição do cadastro: o
+      // form não trafega lat/lng, e zerá-las aqui apagaria em silêncio o que o campo capturou.
+      const previous = new Map(this._addresses.map((entry) => [entry.purpose, entry]));
       this._addresses = params.addresses.map((entry) => ({
         purpose: entry.purpose,
         address: Address.create(entry.address),
-        latitude: null,
-        longitude: null,
+        latitude: previous.get(entry.purpose)?.latitude ?? null,
+        longitude: previous.get(entry.purpose)?.longitude ?? null,
       }));
     }
     if (params.active !== undefined) {
@@ -380,6 +393,9 @@ export class Contact extends AggregateRoot {
 
   get routeId(): string | null {
     return this._routeId;
+  }
+  get defaultPaymentConditionId(): string | null {
+    return this._defaultPaymentConditionId;
   }
   get notes(): string | null {
     return this._notes;

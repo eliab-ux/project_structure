@@ -40,6 +40,8 @@ export class CreateOrderCommand {
       deliveryMode?: DeliveryMode | null;
       originDetail?: string | null;
       tripId?: string | null;
+      /** Condição de pagamento (§3.6). Ausente → herda o default do contato. */
+      paymentConditionId?: string | null;
       items: OrderItemInput[];
       discountPercent?: number | null;
       discountValue?: number | null;
@@ -94,6 +96,10 @@ export class CreateOrderUseCase implements UseCase<CreateOrderCommand, OrderDto>
       const items = await buildOrderItems(this.products, input.items);
       const number = await this.orders.nextOrderNumber(input.companyId);
 
+      // §3.6: o pedido carrega condição PRÓPRIA — a informada, ou o default do contato. A herança
+      // acontece UMA vez, aqui: mudar o default do contato depois não reescreve pedidos passados.
+      const paymentConditionId = input.paymentConditionId ?? customer.defaultPaymentConditionId;
+
       const order = Order.create({
         accountId: command.accountId,
         companyId: input.companyId,
@@ -104,6 +110,7 @@ export class CreateOrderUseCase implements UseCase<CreateOrderCommand, OrderDto>
         deliveryMode: input.deliveryMode,
         originDetail: input.originDetail,
         tripId: input.tripId,
+        paymentConditionId,
         items,
         discountPercent: input.discountPercent,
         discountValue: input.discountValue,

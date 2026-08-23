@@ -8,6 +8,8 @@ export interface CustomerInfo {
   creditLimit: number | null;
   /** Vendedor vinculado (carteirização, §2.3) — reservado para o filtro por ator. */
   salesRepId: string | null;
+  /** Condição de pagamento default (§3.6) — o pedido herda quando nenhuma é informada. */
+  defaultPaymentConditionId: string | null;
   isCustomer: boolean;
   active: boolean;
 }

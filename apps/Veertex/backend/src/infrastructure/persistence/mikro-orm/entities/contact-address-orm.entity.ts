@@ -7,11 +7,9 @@ import { ContactOrmEntity } from './contact-orm.entity';
  *
  * `account_id` próprio + policy de RLS própria — ver `ContactEmailOrmEntity`.
  *
- * ⚠️ `latitude`/`longitude` existem e ficam **sempre nulas nesta fatia**. A geocodificação do §3.4 é
- * assíncrona via BullMQ, e BullMQ + Redis são dependências novas — gatilho de parada. Coluna nula é
- * dado ausente, não promessa: nenhuma tela oferece mapa e nenhum job está registrado. As colunas
- * entram agora porque acrescentá-las depois seria migration numa tabela com linhas, e o custo de
- * duas colunas nulas é zero.
+ * `latitude`/`longitude`: preenchidas pela PROPAGAÇÃO do GPS do pedido de rota (§3.1 do 04 — a
+ * captura da abertura preenche quando vazias; a alteração auditada corrige; ver
+ * `MikroOrmContactGeo`). A geocodificação por endereço do §3.4 (BullMQ) segue inexistente.
  */
 @Entity({ tableName: 'contact_addresses' })
 export class ContactAddressOrmEntity extends TenantScopedOrmEntity {

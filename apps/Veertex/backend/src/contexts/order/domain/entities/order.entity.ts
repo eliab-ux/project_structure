@@ -37,6 +37,8 @@ export class Order extends AggregateRoot {
     private _originDetail: string | null,
     /** Viagem da consignação (§3.1 do 04). Só pedidos de rota têm; null nos demais. */
     private _tripId: string | null,
+    /** Condição de pagamento PRÓPRIA do pedido (§3.6 do 02) — herdada do contato, editável. */
+    private _paymentConditionId: string | null,
     private _status: OrderStatus,
     private _items: OrderItem[],
     private _discountPercent: number,
@@ -59,6 +61,7 @@ export class Order extends AggregateRoot {
     deliveryMode?: DeliveryMode | null;
     originDetail?: string | null;
     tripId?: string | null;
+    paymentConditionId?: string | null;
     items: OrderItem[];
     discountPercent?: number | null;
     discountValue?: number | null;
@@ -77,6 +80,7 @@ export class Order extends AggregateRoot {
       params.deliveryMode ?? DEFAULT_DELIVERY_MODE,
       params.originDetail?.trim() || null,
       params.tripId ?? null,
+      params.paymentConditionId ?? null,
       'rascunho',
       params.items,
       Math.max(0, Math.min(100, params.discountPercent ?? 0)),
@@ -101,6 +105,7 @@ export class Order extends AggregateRoot {
       params.deliveryMode ?? DEFAULT_DELIVERY_MODE,
       params.originDetail ?? null,
       params.tripId ?? null,
+      params.paymentConditionId ?? null,
       params.status,
       params.items,
       params.discountPercent ?? 0,
@@ -141,6 +146,9 @@ export class Order extends AggregateRoot {
   }
   get tripId(): string | null {
     return this._tripId;
+  }
+  get paymentConditionId(): string | null {
+    return this._paymentConditionId;
   }
   get status(): OrderStatus {
     return this._status;
@@ -199,6 +207,7 @@ export class Order extends AggregateRoot {
     deliveryMode?: DeliveryMode;
     originDetail?: string | null;
     salesRepId?: string | null;
+    paymentConditionId?: string | null;
     discountPercent?: number | null;
     discountValue?: number | null;
     notes?: string | null;
@@ -209,6 +218,9 @@ export class Order extends AggregateRoot {
     if (params.deliveryMode !== undefined) this._deliveryMode = params.deliveryMode;
     if (params.originDetail !== undefined) this._originDetail = params.originDetail?.trim() || null;
     if (params.salesRepId !== undefined) this._salesRepId = params.salesRepId;
+    if (params.paymentConditionId !== undefined) {
+      this._paymentConditionId = params.paymentConditionId;
+    }
     if (params.discountPercent !== undefined) {
       this._discountPercent = Math.max(0, Math.min(100, params.discountPercent ?? 0));
     }

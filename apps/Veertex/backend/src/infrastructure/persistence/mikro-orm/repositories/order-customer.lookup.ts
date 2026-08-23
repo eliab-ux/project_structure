@@ -18,7 +18,18 @@ export class OrderCustomerLookup implements CustomerLookupPort {
     const row = await this.em.findOne(
       ContactOrmEntity,
       { id: contactId },
-      { fields: ['id', 'legalName', 'tradeName', 'types', 'creditLimit', 'salesRepId', 'active'] },
+      {
+        fields: [
+          'id',
+          'legalName',
+          'tradeName',
+          'types',
+          'creditLimit',
+          'salesRepId',
+          'defaultPaymentConditionId',
+          'active',
+        ],
+      },
     );
     if (!row) {
       return null;
@@ -28,6 +39,7 @@ export class OrderCustomerLookup implements CustomerLookupPort {
       displayName: row.tradeName ?? row.legalName,
       creditLimit: row.creditLimit === null ? null : Number(row.creditLimit),
       salesRepId: row.salesRepId,
+      defaultPaymentConditionId: row.defaultPaymentConditionId,
       isCustomer: (row.types ?? []).includes('customer'),
       active: row.active,
     };

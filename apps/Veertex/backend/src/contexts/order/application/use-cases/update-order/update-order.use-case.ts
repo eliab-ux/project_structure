@@ -28,6 +28,8 @@ export class UpdateOrderCommand {
       deliveryMode?: DeliveryMode;
       originDetail?: string | null;
       salesRepId?: string | null;
+      /** Condição de pagamento própria do pedido (§3.6) — editável enquanto rascunho. */
+      paymentConditionId?: string | null;
       items?: OrderItemInput[];
       discountPercent?: number | null;
       discountValue?: number | null;
@@ -70,6 +72,7 @@ export class UpdateOrderUseCase implements UseCase<UpdateOrderCommand, OrderDto>
         deliveryMode: command.input.deliveryMode,
         originDetail: command.input.originDetail,
         salesRepId: command.input.salesRepId,
+        paymentConditionId: command.input.paymentConditionId,
         discountPercent: command.input.discountPercent,
         discountValue: command.input.discountValue,
         notes: command.input.notes,

@@ -75,6 +75,9 @@ export class ContactOrmEntity extends TenantScopedOrmEntity {
   @Property({ type: 'uuid', nullable: true, fieldName: 'route_id' })
   routeId!: string | null;
 
+  @Property({ type: 'uuid', nullable: true, fieldName: 'default_payment_condition_id' })
+  defaultPaymentConditionId!: string | null;
+
   // ── Opcionais do §3.4: colunas reais nullable, ocultas por default no catálogo de campos ──────
   @Property({ length: 30, nullable: true, fieldName: 'municipal_registration' })
   municipalRegistration!: string | null;

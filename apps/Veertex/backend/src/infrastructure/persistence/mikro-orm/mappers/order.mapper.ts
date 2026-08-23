@@ -31,6 +31,7 @@ export class OrderMapper {
       deliveryMode: orm.deliveryMode as DeliveryMode,
       originDetail: orm.originDetail,
       tripId: orm.tripId,
+      paymentConditionId: orm.paymentConditionId ?? null,
       status: orm.status as OrderStatus,
       items,
       discountPercent: Number(orm.discountPercent),
@@ -49,6 +50,7 @@ export class OrderMapper {
     orm.deliveryMode = order.deliveryMode;
     orm.originDetail = order.originDetail;
     orm.tripId = order.tripId;
+    orm.paymentConditionId = order.paymentConditionId;
     orm.status = order.status;
     orm.discountPercent = order.discountPercent.toFixed(2);
     orm.discountValue = order.discountValue.toFixed(2);

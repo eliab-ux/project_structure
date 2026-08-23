@@ -9,6 +9,12 @@ import {
   OrderEvidenceRepositoryPort,
 } from '../../ports/output/order-evidence-repository.port';
 import { OrderEvidence } from '../../../domain/entities/order-evidence.entity';
+import { CONTACT_GEO, ContactGeoPort } from '../../ports/output/contact-geo.port';
+import {
+  ORDER_REPOSITORY,
+  OrderRepositoryPort,
+} from '../../../../order/application/ports/output/order-repository.port';
+import { OrderId } from '../../../../order/domain/value-objects/order-id.vo';
 import { GpsNotCapturedException } from '../../../domain/exceptions/route-exceptions';
 
 export class ChangeOrderGpsCommand {
@@ -41,6 +47,8 @@ export class ChangeOrderGpsUseCase implements UseCase<ChangeOrderGpsCommand, Cha
 
   constructor(
     @Inject(ORDER_EVIDENCE_REPOSITORY) private readonly evidences: OrderEvidenceRepositoryPort,
+    @Inject(ORDER_REPOSITORY) private readonly orders: OrderRepositoryPort,
+    @Inject(CONTACT_GEO) private readonly contactGeo: ContactGeoPort,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
   ) {}
 
@@ -64,6 +72,18 @@ export class ChangeOrderGpsUseCase implements UseCase<ChangeOrderGpsCommand, Cha
           changeReason: command.input.reason,
         }),
       );
+
+      // A correção PROPAGA ao cadastro (overwrite=true): o ponto anterior estava errado, e
+      // deixá-lo no endereço da revendedora perpetuaria o erro que esta ação existe para corrigir.
+      const order = await this.orders.findById(OrderId.from(command.input.orderId));
+      if (order) {
+        await this.contactGeo.applyOrderGps({
+          contactId: order.contactId,
+          latitude: command.input.latitude,
+          longitude: command.input.longitude,
+          overwrite: true,
+        });
+      }
 
       // Trilha no log também (sem coordenada antiga/nova — elas vivem nas linhas, auditáveis).
       this.logger.warn('GPS do pedido alterado por ação explícita', {

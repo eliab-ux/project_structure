@@ -36,6 +36,8 @@ import { EVIDENCE_STORAGE } from './application/ports/output/evidence-storage.po
 import { PROMISSORY_DEBTOR_LOOKUP } from './application/ports/output/promissory-debtor-lookup.port';
 import { NoopEvidenceStorage } from '../../infrastructure/observability/noop-evidence-storage';
 import { MinioEvidenceStorage } from '../../infrastructure/storage/minio-evidence-storage';
+import { CONTACT_GEO } from './application/ports/output/contact-geo.port';
+import { MikroOrmContactGeo } from '../../infrastructure/persistence/mikro-orm/repositories/contact-geo.adapter';
 import { PromissoryDebtorLookup } from '../../infrastructure/persistence/mikro-orm/repositories/promissory-debtor.lookup';
 
 /**
@@ -58,6 +60,7 @@ import { PromissoryDebtorLookup } from '../../infrastructure/persistence/mikro-o
       useFactory: () =>
         process.env.MINIO_ENDPOINT ? new MinioEvidenceStorage() : new NoopEvidenceStorage(),
     },
+    { provide: CONTACT_GEO, useClass: MikroOrmContactGeo },
     { provide: PROMISSORY_DEBTOR_LOOKUP, useClass: PromissoryDebtorLookup },
     CreateRouteUseCase,
     ListRoutesUseCase,

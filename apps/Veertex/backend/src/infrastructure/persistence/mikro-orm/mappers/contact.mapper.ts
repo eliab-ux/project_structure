@@ -37,6 +37,7 @@ export class ContactMapper {
       creditLimit: orm.creditLimit === null ? null : Number(orm.creditLimit),
       salesRepId: orm.salesRepId,
       routeId: orm.routeId,
+      defaultPaymentConditionId: orm.defaultPaymentConditionId ?? null,
       notes: orm.notes,
       optional: {
         municipalRegistration: orm.municipalRegistration,
@@ -88,6 +89,7 @@ export class ContactMapper {
     orm.creditLimit = contact.creditLimit === null ? null : contact.creditLimit.toFixed(2);
     orm.salesRepId = contact.salesRepId;
     orm.routeId = contact.routeId;
+    orm.defaultPaymentConditionId = contact.defaultPaymentConditionId;
     orm.notes = contact.notes;
     orm.municipalRegistration = contact.optional.municipalRegistration;
     orm.suframa = contact.optional.suframa;

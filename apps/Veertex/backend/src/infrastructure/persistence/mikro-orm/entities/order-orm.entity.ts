@@ -40,6 +40,9 @@ export class OrderOrmEntity extends TenantScopedOrmEntity {
   @Property({ type: 'uuid', nullable: true, fieldName: 'trip_id' })
   tripId: string | null = null;
 
+  @Property({ type: 'uuid', nullable: true, fieldName: 'payment_condition_id' })
+  paymentConditionId: string | null = null;
+
   @Index()
   @Property({ length: 20 })
   status!: string;

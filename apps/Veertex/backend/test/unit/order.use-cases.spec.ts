@@ -6,6 +6,10 @@ import {
   ChangeOrderStatusUseCase,
   ChangeOrderStatusCommand,
 } from '../../src/contexts/order/application/use-cases/change-order-status/change-order-status.use-case';
+import {
+  UpdateOrderUseCase,
+  UpdateOrderCommand,
+} from '../../src/contexts/order/application/use-cases/update-order/update-order.use-case';
 import { Order } from '../../src/contexts/order/domain/entities/order.entity';
 import { OrderItem } from '../../src/contexts/order/domain/entities/order-item.entity';
 import { OrderRepositoryPort } from '../../src/contexts/order/application/ports/output/order-repository.port';
@@ -55,6 +59,7 @@ function customerFalso(overrides: Record<string, unknown> = {}): CustomerLookupP
       displayName: 'Cliente Bom',
       creditLimit: null,
       salesRepId: null,
+      defaultPaymentConditionId: null,
       isCustomer: true,
       active: true,
       ...overrides,
@@ -218,5 +223,61 @@ describe('ChangeOrderStatusUseCase — crédito na confirmação (§2.2)', () =>
     );
     const dto = await uc.execute(new ChangeOrderStatusCommand(alvo.id.value, 'confirm'));
     expect(dto.status).toBe('confirmado');
+  });
+});
+
+describe('CreateOrder/UpdateOrder — condição de pagamento (§3.6 do 02)', () => {
+  const CONDICAO_CONTATO = 'c0nd1c40-0000-4000-8000-000000000001';
+  const CONDICAO_EXPLICITA = 'c0nd1c40-0000-4000-8000-000000000002';
+
+  it('herda o default do contato quando nenhuma condição é informada', async () => {
+    const { repo } = repoFalso();
+    const uc = new CreateOrderUseCase(
+      repo,
+      companyFalsa(),
+      customerFalso({ defaultPaymentConditionId: CONDICAO_CONTATO }),
+      produtoFalso,
+      uowFalso,
+    );
+    const dto = await uc.execute(criar());
+    expect(dto.paymentConditionId).toBe(CONDICAO_CONTATO);
+  });
+
+  it('condição informada VENCE o default do contato', async () => {
+    const { repo } = repoFalso();
+    const uc = new CreateOrderUseCase(
+      repo,
+      companyFalsa(),
+      customerFalso({ defaultPaymentConditionId: CONDICAO_CONTATO }),
+      produtoFalso,
+      uowFalso,
+    );
+    const dto = await uc.execute(criar({ paymentConditionId: CONDICAO_EXPLICITA }));
+    expect(dto.paymentConditionId).toBe(CONDICAO_EXPLICITA);
+  });
+
+  it('sem condição no pedido nem default no contato → null (venda sem condição é válida)', async () => {
+    const { repo } = repoFalso();
+    const uc = new CreateOrderUseCase(repo, companyFalsa(), customerFalso(), produtoFalso, uowFalso);
+    const dto = await uc.execute(criar());
+    expect(dto.paymentConditionId).toBeNull();
+  });
+
+  it('a condição do pedido é editável enquanto rascunho', async () => {
+    const { repo } = repoFalso();
+    const create = new CreateOrderUseCase(
+      repo,
+      companyFalsa(),
+      customerFalso({ defaultPaymentConditionId: CONDICAO_CONTATO }),
+      produtoFalso,
+      uowFalso,
+    );
+    const criado = await create.execute(criar());
+
+    const update = new UpdateOrderUseCase(repo, produtoFalso, uowFalso);
+    const dto = await update.execute(
+      new UpdateOrderCommand(criado.id, true, { paymentConditionId: CONDICAO_EXPLICITA }),
+    );
+    expect(dto.paymentConditionId).toBe(CONDICAO_EXPLICITA);
   });
 });

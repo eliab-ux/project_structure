@@ -37,6 +37,7 @@ export class OrderDto {
   deliveryModeLabel!: string;
   originDetail!: string | null;
   tripId!: string | null;
+  paymentConditionId!: string | null;
   status!: string;
   statusLabel!: string;
   items!: OrderItemDto[];
@@ -64,6 +65,7 @@ export class OrderDto {
       DELIVERY_MODE_LABEL[order.deliveryMode as DeliveryMode] ?? order.deliveryMode;
     dto.originDetail = order.originDetail;
     dto.tripId = order.tripId;
+    dto.paymentConditionId = order.paymentConditionId;
     dto.status = order.status;
     dto.statusLabel = ORDER_STATUS_LABEL[order.status as OrderStatus] ?? order.status;
     dto.items = order.items.map(OrderItemDto.fromDomain);

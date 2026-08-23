@@ -68,6 +68,21 @@ export interface TripClosureSummary {
     helperAmount: number;
     payableTitleIds: string[];
   };
+  /**
+   * Comparativo com a viagem ANTERIOR fechada da mesma rota (§3.5). `null` = primeira viagem da
+   * rota. Os números da anterior são RECOMPUTADOS das cobranças/recebimentos dela (append-only) —
+   * mesma régua do fechamento atual, nunca uma segunda verdade persistida.
+   */
+  previousTrip: {
+    tripId: string;
+    departureAt: string | null;
+    wallet: number;
+    received: number;
+    receivedPercent: number;
+    expensesTotal: number;
+    /** Deltas = atual − anterior (recebido, % de recebimento, despesas). */
+    deltas: { received: number; receivedPercent: number; expensesTotal: number };
+  } | null;
 }
 
 /**
@@ -198,6 +213,14 @@ export class CloseTripUseCase implements UseCase<CloseTripCommand, TripClosureSu
 
       const pct = (part: number, whole: number) => (whole > 0 ? round2((part / whole) * 100) : 0);
 
+      // ── Comparativo com a viagem anterior (§3.5) ──────────────────────────────────────────────
+      const receivedPercent = pct(received, wallet);
+      const previousTrip = await this.buildPreviousTripComparison(trip, {
+        received,
+        receivedPercent,
+        expensesTotal: round2(expensesTotal),
+      });
+
       return {
         cobranca: {
           wallet: round2(walletByKind.cobranca),
@@ -228,7 +251,62 @@ export class CloseTripUseCase implements UseCase<CloseTripCommand, TripClosureSu
           helperAmount,
           payableTitleIds,
         },
+        previousTrip,
       };
     });
+  }
+
+  /**
+   * A viagem anterior = a última FECHADA da mesma rota que saiu antes desta. Os números dela saem
+   * das cobranças/recebimentos append-only (mesma régua do fechamento atual). Falha aqui não pode
+   * derrubar um fechamento — o comparativo é leitura; sem anterior, é `null` e o fechamento segue.
+   */
+  private async buildPreviousTripComparison(
+    trip: { id: string; routeId: string; departureAt: Date | null; createdAt: Date },
+    current: { received: number; receivedPercent: number; expensesTotal: number },
+  ): Promise<TripClosureSummary['previousTrip']> {
+    const closed = await this.trips.list({ routeId: trip.routeId, status: 'fechada' });
+    const anchor = (trip.departureAt ?? trip.createdAt).getTime();
+    const previous = closed
+      .filter((t) => t.id !== trip.id)
+      .filter((t) => (t.departureAt ?? t.createdAt).getTime() <= anchor)
+      .sort(
+        (a, b) => (b.departureAt ?? b.createdAt).getTime() - (a.departureAt ?? a.createdAt).getTime(),
+      )[0];
+    if (!previous) {
+      return null;
+    }
+
+    const collections = await this.collections.listByTrip(previous.id);
+    const walletTitleIds = new Set(collections.map((c) => c.titleId));
+    const wallet = round2(collections.reduce((sum, c) => sum + c.amountAtBuild, 0));
+
+    const receipts = (await this.receipts.listByTrip(previous.id)).filter(
+      (r) => r.status === 'efetivado',
+    );
+    const received = round2(
+      receipts
+        .filter((r) => r.insideWallet && r.titleId && walletTitleIds.has(r.titleId))
+        .reduce((sum, r) => sum + r.amount, 0),
+    );
+
+    const expensesTotal = round2(
+      (await this.expenses.listByTrip(previous.id)).reduce((sum, e) => sum + e.amount, 0),
+    );
+
+    const receivedPercent = wallet > 0 ? round2((received / wallet) * 100) : 0;
+    return {
+      tripId: previous.id,
+      departureAt: previous.departureAt ? previous.departureAt.toISOString() : null,
+      wallet,
+      received,
+      receivedPercent,
+      expensesTotal,
+      deltas: {
+        received: round2(current.received - received),
+        receivedPercent: round2(current.receivedPercent - receivedPercent),
+        expensesTotal: round2(current.expensesTotal - expensesTotal),
+      },
+    };
   }
 }

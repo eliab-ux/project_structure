@@ -11,6 +11,9 @@ import {
 } from '../../src/contexts/route/application/use-cases/change-order-gps/change-order-gps.use-case';
 import { OrderEvidenceRepositoryPort } from '../../src/contexts/route/application/ports/output/order-evidence-repository.port';
 import { EvidenceStoragePort } from '../../src/contexts/route/application/ports/output/evidence-storage.port';
+import { ContactGeoPort } from '../../src/contexts/route/application/ports/output/contact-geo.port';
+import { Order } from '../../src/contexts/order/domain/entities/order.entity';
+import { OrderRepositoryPort } from '../../src/contexts/order/application/ports/output/order-repository.port';
 import {
   GpsAlreadyCapturedException,
   GpsNotCapturedException,
@@ -20,6 +23,8 @@ import { UnitOfWorkPort } from '../../src/infrastructure/persistence/ports/unit-
 const CONTA = '11111111-1111-4111-8111-111111111111';
 const PEDIDO = '22222222-2222-4222-8222-222222222222';
 const OPERADOR = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+const CLIENTE = '55555555-5555-4555-8555-555555555555';
+const EMPRESA = '66666666-6666-4666-8666-666666666666';
 
 const uowFalso: UnitOfWorkPort = { execute: async (fn) => fn() } as UnitOfWorkPort;
 
@@ -42,6 +47,39 @@ function evidencesFalso() {
 const storageFalso: EvidenceStoragePort = {
   store: async (p) => `evidence/${p.accountId}/${p.orderId}/${p.kind}-x`,
 };
+
+/** Pedido de rota do CLIENTE — o alvo da propagação do GPS ao cadastro (§3.1). */
+function ordersFalso(): OrderRepositoryPort {
+  const order = Order.create({
+    accountId: CONTA,
+    companyId: EMPRESA,
+    contactId: CLIENTE,
+    number: 1,
+    origin: 'rota',
+    items: [],
+  });
+  return {
+    findById: async () => order,
+    list: async () => [order],
+    save: async (o) => o,
+    nextOrderNumber: async () => 1,
+  };
+}
+
+function contactGeoFalso() {
+  const calls: {
+    contactId: string;
+    latitude: number;
+    longitude: number;
+    overwrite: boolean;
+  }[] = [];
+  const geo: ContactGeoPort = {
+    applyOrderGps: async (params) => {
+      calls.push(params);
+    },
+  };
+  return { geo, calls };
+}
 
 describe('Valor por extenso (§3.1 do 04) — o que a promissória imprime', () => {
   const casos: [number, string][] = [
@@ -79,7 +117,8 @@ describe('PromissoryNote — 1 por pedido, sobre o total, com extenso', () => {
 describe('GPS — imutável; alteração só por ação explícita auditada (aceite 2 do 04)', () => {
   it('captura na abertura; recapturar é RECUSADO', async () => {
     const { repo } = evidencesFalso();
-    const uc = new RegisterOrderEvidenceUseCase(repo, storageFalso, uowFalso);
+    const { geo } = contactGeoFalso();
+    const uc = new RegisterOrderEvidenceUseCase(repo, storageFalso, ordersFalso(), geo, uowFalso);
     await uc.execute(
       new RegisterOrderEvidenceCommand(CONTA, {
         orderId: PEDIDO,
@@ -102,8 +141,15 @@ describe('GPS — imutável; alteração só por ação explícita auditada (ace
 
   it('ChangeOrderGps preserva o anterior na cadeia, com quem/motivo (auditado)', async () => {
     const { repo, saved } = evidencesFalso();
-    const register = new RegisterOrderEvidenceUseCase(repo, storageFalso, uowFalso);
-    const change = new ChangeOrderGpsUseCase(repo, uowFalso);
+    const { geo } = contactGeoFalso();
+    const register = new RegisterOrderEvidenceUseCase(
+      repo,
+      storageFalso,
+      ordersFalso(),
+      geo,
+      uowFalso,
+    );
+    const change = new ChangeOrderGpsUseCase(repo, ordersFalso(), geo, uowFalso);
 
     await register.execute(
       new RegisterOrderEvidenceCommand(CONTA, {
@@ -135,7 +181,7 @@ describe('GPS — imutável; alteração só por ação explícita auditada (ace
 
   it('alterar GPS de pedido sem captura é recusado', async () => {
     const { repo } = evidencesFalso();
-    const change = new ChangeOrderGpsUseCase(repo, uowFalso);
+    const change = new ChangeOrderGpsUseCase(repo, ordersFalso(), contactGeoFalso().geo, uowFalso);
     await expect(
       change.execute(
         new ChangeOrderGpsCommand(CONTA, OPERADOR, {
@@ -150,7 +196,8 @@ describe('GPS — imutável; alteração só por ação explícita auditada (ace
 
   it('foto vai ao storage e a CHAVE fica na evidência (URL nunca persistida)', async () => {
     const { repo, saved } = evidencesFalso();
-    const uc = new RegisterOrderEvidenceUseCase(repo, storageFalso, uowFalso);
+    const { geo } = contactGeoFalso();
+    const uc = new RegisterOrderEvidenceUseCase(repo, storageFalso, ordersFalso(), geo, uowFalso);
     const result = await uc.execute(
       new RegisterOrderEvidenceCommand(CONTA, {
         orderId: PEDIDO,
@@ -161,5 +208,78 @@ describe('GPS — imutável; alteração só por ação explícita auditada (ace
     );
     expect(result.objectKey).toContain(`evidence/${CONTA}/${PEDIDO}/foto_promissoria`);
     expect(saved[0].objectKey).toBe(result.objectKey);
+  });
+});
+
+describe('GPS — propagação ao cadastro da revendedora (§3.1 do 04)', () => {
+  it('captura da abertura propaga com overwrite=false (primeira visita georreferencia)', async () => {
+    const { repo } = evidencesFalso();
+    const { geo, calls } = contactGeoFalso();
+    const uc = new RegisterOrderEvidenceUseCase(repo, storageFalso, ordersFalso(), geo, uowFalso);
+    await uc.execute(
+      new RegisterOrderEvidenceCommand(CONTA, {
+        orderId: PEDIDO,
+        type: 'gps',
+        latitude: -16.68,
+        longitude: -49.25,
+      }),
+    );
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toEqual({
+      contactId: CLIENTE,
+      latitude: -16.68,
+      longitude: -49.25,
+      overwrite: false,
+    });
+  });
+
+  it('foto NÃO propaga nada ao cadastro', async () => {
+    const { repo } = evidencesFalso();
+    const { geo, calls } = contactGeoFalso();
+    const uc = new RegisterOrderEvidenceUseCase(repo, storageFalso, ordersFalso(), geo, uowFalso);
+    await uc.execute(
+      new RegisterOrderEvidenceCommand(CONTA, {
+        orderId: PEDIDO,
+        type: 'foto_comprovante',
+        fileBase64: 'aGVsbG8=',
+      }),
+    );
+    expect(calls).toHaveLength(0);
+  });
+
+  it('alteração explícita propaga com overwrite=true (a correção corrige o cadastro junto)', async () => {
+    const { repo } = evidencesFalso();
+    const { geo, calls } = contactGeoFalso();
+    const register = new RegisterOrderEvidenceUseCase(
+      repo,
+      storageFalso,
+      ordersFalso(),
+      geo,
+      uowFalso,
+    );
+    const change = new ChangeOrderGpsUseCase(repo, ordersFalso(), geo, uowFalso);
+    await register.execute(
+      new RegisterOrderEvidenceCommand(CONTA, {
+        orderId: PEDIDO,
+        type: 'gps',
+        latitude: -16.68,
+        longitude: -49.25,
+      }),
+    );
+    await change.execute(
+      new ChangeOrderGpsCommand(CONTA, OPERADOR, {
+        orderId: PEDIDO,
+        latitude: -16.7,
+        longitude: -49.3,
+        reason: 'Ponto errado na abertura',
+      }),
+    );
+    expect(calls).toHaveLength(2);
+    expect(calls[1]).toEqual({
+      contactId: CLIENTE,
+      latitude: -16.7,
+      longitude: -49.3,
+      overwrite: true,
+    });
   });
 });

@@ -85,6 +85,11 @@ export class CreateOrderRequestDto {
   @IsUUID()
   tripId?: string | null;
 
+  /** Condição de pagamento (§3.6 do 02). Ausente → herda o default do contato. */
+  @IsOptional()
+  @IsUUID()
+  paymentConditionId?: string | null;
+
   @IsArray()
   @ArrayMinSize(1, { message: 'Informe ao menos um item.' })
   @ArrayMaxSize(200)
@@ -124,6 +129,10 @@ export class UpdateOrderRequestDto {
   @IsOptional()
   @IsIn(ORDER_ORIGINS as unknown as string[])
   origin?: string;
+
+  @IsOptional()
+  @IsUUID()
+  paymentConditionId?: string | null;
 
   @IsOptional()
   @IsIn(DELIVERY_MODES as unknown as string[])

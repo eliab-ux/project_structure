@@ -218,3 +218,101 @@ describe('CloseTrip — fechamento com a MASSA REAL do Modelo B ao centavo (§3.
     expect(created.map((c) => c.amount)).toEqual([800, 200, 600]);
   });
 });
+
+describe('CloseTrip — comparativo com a viagem anterior (§3.5 do 04)', () => {
+  function fecharViagemAnterior(): Trip {
+    const prev = Trip.create({
+      accountId: CONTA,
+      companyId: EMPRESA,
+      routeId: ROTA,
+      salesRepId: VENDEDOR,
+    });
+    prev.depart();
+    prev.arrive({});
+    prev.registerClosure({
+      managerUserId: null,
+      managerPercent: null,
+      helperAmount: null,
+      commissionPercent: 5,
+      repCommission: 50,
+    });
+    prev.close();
+    return prev;
+  }
+
+  function fakesComAnterior(atual: Trip, anterior: Trip) {
+    const porViagem = <T>(mapa: Record<string, T[]>) => ({
+      listByTrip: async (tripId: string) => mapa[tripId] ?? [],
+    });
+    const trips: TripRepositoryPort = {
+      findById: async () => atual,
+      list: async (filter) =>
+        [atual, anterior].filter((t) => !filter.status || t.status === filter.status),
+      save: async (t) => t,
+    };
+    const collections: TripCollectionRepositoryPort = {
+      ...porViagem({
+        [atual.id]: [cobranca(atual, 'atual-t1', 10000)],
+        [anterior.id]: [cobranca(anterior, 'prev-t1', 2000)],
+      }),
+      countByTitle: async () => 0,
+      existsForTripTitle: async () => false,
+      save: async (c) => c,
+    };
+    const receipts: FieldReceiptRepositoryPort = {
+      findById: async () => null,
+      ...porViagem({
+        [atual.id]: [recebimentoEfetivado(atual, 'atual-t1', 10000)],
+        [anterior.id]: [recebimentoEfetivado(anterior, 'prev-t1', 1000)],
+      }),
+      save: async (r) => r,
+    };
+    const expenses: TripExpenseRepositoryPort = {
+      ...porViagem({
+        [atual.id]: [],
+        [anterior.id]: [
+          TripExpense.create({ accountId: CONTA, tripId: anterior.id, category: 'hotel', amount: 250 }),
+        ],
+      }),
+      save: async (e) => e,
+    };
+    const bTiers: CommissionBTierRepositoryPort = {
+      getForAccount: async () => [],
+      replaceForAccount: async (_a, t) => t,
+    };
+    const createTitle = {
+      execute: async () => ({ id: 'title-x', status: 'open' }),
+    } as unknown as CreateFinancialTitleUseCase;
+    return new CloseTripUseCase(trips, collections, receipts, expenses, bTiers, createTitle, uowFalso);
+  }
+
+  it('recomputa a anterior das próprias cobranças/recebimentos e entrega os deltas', async () => {
+    const anterior = fecharViagemAnterior();
+    const atual = viagemEmFechamento();
+    const uc = fakesComAnterior(atual, anterior);
+
+    const summary = await uc.execute(new CloseTripCommand(CONTA, atual.id));
+
+    expect(summary.previousTrip).not.toBeNull();
+    expect(summary.previousTrip?.tripId).toBe(anterior.id);
+    expect(summary.previousTrip?.wallet).toBe(2000);
+    expect(summary.previousTrip?.received).toBe(1000);
+    expect(summary.previousTrip?.receivedPercent).toBe(50);
+    expect(summary.previousTrip?.expensesTotal).toBe(250);
+    // Atual: 10000/10000 = 100%, sem despesas → deltas contra a anterior.
+    expect(summary.previousTrip?.deltas.received).toBe(9000);
+    expect(summary.previousTrip?.deltas.receivedPercent).toBe(50);
+    expect(summary.previousTrip?.deltas.expensesTotal).toBe(-250);
+  });
+
+  it('primeira viagem da rota → previousTrip = null (o fechamento segue normal)', async () => {
+    const trip = viagemEmFechamento();
+    const { uc } = fakes({
+      trip,
+      collections: [cobranca(trip, 't1', 1000)],
+      receipts: [recebimentoEfetivado(trip, 't1', 1000)],
+    });
+    const summary = await uc.execute(new CloseTripCommand(CONTA, trip.id));
+    expect(summary.previousTrip).toBeNull();
+  });
+});
