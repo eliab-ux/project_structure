@@ -2,6 +2,7 @@ import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsIn,
+  IsISO8601,
   IsNumber,
   IsOptional,
   IsString,
@@ -16,6 +17,8 @@ import {
   CATEGORY_KINDS,
   CATEGORY_OPERATIONS,
 } from '../../../../../contexts/finance/domain/category-kind';
+import { TITLE_STATUSES } from '../../../../../contexts/finance/domain/title-enums';
+import { SETTLEMENT_METHODS } from '../../../../../contexts/finance/domain/entities/title-settlement.entity';
 
 const trimmed = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
@@ -119,4 +122,85 @@ export class ListFinanceQueryDto {
   @IsBoolean()
   @Transform(({ value }) => value === true || value === 'true')
   includeInactive?: boolean;
+}
+
+export class CreateTitleRequestDto {
+  @IsUUID()
+  companyId!: string;
+
+  @IsOptional()
+  @IsUUID()
+  contactId?: string | null;
+
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string | null;
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(200)
+  @Transform(trimmed)
+  description!: string;
+
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0.01)
+  @Max(999_999_999)
+  amount!: number;
+
+  @IsOptional()
+  @IsISO8601()
+  issueDate?: string;
+
+  @IsISO8601()
+  dueDate!: string;
+}
+
+export class SettleTitleRequestDto {
+  @IsUUID()
+  financialAccountId!: string;
+
+  @IsIn(SETTLEMENT_METHODS as unknown as string[])
+  method!: string;
+
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0.01)
+  @Max(999_999_999)
+  principal!: number;
+
+  @IsOptional()
+  @IsISO8601()
+  settledAt?: string;
+
+  // Overrides opcionais — ausentes, o FIN calcula juros/multa pelos parâmetros da conta.
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(999_999_999)
+  interest?: number;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(999_999_999)
+  fine?: number;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(999_999_999)
+  discount?: number;
+}
+
+export class ListTitlesQueryDto {
+  @IsOptional()
+  @IsUUID()
+  companyId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  contactId?: string;
+
+  @IsOptional()
+  @IsIn(TITLE_STATUSES as unknown as string[])
+  status?: string;
 }

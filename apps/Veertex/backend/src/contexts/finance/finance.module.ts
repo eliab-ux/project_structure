@@ -6,6 +6,9 @@ import { CreateFinancialCategoryUseCase } from './application/use-cases/create-f
 import { ListFinancialCategoriesUseCase } from './application/use-cases/list-financial-categories/list-financial-categories.use-case';
 import { UpdateFinancialCategoryUseCase } from './application/use-cases/update-financial-category/update-financial-category.use-case';
 import { SeedFinancialCategoriesUseCase } from './application/use-cases/seed-financial-categories/seed-financial-categories.use-case';
+import { CreateFinancialTitleUseCase } from './application/use-cases/create-financial-title/create-financial-title.use-case';
+import { SettleTitleUseCase } from './application/use-cases/settle-title/settle-title.use-case';
+import { ListFinancialTitlesUseCase } from './application/use-cases/list-financial-titles/list-financial-titles.use-case';
 
 /**
  * FIN — Financeiro (§05). Os repositórios vêm do @Global RepositoriesModule; este módulo cabeia os
@@ -21,6 +24,9 @@ import { SeedFinancialCategoriesUseCase } from './application/use-cases/seed-fin
     ListFinancialCategoriesUseCase,
     UpdateFinancialCategoryUseCase,
     SeedFinancialCategoriesUseCase,
+    CreateFinancialTitleUseCase,
+    SettleTitleUseCase,
+    ListFinancialTitlesUseCase,
   ],
   exports: [
     CreateFinancialAccountUseCase,
@@ -30,6 +36,9 @@ import { SeedFinancialCategoriesUseCase } from './application/use-cases/seed-fin
     ListFinancialCategoriesUseCase,
     UpdateFinancialCategoryUseCase,
     SeedFinancialCategoriesUseCase,
+    CreateFinancialTitleUseCase,
+    SettleTitleUseCase,
+    ListFinancialTitlesUseCase,
   ],
 })
 export class FinanceModule {}

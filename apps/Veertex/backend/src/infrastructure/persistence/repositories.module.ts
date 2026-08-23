@@ -20,6 +20,8 @@ import { COMMISSION_TIER_REPOSITORY } from '../../contexts/commission/applicatio
 import { SALES_TARGET_REPOSITORY } from '../../contexts/commission/application/ports/output/sales-target-repository.port';
 import { FINANCIAL_ACCOUNT_REPOSITORY } from '../../contexts/finance/application/ports/output/financial-account-repository.port';
 import { FINANCIAL_CATEGORY_REPOSITORY } from '../../contexts/finance/application/ports/output/financial-category-repository.port';
+import { FINANCIAL_TITLE_REPOSITORY } from '../../contexts/finance/application/ports/output/financial-title-repository.port';
+import { LATE_CHARGE_PARAMS } from '../../contexts/finance/application/ports/output/late-charge-params.port';
 
 import { PlanOrmEntity } from './mikro-orm/entities/plan-orm.entity';
 import { AccountOrmEntity } from './mikro-orm/entities/account-orm.entity';
@@ -45,6 +47,8 @@ import { CommissionATierOrmEntity } from './mikro-orm/entities/commission-a-tier
 import { SalesTargetOrmEntity } from './mikro-orm/entities/sales-target-orm.entity';
 import { FinancialAccountOrmEntity } from './mikro-orm/entities/financial-account-orm.entity';
 import { FinancialCategoryOrmEntity } from './mikro-orm/entities/financial-category-orm.entity';
+import { FinancialTitleOrmEntity } from './mikro-orm/entities/financial-title-orm.entity';
+import { TitleSettlementOrmEntity } from './mikro-orm/entities/title-settlement-orm.entity';
 
 import { PlanMapper } from './mikro-orm/mappers/plan.mapper';
 import { AccountMapper } from './mikro-orm/mappers/account.mapper';
@@ -75,6 +79,8 @@ import { MikroOrmCommissionTierRepository } from './mikro-orm/repositories/commi
 import { MikroOrmSalesTargetRepository } from './mikro-orm/repositories/sales-target.repository';
 import { MikroOrmFinancialAccountRepository } from './mikro-orm/repositories/financial-account.repository';
 import { MikroOrmFinancialCategoryRepository } from './mikro-orm/repositories/financial-category.repository';
+import { MikroOrmFinancialTitleRepository } from './mikro-orm/repositories/financial-title.repository';
+import { LateChargeParamsReader } from './mikro-orm/repositories/late-charge-params.reader';
 
 /**
  * Every repository, in one @Global module.
@@ -117,6 +123,8 @@ import { MikroOrmFinancialCategoryRepository } from './mikro-orm/repositories/fi
       SalesTargetOrmEntity,
       FinancialAccountOrmEntity,
       FinancialCategoryOrmEntity,
+      FinancialTitleOrmEntity,
+      TitleSettlementOrmEntity,
     ]),
   ],
   providers: [
@@ -151,6 +159,8 @@ import { MikroOrmFinancialCategoryRepository } from './mikro-orm/repositories/fi
     { provide: SALES_TARGET_REPOSITORY, useClass: MikroOrmSalesTargetRepository },
     { provide: FINANCIAL_ACCOUNT_REPOSITORY, useClass: MikroOrmFinancialAccountRepository },
     { provide: FINANCIAL_CATEGORY_REPOSITORY, useClass: MikroOrmFinancialCategoryRepository },
+    { provide: FINANCIAL_TITLE_REPOSITORY, useClass: MikroOrmFinancialTitleRepository },
+    { provide: LATE_CHARGE_PARAMS, useClass: LateChargeParamsReader },
   ],
   exports: [
     PLAN_REPOSITORY,
@@ -172,6 +182,8 @@ import { MikroOrmFinancialCategoryRepository } from './mikro-orm/repositories/fi
     SALES_TARGET_REPOSITORY,
     FINANCIAL_ACCOUNT_REPOSITORY,
     FINANCIAL_CATEGORY_REPOSITORY,
+    FINANCIAL_TITLE_REPOSITORY,
+    LATE_CHARGE_PARAMS,
   ],
 })
 export class RepositoriesModule {}

@@ -72,6 +72,14 @@ export class AccountOrmEntity {
   @Property({ fieldName: 'stock_allow_negative' })
   stockAllowNegative: boolean = false;
 
+  /** Juros ao mês (%) por atraso — parâmetro da conta (§2.1 do 05). Default 0. */
+  @Property({ type: 'numeric', precision: 6, scale: 2, fieldName: 'fin_monthly_interest_percent' })
+  finMonthlyInterestPercent = '0';
+
+  /** Multa (%) por atraso — parâmetro da conta (§2.1 do 05). Default 0. */
+  @Property({ type: 'numeric', precision: 6, scale: 2, fieldName: 'fin_fine_percent' })
+  finFinePercent = '0';
+
   @Property({ type: 'timestamptz', fieldName: 'created_at' })
   createdAt: Date = new Date();
 
