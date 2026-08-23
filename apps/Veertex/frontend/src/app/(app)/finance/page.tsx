@@ -32,7 +32,7 @@ import { useAuth } from 'src/contexts/AuthContext';
 import { apiErrorMessage } from 'src/services/api';
 import companyService from 'src/services/companyService';
 import contactService from 'src/services/contactService';
-import financeService from 'src/services/financeService';
+import financeService, { FinanceDashboard } from 'src/services/financeService';
 import { Company, Contact } from 'src/types/admin';
 import {
   CATEGORY_KIND_LABEL,
@@ -78,6 +78,8 @@ const STATUS_CHIP: Record<TitleStatus, 'default' | 'info' | 'success' | 'warning
  */
 export default function FinancePage() {
   const [tab, setTab] = useState(0);
+  const [dashboard, setDashboard] = useState<FinanceDashboard | null>(null);
+  const [dashboardCompany, setDashboardCompany] = useState('');
   const [companies, setCompanies] = useState<Company[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [accounts, setAccounts] = useState<FinancialAccount[]>([]);
@@ -102,12 +104,69 @@ export default function FinancePage() {
     void reloadRefs();
   }, [reloadRefs]);
 
+  useEffect(() => {
+    void financeService
+      .dashboard(dashboardCompany || undefined)
+      .then(setDashboard)
+      .catch(() => setDashboard(null));
+  }, [dashboardCompany]);
+
   return (
     <Box component="section" aria-label="Financeiro" sx={{ maxWidth: MAX_WIDTH, mx: 'auto' }}>
       <PageHeader
         title="Financeiro"
         description="Títulos a receber e a pagar, baixas, contas e categorias."
       />
+
+      {dashboard ? (
+        <Stack spacing={1.5} sx={{ mb: 3 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
+            <Typography variant="subtitle2" color="text.secondary">
+              Últimos 7 dias
+              {dashboard.totals.receivedPrevious7d > 0 || dashboard.totals.paidPrevious7d > 0
+                ? ' (comparado com os 7 anteriores)'
+                : ''}
+            </Typography>
+            <TextField
+              select
+              label="Empresa"
+              value={dashboardCompany}
+              onChange={(event) => setDashboardCompany(event.target.value)}
+              size="small"
+              sx={{ minWidth: 200 }}
+            >
+              <MenuItem value="">Todas</MenuItem>
+              {companies.map((company) => (
+                <MenuItem key={company.id} value={company.id}>
+                  {company.displayName}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Stack>
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+            <DashboardCard
+              label="Recebido"
+              value={dashboard.totals.received7d}
+              previous={dashboard.totals.receivedPrevious7d}
+            />
+            <DashboardCard
+              label="Pago"
+              value={dashboard.totals.paid7d}
+              previous={dashboard.totals.paidPrevious7d}
+            />
+            <DashboardCard
+              label="Vencido a receber"
+              value={dashboard.totals.overdueReceivable}
+              warn
+            />
+            <DashboardCard
+              label="A receber em 7 dias"
+              value={dashboard.totals.dueNext7dReceivable}
+            />
+            <DashboardCard label="A pagar em 7 dias" value={dashboard.totals.dueNext7dPayable} />
+          </Stack>
+        </Stack>
+      ) : null}
 
       <Tabs value={tab} onChange={(_, value) => setTab(value)} sx={{ mb: 3 }}>
         <Tab label="Títulos" />
@@ -1087,5 +1146,39 @@ function CategoriesTab({
         </DialogActions>
       </Dialog>
     </Stack>
+  );
+}
+
+function DashboardCard({
+  label,
+  value,
+  previous,
+  warn,
+}: {
+  label: string;
+  value: number;
+  previous?: number;
+  warn?: boolean;
+}) {
+  const delta = previous !== undefined && previous > 0 ? value - previous : null;
+  return (
+    <Paper variant="outlined" sx={{ p: 2, flex: 1 }}>
+      <Typography variant="caption" color="text.secondary">
+        {label}
+      </Typography>
+      <Typography variant="h6" color={warn && value > 0 ? 'error.main' : undefined}>
+        {formatMoney(value)}
+      </Typography>
+      {delta !== null ? (
+        <Typography
+          variant="caption"
+          color={delta >= 0 ? 'success.main' : 'error.main'}
+          role="status"
+        >
+          {delta >= 0 ? '+' : ''}
+          {formatMoney(delta)} vs. 7 dias anteriores
+        </Typography>
+      ) : null}
+    </Paper>
   );
 }

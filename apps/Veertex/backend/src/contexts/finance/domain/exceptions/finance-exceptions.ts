@@ -30,3 +30,10 @@ export class TitleClosedException extends DomainException {
     super('Título já quitado: não aceita nova baixa.');
   }
 }
+
+/** Operação de baixa/crédito com valor ou estado inválido — erro de negócio, mensagem segura. */
+export class InvalidSettlementException extends DomainException {
+  constructor(message: string) {
+    super(message);
+  }
+}

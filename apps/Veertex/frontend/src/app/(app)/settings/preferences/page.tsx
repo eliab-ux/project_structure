@@ -43,9 +43,7 @@ export default function PreferencesPage() {
   const [commissionDueRule, setCommissionDueRule] = useState(
     prefs?.commissionDueRule ?? 'last_day_of_period',
   );
-  const [commissionDueDay, setCommissionDueDay] = useState(
-    String(prefs?.commissionDueDay ?? 5),
-  );
+  const [commissionDueDay, setCommissionDueDay] = useState(String(prefs?.commissionDueDay ?? 5));
   const [saving, setSaving] = useState(false);
 
   async function save() {

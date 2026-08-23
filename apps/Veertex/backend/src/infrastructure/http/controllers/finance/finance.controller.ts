@@ -14,6 +14,11 @@ import {
   CreateFinancialAccountUseCase,
 } from '../../../../contexts/finance/application/use-cases/create-financial-account/create-financial-account.use-case';
 import {
+  FinanceDashboardDto,
+  GetFinanceDashboardQuery,
+  GetFinanceDashboardUseCase,
+} from '../../../../contexts/finance/application/use-cases/get-finance-dashboard/get-finance-dashboard.use-case';
+import {
   ListFinancialAccountsQuery,
   ListFinancialAccountsUseCase,
 } from '../../../../contexts/finance/application/use-cases/list-financial-accounts/list-financial-accounts.use-case';
@@ -70,6 +75,7 @@ import {
   CreateFinancialCategoryRequestDto,
   CreateRecurringPayableRequestDto,
   CreateTitleRequestDto,
+  DashboardQueryDto,
   ListFinanceQueryDto,
   ListTitlesQueryDto,
   SettleTitleRequestDto,
@@ -96,7 +102,15 @@ export class FinanceController {
     private readonly settleTitle: SettleTitleUseCase,
     private readonly listTitles: ListFinancialTitlesUseCase,
     private readonly createRecurringPayable: CreateRecurringPayableUseCase,
+      private readonly getDashboard: GetFinanceDashboardUseCase,
   ) {}
+
+  @Get('dashboard')
+  @RequirePermission(PERMISSIONS.finance.read)
+  async dashboard(@Query() query: DashboardQueryDto): Promise<FinanceDashboardDto> {
+    // Cards de 7 dias, por empresa e total, com comparativo (05 fatia 5, §2.6).
+    return this.getDashboard.execute(new GetFinanceDashboardQuery(query.companyId ?? null));
+  }
 
   @Get('accounts')
   @RequirePermission(PERMISSIONS.finance.read)

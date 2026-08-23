@@ -9,6 +9,33 @@ import {
   TitleDirection,
 } from 'src/types/finance';
 
+export interface FinanceDashboardCard {
+  companyId: string;
+  received7d: number;
+  paid7d: number;
+  receivedPrevious7d: number;
+  paidPrevious7d: number;
+  overdueReceivable: number;
+  overduePayable: number;
+  dueNext7dReceivable: number;
+  dueNext7dPayable: number;
+}
+
+export interface FinanceDashboard {
+  windowFrom: string;
+  windowTo: string;
+  companies: FinanceDashboardCard[];
+  totals: Omit<FinanceDashboardCard, 'companyId'>;
+}
+
+/** Cards de 7 dias, por empresa e total, com comparativo (05 fatia 5). */
+async function dashboard(companyId?: string): Promise<FinanceDashboard> {
+  const response = await api.get<FinanceDashboard>('/finance/dashboard', {
+    params: companyId ? { companyId } : {},
+  });
+  return response.data;
+}
+
 async function listAccounts(includeInactive = false): Promise<FinancialAccount[]> {
   const response = await api.get<FinancialAccount[]>('/finance/accounts', {
     params: { includeInactive },
@@ -97,6 +124,7 @@ async function settleTitle(id: string, payload: SettleTitlePayload): Promise<Fin
 }
 
 const financeService = {
+  dashboard,
   listAccounts,
   createAccount,
   updateAccount,

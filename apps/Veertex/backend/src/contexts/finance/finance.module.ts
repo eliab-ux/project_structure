@@ -10,6 +10,7 @@ import { CreateFinancialTitleUseCase } from './application/use-cases/create-fina
 import { SettleTitleUseCase } from './application/use-cases/settle-title/settle-title.use-case';
 import { ListFinancialTitlesUseCase } from './application/use-cases/list-financial-titles/list-financial-titles.use-case';
 import { CreateRecurringPayableUseCase } from './application/use-cases/create-recurring-payable/create-recurring-payable.use-case';
+import { GetFinanceDashboardUseCase } from './application/use-cases/get-finance-dashboard/get-finance-dashboard.use-case';
 
 /**
  * FIN — Financeiro (§05). Os repositórios vêm do @Global RepositoriesModule; este módulo cabeia os
@@ -29,6 +30,7 @@ import { CreateRecurringPayableUseCase } from './application/use-cases/create-re
     SettleTitleUseCase,
     ListFinancialTitlesUseCase,
     CreateRecurringPayableUseCase,
+    GetFinanceDashboardUseCase,
   ],
   exports: [
     CreateFinancialAccountUseCase,
@@ -42,6 +44,7 @@ import { CreateRecurringPayableUseCase } from './application/use-cases/create-re
     SettleTitleUseCase,
     ListFinancialTitlesUseCase,
     CreateRecurringPayableUseCase,
+    GetFinanceDashboardUseCase,
   ],
 })
 export class FinanceModule {}

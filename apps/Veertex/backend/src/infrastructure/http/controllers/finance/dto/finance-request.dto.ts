@@ -237,3 +237,9 @@ export class CreateRecurringPayableRequestDto {
   @Max(60)
   occurrences!: number;
 }
+
+export class DashboardQueryDto {
+  @IsOptional()
+  @IsUUID()
+  companyId?: string;
+}

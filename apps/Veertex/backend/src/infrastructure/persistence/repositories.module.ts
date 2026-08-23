@@ -21,6 +21,10 @@ import { SALES_TARGET_REPOSITORY } from '../../contexts/commission/application/p
 import { FINANCIAL_ACCOUNT_REPOSITORY } from '../../contexts/finance/application/ports/output/financial-account-repository.port';
 import { FINANCIAL_CATEGORY_REPOSITORY } from '../../contexts/finance/application/ports/output/financial-category-repository.port';
 import { FINANCIAL_TITLE_REPOSITORY } from '../../contexts/finance/application/ports/output/financial-title-repository.port';
+import { CUSTOMER_CREDIT_REPOSITORY } from '../../contexts/finance/application/ports/output/customer-credit-repository.port';
+import { FINANCE_DASHBOARD } from '../../contexts/finance/application/ports/output/finance-dashboard.port';
+import { MikroOrmFinanceDashboard } from './mikro-orm/repositories/finance-dashboard.adapter';
+import { MikroOrmCustomerCreditRepository } from './mikro-orm/repositories/customer-credit.repository';
 import { LATE_CHARGE_PARAMS } from '../../contexts/finance/application/ports/output/late-charge-params.port';
 import { ROUTE_REPOSITORY } from '../../contexts/route/application/ports/output/route-repository.port';
 import { COMMERCIAL_RULE_REPOSITORY } from '../../contexts/route/application/ports/output/commercial-rule-repository.port';
@@ -196,6 +200,8 @@ import { MikroOrmPromissoryNoteRepository } from './mikro-orm/repositories/promi
     { provide: FINANCIAL_ACCOUNT_REPOSITORY, useClass: MikroOrmFinancialAccountRepository },
     { provide: FINANCIAL_CATEGORY_REPOSITORY, useClass: MikroOrmFinancialCategoryRepository },
     { provide: FINANCIAL_TITLE_REPOSITORY, useClass: MikroOrmFinancialTitleRepository },
+    { provide: CUSTOMER_CREDIT_REPOSITORY, useClass: MikroOrmCustomerCreditRepository },
+    { provide: FINANCE_DASHBOARD, useClass: MikroOrmFinanceDashboard },
     { provide: LATE_CHARGE_PARAMS, useClass: LateChargeParamsReader },
     { provide: ROUTE_REPOSITORY, useClass: MikroOrmRouteRepository },
     { provide: COMMERCIAL_RULE_REPOSITORY, useClass: MikroOrmCommercialRuleRepository },
@@ -228,6 +234,8 @@ import { MikroOrmPromissoryNoteRepository } from './mikro-orm/repositories/promi
     FINANCIAL_ACCOUNT_REPOSITORY,
     FINANCIAL_CATEGORY_REPOSITORY,
     FINANCIAL_TITLE_REPOSITORY,
+    CUSTOMER_CREDIT_REPOSITORY,
+    FINANCE_DASHBOARD,
     LATE_CHARGE_PARAMS,
     ROUTE_REPOSITORY,
     COMMERCIAL_RULE_REPOSITORY,

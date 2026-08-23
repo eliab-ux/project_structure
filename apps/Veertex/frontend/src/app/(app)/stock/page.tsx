@@ -887,9 +887,7 @@ function ReservationsTab({
     void load();
   }, [load]);
 
-  const expired = reservations.filter(
-    (reservation) => reservation.releaseReason === 'expired',
-  );
+  const expired = reservations.filter((reservation) => reservation.releaseReason === 'expired');
 
   return (
     <Stack spacing={2}>

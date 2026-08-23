@@ -347,7 +347,12 @@ export default function CommissionPage() {
             <Typography variant="h6" sx={{ mb: 1 }}>
               Faixas do modelo B (rota)
               {bTiers?.usingDefault ? (
-                <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                <Typography
+                  component="span"
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ ml: 1 }}
+                >
                   — usando o padrão da operação (nada customizado)
                 </Typography>
               ) : null}
