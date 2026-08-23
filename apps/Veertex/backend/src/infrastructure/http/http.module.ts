@@ -10,6 +10,7 @@ import { StockModule } from '../../contexts/stock/stock.module';
 import { PaymentConditionModule } from '../../contexts/payment-condition/payment-condition.module';
 import { PriceListModule } from '../../contexts/price-list/price-list.module';
 import { CommissionModule } from '../../contexts/commission/commission.module';
+import { FinanceModule } from '../../contexts/finance/finance.module';
 import { ModuleModule } from '../../contexts/module/module.module';
 import { PlanModule } from '../../contexts/plan/plan.module';
 import { RoleModule } from '../../contexts/role/role.module';
@@ -26,6 +27,7 @@ import { StockController } from './controllers/stock/stock.controller';
 import { PaymentConditionController } from './controllers/payment-condition/payment-condition.controller';
 import { PriceListController } from './controllers/price-list/price-list.controller';
 import { CommissionController } from './controllers/commission/commission.controller';
+import { FinanceController } from './controllers/finance/finance.controller';
 import { ModuleController } from './controllers/module/module.controller';
 import { RoleController } from './controllers/role/role.controller';
 import { UserController } from './controllers/user/user.controller';
@@ -62,6 +64,7 @@ import { IntentModule } from '../../contexts/intent/intent.module';
     PaymentConditionModule,
     PriceListModule,
     CommissionModule,
+    FinanceModule,
     ModuleModule,
     PlanModule,
     RoleModule,
@@ -81,6 +84,7 @@ import { IntentModule } from '../../contexts/intent/intent.module';
     PaymentConditionController,
     PriceListController,
     CommissionController,
+    FinanceController,
     ModuleController,
     RoleController,
     UserController,

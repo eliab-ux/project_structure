@@ -18,6 +18,8 @@ import { PAYMENT_CONDITION_REPOSITORY } from '../../contexts/payment-condition/a
 import { PRICE_LIST_REPOSITORY } from '../../contexts/price-list/application/ports/output/price-list-repository.port';
 import { COMMISSION_TIER_REPOSITORY } from '../../contexts/commission/application/ports/output/commission-tier-repository.port';
 import { SALES_TARGET_REPOSITORY } from '../../contexts/commission/application/ports/output/sales-target-repository.port';
+import { FINANCIAL_ACCOUNT_REPOSITORY } from '../../contexts/finance/application/ports/output/financial-account-repository.port';
+import { FINANCIAL_CATEGORY_REPOSITORY } from '../../contexts/finance/application/ports/output/financial-category-repository.port';
 
 import { PlanOrmEntity } from './mikro-orm/entities/plan-orm.entity';
 import { AccountOrmEntity } from './mikro-orm/entities/account-orm.entity';
@@ -41,6 +43,8 @@ import { PriceListOrmEntity } from './mikro-orm/entities/price-list-orm.entity';
 import { PriceListItemOrmEntity } from './mikro-orm/entities/price-list-item-orm.entity';
 import { CommissionATierOrmEntity } from './mikro-orm/entities/commission-a-tier-orm.entity';
 import { SalesTargetOrmEntity } from './mikro-orm/entities/sales-target-orm.entity';
+import { FinancialAccountOrmEntity } from './mikro-orm/entities/financial-account-orm.entity';
+import { FinancialCategoryOrmEntity } from './mikro-orm/entities/financial-category-orm.entity';
 
 import { PlanMapper } from './mikro-orm/mappers/plan.mapper';
 import { AccountMapper } from './mikro-orm/mappers/account.mapper';
@@ -69,6 +73,8 @@ import { MikroOrmPaymentConditionRepository } from './mikro-orm/repositories/pay
 import { MikroOrmPriceListRepository } from './mikro-orm/repositories/price-list.repository';
 import { MikroOrmCommissionTierRepository } from './mikro-orm/repositories/commission-tier.repository';
 import { MikroOrmSalesTargetRepository } from './mikro-orm/repositories/sales-target.repository';
+import { MikroOrmFinancialAccountRepository } from './mikro-orm/repositories/financial-account.repository';
+import { MikroOrmFinancialCategoryRepository } from './mikro-orm/repositories/financial-category.repository';
 
 /**
  * Every repository, in one @Global module.
@@ -109,6 +115,8 @@ import { MikroOrmSalesTargetRepository } from './mikro-orm/repositories/sales-ta
       PriceListItemOrmEntity,
       CommissionATierOrmEntity,
       SalesTargetOrmEntity,
+      FinancialAccountOrmEntity,
+      FinancialCategoryOrmEntity,
     ]),
   ],
   providers: [
@@ -141,6 +149,8 @@ import { MikroOrmSalesTargetRepository } from './mikro-orm/repositories/sales-ta
     { provide: PRICE_LIST_REPOSITORY, useClass: MikroOrmPriceListRepository },
     { provide: COMMISSION_TIER_REPOSITORY, useClass: MikroOrmCommissionTierRepository },
     { provide: SALES_TARGET_REPOSITORY, useClass: MikroOrmSalesTargetRepository },
+    { provide: FINANCIAL_ACCOUNT_REPOSITORY, useClass: MikroOrmFinancialAccountRepository },
+    { provide: FINANCIAL_CATEGORY_REPOSITORY, useClass: MikroOrmFinancialCategoryRepository },
   ],
   exports: [
     PLAN_REPOSITORY,
@@ -160,6 +170,8 @@ import { MikroOrmSalesTargetRepository } from './mikro-orm/repositories/sales-ta
     PRICE_LIST_REPOSITORY,
     COMMISSION_TIER_REPOSITORY,
     SALES_TARGET_REPOSITORY,
+    FINANCIAL_ACCOUNT_REPOSITORY,
+    FINANCIAL_CATEGORY_REPOSITORY,
   ],
 })
 export class RepositoriesModule {}

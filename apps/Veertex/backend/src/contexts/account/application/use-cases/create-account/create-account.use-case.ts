@@ -49,6 +49,11 @@ import {
   DEFAULT_WAREHOUSE_NAME,
   StockLocation,
 } from '../../../../stock/domain/entities/stock-location.entity';
+import {
+  FINANCIAL_CATEGORY_REPOSITORY,
+  FinancialCategoryRepositoryPort,
+} from '../../../../finance/application/ports/output/financial-category-repository.port';
+import { SeedFinancialCategoriesUseCase } from '../../../../finance/application/use-cases/seed-financial-categories/seed-financial-categories.use-case';
 import { Account } from '../../../domain/entities/account.entity';
 import { AccountDto } from '../../dto/account.dto';
 import {
@@ -92,6 +97,8 @@ export class CreateAccountUseCase implements UseCase<CreateAccountCommand, Creat
     @Inject(ROLE_REPOSITORY) private readonly roles: RoleRepositoryPort,
     @Inject(USER_REPOSITORY) private readonly users: UserRepositoryPort,
     @Inject(STOCK_LOCATION_REPOSITORY) private readonly stockLocations: StockLocationRepositoryPort,
+    @Inject(FINANCIAL_CATEGORY_REPOSITORY)
+    private readonly financialCategories: FinancialCategoryRepositoryPort,
     @Inject(PLAN_REPOSITORY) private readonly plans: PlanRepositoryPort,
     @Inject(PASSWORD_HASHER) private readonly hasher: PasswordHasherPort,
     @Inject(ACCOUNT_MODULE_REPOSITORY)
@@ -99,6 +106,7 @@ export class CreateAccountUseCase implements UseCase<CreateAccountCommand, Creat
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
     private readonly seedDefaultRoles: SeedDefaultRolesUseCase,
     private readonly seedAccountModules: SeedAccountModulesUseCase,
+    private readonly seedFinancialCategories: SeedFinancialCategoriesUseCase,
   ) {}
 
   async execute(command: CreateAccountCommand): Promise<CreateAccountResult> {
@@ -165,10 +173,14 @@ export class CreateAccountUseCase implements UseCase<CreateAccountCommand, Creat
       planModules: plan.limits.modules,
     });
 
+    // Árvore inicial de categorias financeiras (§2.4 do 05) — a conta começa operável no FIN.
+    const financialCategories = this.seedFinancialCategories.build(account.id.value);
+
     return this.uow.execute(async () => {
       const savedAccount = await this.accounts.save(account);
       await this.roles.saveAll(roles);
       await this.accountModules.saveAll(accountModules);
+      await this.financialCategories.saveAll(financialCategories);
       const savedCompany = await this.companies.save(company);
       // Depósito default da primeira empresa (§2 do 03A) — parte do onboarding atômico.
       await this.stockLocations.save(

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ModuleModule } from '../module/module.module';
 import { RoleModule } from '../role/role.module';
+import { FinanceModule } from '../finance/finance.module';
 import { CreateAccountUseCase } from './application/use-cases/create-account/create-account.use-case';
 import { GetCurrentAccountUseCase } from './application/use-cases/get-current-account/get-current-account.use-case';
 import { UpdateAccountUseCase } from './application/use-cases/update-account/update-account.use-case';
@@ -16,7 +17,7 @@ import { AccountPreferencesReader } from './application/account-preferences.read
  * (duplicate-document, numbering) when creating/updating records.
  */
 @Module({
-  imports: [RoleModule, ModuleModule],
+  imports: [RoleModule, ModuleModule, FinanceModule],
   providers: [
     CreateAccountUseCase,
     GetCurrentAccountUseCase,

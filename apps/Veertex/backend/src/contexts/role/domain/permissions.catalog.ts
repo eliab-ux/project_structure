@@ -95,6 +95,17 @@ export const PERMISSIONS = {
     settingsRead: 'sales.settings.read',
     settingsManage: 'sales.settings.manage',
   },
+  // Financeiro (FIN, §05). `read` para ver contas/categorias/títulos/cards; `settings` para o cadastro
+  // de contas financeiras e a árvore de categorias; `receivable`/`payable` para lançar títulos;
+  // `settle` para dar baixa (separada de lançar: quem registra o título nem sempre é quem baixa).
+  // Chaves planas, valores pontilhados; a área é `finance` (primeiro segmento) p/ o agrupamento casar.
+  finance: {
+    read: 'finance.read',
+    settings: 'finance.settings',
+    receivable: 'finance.receivable.manage',
+    payable: 'finance.payable.manage',
+    settle: 'finance.settle',
+  },
 } as const;
 
 /** Grants everything, present and future. Only the Admin role should hold it. */

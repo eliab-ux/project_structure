@@ -24,6 +24,7 @@ import { StockModule } from './contexts/stock/stock.module';
 import { PaymentConditionModule } from './contexts/payment-condition/payment-condition.module';
 import { PriceListModule } from './contexts/price-list/price-list.module';
 import { CommissionModule } from './contexts/commission/commission.module';
+import { FinanceModule } from './contexts/finance/finance.module';
 import { ModuleModule } from './contexts/module/module.module';
 import { RoleModule } from './contexts/role/role.module';
 import { UserModule } from './contexts/user/user.module';
@@ -58,6 +59,7 @@ import { AuthModule } from './contexts/auth/auth.module';
     PaymentConditionModule,
     PriceListModule,
     CommissionModule,
+    FinanceModule,
     ModuleModule,
     RoleModule,
     UserModule,
