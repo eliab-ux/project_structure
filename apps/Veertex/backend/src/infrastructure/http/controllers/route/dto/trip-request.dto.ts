@@ -4,15 +4,19 @@ import {
   ArrayMinSize,
   IsArray,
   IsIn,
+  IsISO8601,
   IsNumber,
   IsOptional,
+  IsString,
   IsUUID,
   Max,
+  MaxLength,
   Min,
   ValidateNested,
 } from 'class-validator';
 import { TRIP_STATUSES } from '../../../../../contexts/route/domain/entities/trip.entity';
 import { FIELD_RECEIPT_METHODS } from '../../../../../contexts/route/domain/entities/field-receipt.entity';
+import { TRIP_EXPENSE_CATEGORIES } from '../../../../../contexts/route/domain/entities/trip-expense.entity';
 
 export class CreateTripRequestDto {
   @IsUUID()
@@ -157,4 +161,43 @@ export class ExchangeConsignedItemsRequestDto {
   @Min(0.001)
   @Max(9_999_999)
   takenQuantity!: number;
+}
+
+export class RegisterTripExpenseRequestDto {
+  @IsIn(TRIP_EXPENSE_CATEGORIES as unknown as string[])
+  category!: string;
+
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0.01)
+  @Max(9_999_999)
+  amount!: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  note?: string | null;
+
+  @IsOptional()
+  @IsISO8601()
+  spentAt?: string;
+}
+
+export class CloseTripRequestDto {
+  /** Gerente comissionado (Y% sobre o recebido da carteira) — opcional, informado no fechamento. */
+  @IsOptional()
+  @IsUUID()
+  managerUserId?: string | null;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(100)
+  managerPercent?: number;
+
+  /** Ajudante: valor FIXO da(s) semana(s) — não é % (§2 do 04). */
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(9_999_999)
+  helperAmount?: number;
 }

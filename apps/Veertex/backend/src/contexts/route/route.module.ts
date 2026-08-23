@@ -25,6 +25,8 @@ import { RegisterFieldReceiptUseCase } from './application/use-cases/register-fi
 import { EffectuateFieldReceiptUseCase } from './application/use-cases/effectuate-field-receipt/effectuate-field-receipt.use-case';
 import { ReturnConsignedItemsUseCase } from './application/use-cases/return-consigned-items/return-consigned-items.use-case';
 import { ExchangeConsignedItemsUseCase } from './application/use-cases/exchange-consigned-items/exchange-consigned-items.use-case';
+import { RegisterTripExpenseUseCase } from './application/use-cases/register-trip-expense/register-trip-expense.use-case';
+import { CloseTripUseCase } from './application/use-cases/close-trip/close-trip.use-case';
 
 /**
  * ROT — Rota/Consignação (§04). Fatia 2: rotas + Regra Comercial. Fatia 3: viagem + carga/romaneio +
@@ -53,6 +55,8 @@ import { ExchangeConsignedItemsUseCase } from './application/use-cases/exchange-
     EffectuateFieldReceiptUseCase,
     ReturnConsignedItemsUseCase,
     ExchangeConsignedItemsUseCase,
+    RegisterTripExpenseUseCase,
+    CloseTripUseCase,
   ],
   exports: [
     CreateRouteUseCase,
@@ -69,6 +73,8 @@ import { ExchangeConsignedItemsUseCase } from './application/use-cases/exchange-
     EffectuateFieldReceiptUseCase,
     ReturnConsignedItemsUseCase,
     ExchangeConsignedItemsUseCase,
+    RegisterTripExpenseUseCase,
+    CloseTripUseCase,
   ],
 })
 export class RouteModule {}

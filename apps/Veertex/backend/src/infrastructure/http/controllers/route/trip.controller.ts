@@ -51,6 +51,17 @@ import {
   ExchangeResult,
 } from '../../../../contexts/route/application/use-cases/exchange-consigned-items/exchange-consigned-items.use-case';
 import { FieldReceiptMethod } from '../../../../contexts/route/domain/entities/field-receipt.entity';
+import {
+  RegisterTripExpenseCommand,
+  RegisterTripExpenseUseCase,
+  TripExpenseResult,
+} from '../../../../contexts/route/application/use-cases/register-trip-expense/register-trip-expense.use-case';
+import {
+  CloseTripCommand,
+  CloseTripUseCase,
+  TripClosureSummary,
+} from '../../../../contexts/route/application/use-cases/close-trip/close-trip.use-case';
+import { TripExpenseCategory } from '../../../../contexts/route/domain/entities/trip-expense.entity';
 import { TripDto } from '../../../../contexts/route/application/dto/trip.dto';
 import { AuthTokenPayload } from '../../../../contexts/auth/application/ports/output/token-service.port';
 import { MODULES } from '../../../../contexts/module/domain/modules.catalog';
@@ -68,7 +79,9 @@ import {
   ListTripsQueryDto,
   LoadTripCargoRequestDto,
   RegisterFieldReceiptRequestDto,
+  RegisterTripExpenseRequestDto,
   ReturnConsignedItemsRequestDto,
+  CloseTripRequestDto,
 } from './dto/trip-request.dto';
 
 /**
@@ -90,6 +103,8 @@ export class TripController {
     private readonly effectuateReceipt: EffectuateFieldReceiptUseCase,
     private readonly returnItems: ReturnConsignedItemsUseCase,
     private readonly exchangeItems: ExchangeConsignedItemsUseCase,
+    private readonly registerExpense: RegisterTripExpenseUseCase,
+    private readonly closeTrip: CloseTripUseCase,
   ) {}
 
   @Get()
@@ -242,6 +257,48 @@ export class TripController {
         dto.takenProductId,
         dto.takenQuantity,
       ),
+    );
+  }
+
+  // ── Fechamento (fatia 5, §3.5/§3.6 do 04) ────────────────────────────────────────────────────
+
+  /** Lança uma despesa diária da viagem (entra no batimento). */
+  @Post(':id/expenses')
+  @HttpCode(201)
+  @RequirePermission(PERMISSIONS.rot.trip)
+  async addExpense(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: RegisterTripExpenseRequestDto,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<TripExpenseResult> {
+    return this.registerExpense.execute(
+      new RegisterTripExpenseCommand(actor.accountId, {
+        tripId: id,
+        category: dto.category as TripExpenseCategory,
+        amount: dto.amount,
+        note: dto.note ?? null,
+        spentAt: dto.spentAt ? new Date(dto.spentAt) : null,
+      }),
+    );
+  }
+
+  /**
+   * FECHA a viagem (§3.5/§3.6): batimento (cobrança/recobrança/outros/despesas/caixa) + folha de
+   * comissões (motor B) → contas a pagar no FIN. A empresa dos títulos vem da VIAGEM.
+   */
+  @Post(':id/close')
+  @RequirePermission(PERMISSIONS.rot.trip)
+  async close(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CloseTripRequestDto,
+    @CurrentUser() actor: AuthTokenPayload,
+  ): Promise<TripClosureSummary> {
+    return this.closeTrip.execute(
+      new CloseTripCommand(actor.accountId, id, {
+        managerUserId: dto.managerUserId ?? null,
+        managerPercent: dto.managerPercent ?? null,
+        helperAmount: dto.helperAmount ?? null,
+      }),
     );
   }
 }

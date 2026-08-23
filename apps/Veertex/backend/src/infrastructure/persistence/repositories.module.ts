@@ -27,6 +27,8 @@ import { COMMERCIAL_RULE_REPOSITORY } from '../../contexts/route/application/por
 import { TRIP_REPOSITORY } from '../../contexts/route/application/ports/output/trip-repository.port';
 import { TRIP_COLLECTION_REPOSITORY } from '../../contexts/route/application/ports/output/trip-collection-repository.port';
 import { FIELD_RECEIPT_REPOSITORY } from '../../contexts/route/application/ports/output/field-receipt-repository.port';
+import { TRIP_EXPENSE_REPOSITORY } from '../../contexts/route/application/ports/output/trip-expense-repository.port';
+import { COMMISSION_B_TIER_REPOSITORY } from '../../contexts/commission/application/ports/output/commission-b-tier-repository.port';
 
 import { PlanOrmEntity } from './mikro-orm/entities/plan-orm.entity';
 import { AccountOrmEntity } from './mikro-orm/entities/account-orm.entity';
@@ -59,6 +61,8 @@ import { CommercialRuleOrmEntity } from './mikro-orm/entities/commercial-rule-or
 import { TripOrmEntity } from './mikro-orm/entities/trip-orm.entity';
 import { TripCollectionOrmEntity } from './mikro-orm/entities/trip-collection-orm.entity';
 import { FieldReceiptOrmEntity } from './mikro-orm/entities/field-receipt-orm.entity';
+import { TripExpenseOrmEntity } from './mikro-orm/entities/trip-expense-orm.entity';
+import { CommissionBTierOrmEntity } from './mikro-orm/entities/commission-b-tier-orm.entity';
 
 import { PlanMapper } from './mikro-orm/mappers/plan.mapper';
 import { AccountMapper } from './mikro-orm/mappers/account.mapper';
@@ -96,6 +100,8 @@ import { MikroOrmCommercialRuleRepository } from './mikro-orm/repositories/comme
 import { MikroOrmTripRepository } from './mikro-orm/repositories/trip.repository';
 import { MikroOrmTripCollectionRepository } from './mikro-orm/repositories/trip-collection.repository';
 import { MikroOrmFieldReceiptRepository } from './mikro-orm/repositories/field-receipt.repository';
+import { MikroOrmTripExpenseRepository } from './mikro-orm/repositories/trip-expense.repository';
+import { MikroOrmCommissionBTierRepository } from './mikro-orm/repositories/commission-b-tier.repository';
 
 /**
  * Every repository, in one @Global module.
@@ -145,6 +151,8 @@ import { MikroOrmFieldReceiptRepository } from './mikro-orm/repositories/field-r
       TripOrmEntity,
       TripCollectionOrmEntity,
       FieldReceiptOrmEntity,
+      TripExpenseOrmEntity,
+      CommissionBTierOrmEntity,
     ]),
   ],
   providers: [
@@ -186,6 +194,8 @@ import { MikroOrmFieldReceiptRepository } from './mikro-orm/repositories/field-r
     { provide: TRIP_REPOSITORY, useClass: MikroOrmTripRepository },
     { provide: TRIP_COLLECTION_REPOSITORY, useClass: MikroOrmTripCollectionRepository },
     { provide: FIELD_RECEIPT_REPOSITORY, useClass: MikroOrmFieldReceiptRepository },
+    { provide: TRIP_EXPENSE_REPOSITORY, useClass: MikroOrmTripExpenseRepository },
+    { provide: COMMISSION_B_TIER_REPOSITORY, useClass: MikroOrmCommissionBTierRepository },
   ],
   exports: [
     PLAN_REPOSITORY,
@@ -214,6 +224,8 @@ import { MikroOrmFieldReceiptRepository } from './mikro-orm/repositories/field-r
     TRIP_REPOSITORY,
     TRIP_COLLECTION_REPOSITORY,
     FIELD_RECEIPT_REPOSITORY,
+    TRIP_EXPENSE_REPOSITORY,
+    COMMISSION_B_TIER_REPOSITORY,
   ],
 })
 export class RepositoriesModule {}
