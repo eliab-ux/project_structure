@@ -104,6 +104,11 @@ const NAV_GROUPS: NavGroup[] = [
     items: [{ href: '/finance', label: 'Financeiro', permission: 'finance.read', module: 'FIN' }],
   },
   {
+    label: 'Cobrança',
+    module: 'COB',
+    items: [{ href: '/billing', label: 'Cobrança', permission: 'cob.read', module: 'COB' }],
+  },
+  {
     label: 'Rotas',
     module: 'ROT',
     items: [
