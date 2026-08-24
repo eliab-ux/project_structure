@@ -1,4 +1,7 @@
 import { Module } from '@nestjs/common';
+import { AccountModule } from '../account/account.module';
+import { CONTACT_OVERDUE_LOOKUP } from './application/ports/output/contact-overdue-lookup.port';
+import { MikroOrmContactOverdueLookup } from '../../infrastructure/persistence/mikro-orm/repositories/contact-overdue.lookup';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ContactOrmEntity } from '../../infrastructure/persistence/mikro-orm/entities/contact-orm.entity';
 import { ProductOrmEntity } from '../../infrastructure/persistence/mikro-orm/entities/product-orm.entity';
@@ -24,8 +27,14 @@ import { ListOrdersUseCase } from './application/use-cases/list-orders/list-orde
 @Module({
   // StockModule fornece os use cases de reserva que o adapter EST usa. O VND depende do PORT, não do
   // módulo EST diretamente — o adapter é quem conhece o EST.
-  imports: [MikroOrmModule.forFeature([ContactOrmEntity, ProductOrmEntity]), StockModule],
+  imports: [
+    MikroOrmModule.forFeature([ContactOrmEntity, ProductOrmEntity]),
+    StockModule,
+    // Preferências da conta (bloqueio por inadimplência, 06 §2.5) — o reader vem do AccountModule.
+    AccountModule,
+  ],
   providers: [
+    { provide: CONTACT_OVERDUE_LOOKUP, useClass: MikroOrmContactOverdueLookup },
     { provide: CUSTOMER_LOOKUP, useClass: OrderCustomerLookup },
     { provide: ORDER_PRODUCT_LOOKUP, useClass: OrderProductLookup },
     { provide: ORDER_STOCK_RESERVATION, useClass: EstOrderStockReservation },

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import {
   ListProductsFilter,
@@ -20,6 +20,8 @@ import { ProductMapper } from '../mappers/product.mapper';
  */
 @Injectable()
 export class MikroOrmProductRepository implements ProductRepositoryPort {
+  private readonly logger = new Logger(MikroOrmProductRepository.name);
+
   constructor(
     private readonly em: EntityManager,
     private readonly mapper: ProductMapper,
@@ -81,7 +83,21 @@ export class MikroOrmProductRepository implements ProductRepositoryPort {
       { orderBy: { name: 'ASC' } },
     );
 
-    return rows.map((row) => this.mapper.toDomain(row));
+    // Linha que falha ao MAPEAR é pulada com ERRO no log (nomeando a linha) — uma linha
+    // envenenada não pode negar serviço da lista inteira (defeito real, 24/08/2026: um produto
+    // irreconstituível derrubava GET /products com 500 para a conta toda).
+    const mapped: Product[] = [];
+    for (const row of rows) {
+      try {
+        mapped.push(this.mapper.toDomain(row));
+      } catch (error) {
+        this.logger.error(
+          `Produto ${row.id} pulado na listagem: ${(error as Error)?.message ?? 'erro de mapeamento'}`,
+          (error as Error)?.stack,
+        );
+      }
+    }
+    return mapped;
   }
 
   /**

@@ -242,7 +242,7 @@ export const INTENT_COMMAND_FIELDS: Record<IntentCommandName, IntentFieldSpec[]>
     { name: 'name', kind: 'text', required: true, hint: 'nome do produto' },
     { name: 'unit', kind: 'text', required: true, hint: 'unidade comercial (UN, KG, CX...)' },
     { name: 'sku', kind: 'text', required: false, hint: 'SKU' },
-    { name: 'kind', kind: 'text', required: false, hint: 'tipo do produto' },
+    { name: 'kind', kind: 'text', required: false, hint: 'product | service (em inglês, literal)' },
     { name: 'brand', kind: 'text', required: false, hint: 'marca' },
     { name: 'categoryPath', kind: 'text', required: false, hint: 'categoria (caminho)' },
     { name: 'basePrice', kind: 'number', required: false, hint: 'preço base' },

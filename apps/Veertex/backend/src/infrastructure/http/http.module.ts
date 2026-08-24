@@ -12,11 +12,14 @@ import { PriceListModule } from '../../contexts/price-list/price-list.module';
 import { CommissionModule } from '../../contexts/commission/commission.module';
 import { FinanceModule } from '../../contexts/finance/finance.module';
 import { RouteModule } from '../../contexts/route/route.module';
+import { BillingModule } from '../../contexts/billing/billing.module';
 import { ModuleModule } from '../../contexts/module/module.module';
 import { PlanModule } from '../../contexts/plan/plan.module';
 import { RoleModule } from '../../contexts/role/role.module';
 import { UserModule } from '../../contexts/user/user.module';
 import { HealthController } from './controllers/health/health.controller';
+import { BillingController } from './controllers/billing/billing.controller';
+import { BillingWebhookController } from './controllers/billing/billing-webhook.controller';
 import { AuthController } from './controllers/auth/auth.controller';
 import { AccountController } from './controllers/account/account.controller';
 import { CompanyController } from './controllers/company/company.controller';
@@ -70,6 +73,7 @@ import { IntentModule } from '../../contexts/intent/intent.module';
     CommissionModule,
     FinanceModule,
     RouteModule,
+    BillingModule,
     ModuleModule,
     PlanModule,
     RoleModule,
@@ -97,6 +101,8 @@ import { IntentModule } from '../../contexts/intent/intent.module';
     RoleController,
     UserController,
     IntentController,
+    BillingController,
+    BillingWebhookController,
   ],
 })
 export class HttpModule {}

@@ -33,6 +33,10 @@ const PUBLIC_ROUTES: ReadonlySet<string> = new Set([
   // Quem esqueceu a senha não consegue entrar para pedir uma nova.
   'AuthController.requestPasswordReset',
   'AuthController.resetPassword',
+  // É o PROVEDOR de cobrança quem chama (06 §2.2) — agregador não faz login. A autenticação é
+  // própria: token por config na URL (hash, tempo constante) + assinatura validada no adapter;
+  // token inválido responde IGUAL a payload desconhecido (sem oráculo). Ver BillingWebhookController.
+  'BillingWebhookController.receive',
 ]);
 
 /**

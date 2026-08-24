@@ -14,7 +14,7 @@ import {
   DunningEvent,
   DunningRule,
   DunningStep,
-} from '../../../domain/entities/dunning.entity';
+} from '../../../domain/entities/dunning-rule.entity';
 import { DunningRuleInvalidException } from '../../../domain/exceptions/billing-exceptions';
 import {
   DUNNING_EVENT_REPOSITORY,

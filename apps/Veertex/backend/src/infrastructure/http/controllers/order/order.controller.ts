@@ -169,7 +169,7 @@ export class OrderController {
   ): Promise<OrderDto> {
     // `modules` do TOKEN — decide se a confirmação reserva estoque (§3.9). Só com EST ativo.
     return this.changeOrderStatusUseCase.execute(
-      new ChangeOrderStatusCommand(id, 'confirm', actor.modules ?? []),
+      new ChangeOrderStatusCommand(id, 'confirm', actor.modules ?? [], this.canOverdueOverride(actor)),
     );
   }
 
@@ -241,5 +241,10 @@ export class OrderController {
   /** Lê a sub-permissão de desconto do token. `grants` resolve wildcard segmento a segmento. */
   private canDiscount(actor: AuthTokenPayload): boolean {
     return grants(actor.permissions ?? [], PERMISSIONS.orders.discountGrant);
+  }
+
+  /** `orders.overdue.override` do token — libera a exceção do bloqueio por inadimplência (06 §2.5). */
+  private canOverdueOverride(actor: AuthTokenPayload): boolean {
+    return grants(actor.permissions ?? [], PERMISSIONS.orders.overdueOverride);
   }
 }

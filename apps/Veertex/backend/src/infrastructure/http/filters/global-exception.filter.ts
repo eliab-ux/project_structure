@@ -83,15 +83,17 @@ export class GlobalExceptionFilter implements ExceptionFilter {
      * while carrying none.
      */
     const error = exception as Error & { code?: string; detail?: string };
-    this.logger.error('Unhandled exception', {
-      name: error?.name,
-      message: error?.message,
-      code: error?.code,
-      detail: error?.detail,
-      stack: error?.stack,
-      path: request.url,
-      method: request.method,
-    });
+    // Nome/mensagem/rota NA STRING e o stack como SEGUNDO argumento: o ConsoleLogger do Nest só
+    // renderiza assim — metadados em objeto são engolidos em produção (defeito real, 24/08/2026:
+    // o log dizia "Unhandled exception" e NADA mais, o pior tipo de linha — parece diagnóstico e
+    // não carrega nenhum).
+    this.logger.error(
+      `Unhandled ${error?.name ?? 'Error'}: ${error?.message ?? 'unknown'} — ` +
+        `${request.method} ${request.url}` +
+        (error?.code ? ` [code=${error.code}]` : '') +
+        (error?.detail ? ` detail=${error.detail}` : ''),
+      error?.stack,
+    );
 
     try {
       this.reporter.report({

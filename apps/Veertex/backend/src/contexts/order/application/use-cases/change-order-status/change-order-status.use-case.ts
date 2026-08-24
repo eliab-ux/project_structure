@@ -17,7 +17,13 @@ import { OrderDto } from '../../dto/order.dto';
 import {
   CreditLimitExceededException,
   OrderNotFoundException,
+  OverdueCustomerException,
 } from '../../../domain/exceptions/order-exceptions';
+import {
+  CONTACT_OVERDUE_LOOKUP,
+  ContactOverdueLookupPort,
+} from '../../ports/output/contact-overdue-lookup.port';
+import { AccountPreferencesReader } from '../../../../account/application/account-preferences.reader';
 
 export type OrderStatusAction =
   | 'quote'
@@ -35,6 +41,8 @@ export class ChangeOrderStatusCommand {
     public readonly action: OrderStatusAction,
     /** Módulos ativos do TOKEN — decidem se a confirmação reserva estoque (só com EST ativo). */
     public readonly activeModules: readonly string[] = [],
+    /** `orders.overdue.override` do TOKEN — libera a exceção do bloqueio por inadimplência. */
+    public readonly canOverdueOverride: boolean = false,
   ) {}
 }
 
@@ -53,6 +61,8 @@ export class ChangeOrderStatusUseCase implements UseCase<ChangeOrderStatusComman
     @Inject(ORDER_REPOSITORY) private readonly orders: OrderRepositoryPort,
     @Inject(CUSTOMER_LOOKUP) private readonly customers: CustomerLookupPort,
     @Inject(ORDER_STOCK_RESERVATION) private readonly reservation: OrderStockReservationPort,
+    @Inject(CONTACT_OVERDUE_LOOKUP) private readonly overdue: ContactOverdueLookupPort,
+    private readonly preferences: AccountPreferencesReader,
     @Inject(UNIT_OF_WORK) private readonly uow: UnitOfWorkPort,
   ) {}
 
@@ -71,6 +81,9 @@ export class ChangeOrderStatusUseCase implements UseCase<ChangeOrderStatusComman
           break;
         case 'confirm': {
           await this.assertWithinCreditLimit(order.contactId, order.total);
+          // Bloqueio por inadimplência (06 §2.5): entra na confirmação, junto ao crédito. O check
+          // fica ao lado do limite porque é a MESMA pergunta ("este cliente pode comprar?").
+          await this.assertNotOverdueBlocked(order, command.canOverdueOverride);
           // Reserva ANTES de mudar a situação: falta de disponível recusa a confirmação (a mensagem,
           // vinda do EST, nomeia produto e quantidade) e reverte tudo na transação do request.
           await this.reserveIfStockActive(order, command.activeModules);
@@ -121,6 +134,29 @@ export class ChangeOrderStatusUseCase implements UseCase<ChangeOrderStatusComman
       orderId: order.id.value,
       lines: order.items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
     });
+  }
+
+  /**
+   * Bloqueio por inadimplência (06 §2.5): preferência da conta LIGADA (default) + título a receber
+   * vencido além de N dias → confirmação recusada, exceto para quem tem a permissão de override
+   * (do TOKEN — decisão que veio junto com o desconto, e pelo mesmo motivo).
+   */
+  private async assertNotOverdueBlocked(order: Order, canOverride: boolean): Promise<void> {
+    if (canOverride) {
+      return;
+    }
+    const prefs = await this.preferences.forAccount(order.accountId);
+    if (!prefs.overdueBlockEnabled) {
+      return;
+    }
+    const amount = await this.overdue.overdueAmount(
+      order.contactId,
+      prefs.overdueBlockDays,
+      new Date(),
+    );
+    if (amount > 0) {
+      throw new OverdueCustomerException(amount.toFixed(2), prefs.overdueBlockDays);
+    }
   }
 
   private async assertWithinCreditLimit(contactId: string, total: number): Promise<void> {

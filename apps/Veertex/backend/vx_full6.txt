@@ -1,0 +1,1831 @@
+
+> @gitspread/veertex-backend@1.0.0 test
+> jest --passWithNoTests
+
+[dotenv@17.2.3] injecting env (24) from .env.local,.env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+PASS test/execution/create-account.cli.spec.ts (51.714 s)
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/execution/seed-dev.cli.spec.ts (39.733 s)
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+{"level":30,"time":1787571819068,"pid":11268,"hostname":"INV012952","msg":"Server listening at http://127.0.0.1:58448"}
+{"level":30,"time":1787571819083,"pid":11268,"hostname":"INV012952","reqId":"req-1","req":{"method":"POST","url":"/api/auth/login","hostname":"127.0.0.1:58448","remoteAddress":"198.51.100.7","remotePort":58449},"msg":"incoming request"}
+{"level":30,"time":1787571819387,"pid":11268,"hostname":"INV012952","reqId":"req-1","res":{"statusCode":401},"responseTime":304.143099963665,"msg":"request completed"}
+{"level":30,"time":1787571819396,"pid":11268,"hostname":"INV012952","reqId":"req-2","req":{"method":"POST","url":"/api/auth/login","hostname":"127.0.0.1:58448","remoteAddress":"198.51.100.7","remotePort":58450},"msg":"incoming request"}
+{"level":30,"time":1787571819680,"pid":11268,"hostname":"INV012952","reqId":"req-2","res":{"statusCode":401},"responseTime":283.9093000292778,"msg":"request completed"}
+{"level":30,"time":1787571819682,"pid":11268,"hostname":"INV012952","reqId":"req-3","req":{"method":"POST","url":"/api/auth/login","hostname":"127.0.0.1:58448","remoteAddress":"198.51.100.7","remotePort":58449},"msg":"incoming request"}
+{"level":30,"time":1787571819952,"pid":11268,"hostname":"INV012952","reqId":"req-3","res":{"statusCode":401},"responseTime":269.56339997053146,"msg":"request completed"}
+{"level":30,"time":1787571819954,"pid":11268,"hostname":"INV012952","reqId":"req-4","req":{"method":"POST","url":"/api/auth/login","hostname":"127.0.0.1:58448","remoteAddress":"198.51.100.7","remotePort":58450},"msg":"incoming request"}
+{"level":30,"time":1787571820289,"pid":11268,"hostname":"INV012952","reqId":"req-4","res":{"statusCode":401},"responseTime":334.6387999653816,"msg":"request completed"}
+{"level":30,"time":1787571820293,"pid":11268,"hostname":"INV012952","reqId":"req-5","req":{"method":"POST","url":"/api/auth/login","hostname":"127.0.0.1:58448","remoteAddress":"198.51.100.7","remotePort":58449},"msg":"incoming request"}
+{"level":30,"time":1787571820303,"pid":11268,"hostname":"INV012952","reqId":"req-5","res":{"statusCode":429},"responseTime":9.600500047206879,"msg":"request completed"}
+{"level":30,"time":1787571820309,"pid":11268,"hostname":"INV012952","reqId":"req-6","req":{"method":"POST","url":"/api/auth/login","hostname":"127.0.0.1:58448","remoteAddress":"198.51.100.8","remotePort":58450},"msg":"incoming request"}
+{"level":30,"time":1787571820622,"pid":11268,"hostname":"INV012952","reqId":"req-6","res":{"statusCode":401},"responseTime":312.4044000506401,"msg":"request completed"}
+PASS test/integration/login-throttle.spec.ts (58.602 s)
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:56 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:56 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mObservabilityModule dependencies initialized[39m[38;5;3m +51ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:56 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:56 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMessagingModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:56 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:56 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:56 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:56 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mEventEmitterModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:56 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mWhatsAppModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:56 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mBootstrapModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmCoreModule dependencies initialized[39m[38;5;3m +406ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +5ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSecurityModule dependencies initialized[39m[38;5;3m +21ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPlanModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPersistenceModule dependencies initialized[39m[38;5;3m +7ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRepositoriesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mModuleModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCompanyModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mFieldConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPaymentConditionModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPriceListModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAccountModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRoleModule dependencies initialized[39m[38;5;3m +26ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mStockModule dependencies initialized[39m[38;5;3m +5ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUserModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mProductModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mContactModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mFinanceModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mIntentModule dependencies initialized[39m[38;5;3m +8ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mBillingModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRouteModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCommissionModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mOrderModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mHttpModule dependencies initialized[39m[38;5;3m +4ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHealthController {/api/health}:[39m[38;5;3m +19ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/health, GET} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/auth}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/login, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/refresh, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/me, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/request-password-reset, POST} route[39m[38;5;3m +5ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/reset-password, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/change-password, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAccountController {/api/account}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/account, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/account/plans, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/account, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/account/preferences, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/account/cancellation, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCompanyController {/api/companies}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/companies, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/companies/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/companies, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/companies/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/companies/:id/status, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mContactController {/api/contacts}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contacts, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contacts/field-catalog, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contacts/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contacts, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contacts/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mProductController {/api/products}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products, GET} route[39m[38;5;3m +4ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/field-catalog, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:id/components, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mFieldConfigController {/api/field-config}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/field-config/entities, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/field-config/:entity, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/field-config/:entity, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOrderController {/api/orders}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/quote, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/confirm, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/complete, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/open-consignment, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/start-settlement, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/close-consignment, POST} route[39m[38;5;3m +4ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/cancel, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStockController {/api/stock}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/balance, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/reservations, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/locations, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/locations, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/movements, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/movements, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/transfers, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPaymentConditionController {/api/payment-conditions}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/payment-conditions, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/payment-conditions, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/payment-conditions/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPriceListController {/api/price-lists}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/price-lists, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/price-lists/resolve, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/price-lists, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/price-lists/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCommissionController {/api/commission}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/tiers, GET} route[39m[38;5;3m +4ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/tiers, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/b-tiers, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/b-tiers, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/targets, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/targets, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/model-a, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/model-a/payable, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mFinanceController {/api/finance}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/dashboard, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/accounts, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/accounts, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/accounts/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/categories, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/categories, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/categories/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/receivables, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/receivables, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/titles/:id/settle, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/payables, GET} route[39m[38;5;3m +4ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/payables, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/payables/recurring, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mRouteController {/api/routes}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/routes, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/routes, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/routes/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/routes/commercial-rules/:userId, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/routes/commercial-rules/:userId, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTripController {/api/trips}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/closure, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/cargo, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/depart, POST} route[39m[38;5;3m +19ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/arrive, POST} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/cancel, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/wallet/build, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/receipts, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/receipts/:receiptId/effectuate, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/returns, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/exchanges, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/expenses, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/close, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mConsignmentController {/api/consignment/orders}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/consignment/orders/:id/evidences, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/consignment/orders/:id/gps-change, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/consignment/orders/:id/promissory, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mModuleController {/api/modules}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modules, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modules/:code, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mRoleController {/api/roles}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles/catalog, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles/read-phrase, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUserController {/api/users}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id, PATCH} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id/status, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mIntentController {/api/intent}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/intent/capabilities, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/intent/transcribe, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/intent, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/intent/draft, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/intent/approve, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBillingController {/api/billing}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/config, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/config, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/config/test, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/charges, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/charges, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/dunning/rule, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/dunning/rule, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/dunning/run, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/dunning/events, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/dunning/events/:id/approve, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/renegotiations, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBillingWebhookController {/api/billing/webhook}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/webhook/:accountId/:configId, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:57 [32m    LOG[39m [38;5;3m[DatabaseBootstrapService] [39m[32mNenhuma migration pendente.[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:58 [32m    LOG[39m [38;5;3m[DatabaseBootstrapService] [39m[32mInvariantes de isolamento verificados.[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:58 [32m    LOG[39m [38;5;3m[DatabaseBootstrapService] [39m[32mConexão de runtime confirmada como "veertex_app", sujeita ao RLS.[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:58 [32m    LOG[39m [38;5;3m[DatabaseBootstrapService] [39m[32mCatálogo de módulos reconciliado: 0 inserido(s), 9 atualizado(s).[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:58 [32m    LOG[39m [38;5;3m[DatabaseBootstrapService] [39m[32mCatálogo de planos reconciliado: 0 inserido(s), 3 já existente(s).[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:58 [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +6ms[39m
+{"level":30,"time":1787571838099,"pid":11268,"hostname":"INV012952","msg":"Server listening at http://127.0.0.1:64299"}
+{"level":30,"time":1787571838106,"pid":11268,"hostname":"INV012952","reqId":"req-1","req":{"method":"POST","url":"/api/auth/login","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:58 [32m    LOG[39m [38;5;3m[LoginUseCase] [39m[32mUsuário autenticado[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:58 [32m    LOG[39m [38;5;3m[LoginUseCase] [39m[32mObject:[39m
+{
+  "userId": "24ab062c-0db5-4b24-9453-15a4c4cef008",
+  "accountId": "8208c943-2f50-462b-bb82-782103af90e8"
+}
+
+{"level":30,"time":1787571838529,"pid":11268,"hostname":"INV012952","reqId":"req-1","res":{"statusCode":200},"responseTime":422.42220002412796,"msg":"request completed"}
+{"level":30,"time":1787571838535,"pid":11268,"hostname":"INV012952","reqId":"req-2","req":{"method":"GET","url":"/api/companies","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571838557,"pid":11268,"hostname":"INV012952","reqId":"req-2","res":{"statusCode":200},"responseTime":21.768800020217896,"msg":"request completed"}
+{"level":30,"time":1787571838565,"pid":11268,"hostname":"INV012952","reqId":"req-3","req":{"method":"GET","url":"/api/companies?includeInactive=true","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571838579,"pid":11268,"hostname":"INV012952","reqId":"req-3","res":{"statusCode":200},"responseTime":13.882499992847443,"msg":"request completed"}
+{"level":30,"time":1787571838582,"pid":11268,"hostname":"INV012952","reqId":"req-4","req":{"method":"POST","url":"/api/companies","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571838622,"pid":11268,"hostname":"INV012952","reqId":"req-4","res":{"statusCode":201},"responseTime":39.9103000164032,"msg":"request completed"}
+{"level":30,"time":1787571838629,"pid":11268,"hostname":"INV012952","reqId":"req-5","req":{"method":"PATCH","url":"/api/companies/cf9d6227-cad1-4f1b-a04b-161d2259c797","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571838656,"pid":11268,"hostname":"INV012952","reqId":"req-5","res":{"statusCode":200},"responseTime":27.733799993991852,"msg":"request completed"}
+{"level":30,"time":1787571838659,"pid":11268,"hostname":"INV012952","reqId":"req-6","req":{"method":"PATCH","url":"/api/companies/cf9d6227-cad1-4f1b-a04b-161d2259c797","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571838673,"pid":11268,"hostname":"INV012952","reqId":"req-6","res":{"statusCode":400},"responseTime":13.211100041866302,"msg":"request completed"}
+{"level":30,"time":1787571838677,"pid":11268,"hostname":"INV012952","reqId":"req-7","req":{"method":"PATCH","url":"/api/companies/cf9d6227-cad1-4f1b-a04b-161d2259c797/status","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571838708,"pid":11268,"hostname":"INV012952","reqId":"req-7","res":{"statusCode":200},"responseTime":31.1985000371933,"msg":"request completed"}
+{"level":30,"time":1787571838712,"pid":11268,"hostname":"INV012952","reqId":"req-8","req":{"method":"PATCH","url":"/api/companies/cf9d6227-cad1-4f1b-a04b-161d2259c797/status","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571838735,"pid":11268,"hostname":"INV012952","reqId":"req-8","res":{"statusCode":200},"responseTime":23.896999955177307,"msg":"request completed"}
+{"level":30,"time":1787571838739,"pid":11268,"hostname":"INV012952","reqId":"req-9","req":{"method":"POST","url":"/api/companies","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571838771,"pid":11268,"hostname":"INV012952","reqId":"req-9","res":{"statusCode":201},"responseTime":31.057299971580505,"msg":"request completed"}
+{"level":30,"time":1787571838776,"pid":11268,"hostname":"INV012952","reqId":"req-a","req":{"method":"POST","url":"/api/companies","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571838809,"pid":11268,"hostname":"INV012952","reqId":"req-a","res":{"statusCode":201},"responseTime":33.21119999885559,"msg":"request completed"}
+{"level":30,"time":1787571838812,"pid":11268,"hostname":"INV012952","reqId":"req-b","req":{"method":"GET","url":"/api/companies","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571838827,"pid":11268,"hostname":"INV012952","reqId":"req-b","res":{"statusCode":200},"responseTime":15.434599995613098,"msg":"request completed"}
+{"level":30,"time":1787571838833,"pid":11268,"hostname":"INV012952","reqId":"req-c","req":{"method":"GET","url":"/api/roles","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571838850,"pid":11268,"hostname":"INV012952","reqId":"req-c","res":{"statusCode":200},"responseTime":17.134200036525726,"msg":"request completed"}
+{"level":30,"time":1787571838852,"pid":11268,"hostname":"INV012952","reqId":"req-d","req":{"method":"GET","url":"/api/roles/catalog","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571838861,"pid":11268,"hostname":"INV012952","reqId":"req-d","res":{"statusCode":200},"responseTime":8.52510005235672,"msg":"request completed"}
+{"level":30,"time":1787571838866,"pid":11268,"hostname":"INV012952","reqId":"req-e","req":{"method":"POST","url":"/api/roles","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571838888,"pid":11268,"hostname":"INV012952","reqId":"req-e","res":{"statusCode":201},"responseTime":21.833899974822998,"msg":"request completed"}
+{"level":30,"time":1787571838891,"pid":11268,"hostname":"INV012952","reqId":"req-f","req":{"method":"PATCH","url":"/api/roles/746188ed-1bb4-42ba-af32-54127ebf371f","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571838916,"pid":11268,"hostname":"INV012952","reqId":"req-f","res":{"statusCode":200},"responseTime":25.197499990463257,"msg":"request completed"}
+{"level":30,"time":1787571838919,"pid":11268,"hostname":"INV012952","reqId":"req-g","req":{"method":"GET","url":"/api/roles","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571838933,"pid":11268,"hostname":"INV012952","reqId":"req-g","res":{"statusCode":200},"responseTime":13.570599973201752,"msg":"request completed"}
+{"level":30,"time":1787571838935,"pid":11268,"hostname":"INV012952","reqId":"req-h","req":{"method":"POST","url":"/api/roles/read-phrase","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+[95m[Nest] 11268  - [39m24/08/2026, 08:43:58 [95m  DEBUG[39m [38;5;3m[DeterministicPermissionPhraseTranslator] [39m[95mFrase traduzida por palavra-chave[39m
+[95m[Nest] 11268  - [39m24/08/2026, 08:43:58 [95m  DEBUG[39m [38;5;3m[DeterministicPermissionPhraseTranslator] [39m[95mObject:[39m
+{
+  "vereditos": 2
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:58 [32m    LOG[39m [38;5;3m[ReadPermissionPhraseUseCase] [39m[32mFrase de permissões traduzida[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:43:58 [32m    LOG[39m [38;5;3m[ReadPermissionPhraseUseCase] [39m[32mObject:[39m
+{
+  "linhas": 2,
+  "permitidas": 1,
+  "negadas": 1,
+  "aDecidir": 41
+}
+
+{"level":30,"time":1787571838947,"pid":11268,"hostname":"INV012952","reqId":"req-h","res":{"statusCode":200},"responseTime":12.674199998378754,"msg":"request completed"}
+{"level":30,"time":1787571838949,"pid":11268,"hostname":"INV012952","reqId":"req-i","req":{"method":"GET","url":"/api/roles/catalog","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571838960,"pid":11268,"hostname":"INV012952","reqId":"req-i","res":{"statusCode":200},"responseTime":10.403199970722198,"msg":"request completed"}
+{"level":30,"time":1787571838962,"pid":11268,"hostname":"INV012952","reqId":"req-j","req":{"method":"GET","url":"/api/roles","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571838976,"pid":11268,"hostname":"INV012952","reqId":"req-j","res":{"statusCode":200},"responseTime":13.723000049591064,"msg":"request completed"}
+{"level":30,"time":1787571838980,"pid":11268,"hostname":"INV012952","reqId":"req-k","req":{"method":"POST","url":"/api/roles/read-phrase","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571838991,"pid":11268,"hostname":"INV012952","reqId":"req-k","res":{"statusCode":400},"responseTime":11.242900013923645,"msg":"request completed"}
+{"level":30,"time":1787571838997,"pid":11268,"hostname":"INV012952","reqId":"req-l","req":{"method":"DELETE","url":"/api/roles/746188ed-1bb4-42ba-af32-54127ebf371f","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571839025,"pid":11268,"hostname":"INV012952","reqId":"req-l","res":{"statusCode":204},"responseTime":27.984499990940094,"msg":"request completed"}
+{"level":30,"time":1787571839028,"pid":11268,"hostname":"INV012952","reqId":"req-m","req":{"method":"GET","url":"/api/roles","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571839044,"pid":11268,"hostname":"INV012952","reqId":"req-m","res":{"statusCode":200},"responseTime":15.881699979305267,"msg":"request completed"}
+{"level":30,"time":1787571839047,"pid":11268,"hostname":"INV012952","reqId":"req-n","req":{"method":"GET","url":"/api/users","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571839060,"pid":11268,"hostname":"INV012952","reqId":"req-n","res":{"statusCode":200},"responseTime":13.495999991893768,"msg":"request completed"}
+{"level":30,"time":1787571839063,"pid":11268,"hostname":"INV012952","reqId":"req-o","req":{"method":"POST","url":"/api/users","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571839479,"pid":11268,"hostname":"INV012952","reqId":"req-o","res":{"statusCode":201},"responseTime":415.70080000162125,"msg":"request completed"}
+{"level":30,"time":1787571839483,"pid":11268,"hostname":"INV012952","reqId":"req-p","req":{"method":"POST","url":"/api/users","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571839494,"pid":11268,"hostname":"INV012952","reqId":"req-p","res":{"statusCode":400},"responseTime":10.642000019550323,"msg":"request completed"}
+{"level":30,"time":1787571839498,"pid":11268,"hostname":"INV012952","reqId":"req-q","req":{"method":"PATCH","url":"/api/users/d218b3ad-81fb-4d2b-880c-9da53e46eba3","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571839522,"pid":11268,"hostname":"INV012952","reqId":"req-q","res":{"statusCode":200},"responseTime":24.169200003147125,"msg":"request completed"}
+{"level":30,"time":1787571839526,"pid":11268,"hostname":"INV012952","reqId":"req-r","req":{"method":"PATCH","url":"/api/users/d218b3ad-81fb-4d2b-880c-9da53e46eba3/status","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571839557,"pid":11268,"hostname":"INV012952","reqId":"req-r","res":{"statusCode":200},"responseTime":31.122100055217743,"msg":"request completed"}
+{"level":30,"time":1787571839559,"pid":11268,"hostname":"INV012952","reqId":"req-s","req":{"method":"GET","url":"/api/contacts/field-catalog","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571839575,"pid":11268,"hostname":"INV012952","reqId":"req-s","res":{"statusCode":200},"responseTime":15.599699974060059,"msg":"request completed"}
+{"level":30,"time":1787571839580,"pid":11268,"hostname":"INV012952","reqId":"req-t","req":{"method":"POST","url":"/api/contacts","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571839660,"pid":11268,"hostname":"INV012952","reqId":"req-t","res":{"statusCode":201},"responseTime":79.66380000114441,"msg":"request completed"}
+{"level":30,"time":1787571839664,"pid":11268,"hostname":"INV012952","reqId":"req-u","req":{"method":"POST","url":"/api/contacts","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571839699,"pid":11268,"hostname":"INV012952","reqId":"req-u","res":{"statusCode":400},"responseTime":34.90479999780655,"msg":"request completed"}
+{"level":30,"time":1787571839701,"pid":11268,"hostname":"INV012952","reqId":"req-v","req":{"method":"POST","url":"/api/contacts","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571839719,"pid":11268,"hostname":"INV012952","reqId":"req-v","res":{"statusCode":400},"responseTime":17.66260004043579,"msg":"request completed"}
+{"level":30,"time":1787571839722,"pid":11268,"hostname":"INV012952","reqId":"req-w","req":{"method":"POST","url":"/api/contacts","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571839731,"pid":11268,"hostname":"INV012952","reqId":"req-w","res":{"statusCode":400},"responseTime":8.893400013446808,"msg":"request completed"}
+{"level":30,"time":1787571839734,"pid":11268,"hostname":"INV012952","reqId":"req-x","req":{"method":"GET","url":"/api/contacts?type=supplier","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571839753,"pid":11268,"hostname":"INV012952","reqId":"req-x","res":{"statusCode":200},"responseTime":19.202800035476685,"msg":"request completed"}
+{"level":30,"time":1787571839756,"pid":11268,"hostname":"INV012952","reqId":"req-y","req":{"method":"GET","url":"/api/contacts?type=carrier","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571839771,"pid":11268,"hostname":"INV012952","reqId":"req-y","res":{"statusCode":200},"responseTime":15.168800055980682,"msg":"request completed"}
+{"level":30,"time":1787571839774,"pid":11268,"hostname":"INV012952","reqId":"req-z","req":{"method":"GET","url":"/api/contacts?search=999990011","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571839794,"pid":11268,"hostname":"INV012952","reqId":"req-z","res":{"statusCode":200},"responseTime":19.787800014019012,"msg":"request completed"}
+{"level":30,"time":1787571839796,"pid":11268,"hostname":"INV012952","reqId":"req-10","req":{"method":"PATCH","url":"/api/contacts/58c122ed-6b65-4693-824a-1676d088d76c","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571839841,"pid":11268,"hostname":"INV012952","reqId":"req-10","res":{"statusCode":200},"responseTime":45.066600024700165,"msg":"request completed"}
+{"level":30,"time":1787571839843,"pid":11268,"hostname":"INV012952","reqId":"req-11","req":{"method":"GET","url":"/api/contacts/00000000-0000-4000-8000-000000000000","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571839855,"pid":11268,"hostname":"INV012952","reqId":"req-11","res":{"statusCode":404},"responseTime":11.100699961185455,"msg":"request completed"}
+{"level":30,"time":1787571839856,"pid":11268,"hostname":"INV012952","reqId":"req-12","req":{"method":"GET","url":"/api/companies","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571839857,"pid":11268,"hostname":"INV012952","reqId":"req-12","res":{"statusCode":401},"responseTime":0.7551000118255615,"msg":"request completed"}
+{"level":30,"time":1787571839859,"pid":11268,"hostname":"INV012952","reqId":"req-13","req":{"method":"GET","url":"/api/users","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571839859,"pid":11268,"hostname":"INV012952","reqId":"req-13","res":{"statusCode":401},"responseTime":0.6579999923706055,"msg":"request completed"}
+{"level":30,"time":1787571839860,"pid":11268,"hostname":"INV012952","reqId":"req-14","req":{"method":"GET","url":"/api/roles","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64300},"msg":"incoming request"}
+{"level":30,"time":1787571839861,"pid":11268,"hostname":"INV012952","reqId":"req-14","res":{"statusCode":401},"responseTime":0.5460000038146973,"msg":"request completed"}
+{"level":30,"time":1787571839862,"pid":11268,"hostname":"INV012952","reqId":"req-15","req":{"method":"GET","url":"/api/roles/catalog","hostname":"127.0.0.1:64299","remoteAddress":"127.0.0.1","remotePort":64301},"msg":"incoming request"}
+{"level":30,"time":1787571839863,"pid":11268,"hostname":"INV012952","reqId":"req-15","res":{"statusCode":401},"responseTime":0.5367000102996826,"msg":"request completed"}
+PASS test/execution/admin-http-contract.spec.ts (19.148 s)
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/integration/use-cases.spec.ts (31.847 s)
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+[31m[Nest] 11268  - [39m24/08/2026, 08:44:48 [31m  ERROR[39m [38;5;3m[EvolutionResetCodeMessenger] [39m[31mCanal de recuperação indisponível: EVOLUTION_API_URL, EVOLUTION_SYSTEM_INSTANCE ou EVOLUTION_SYSTEM_APIKEY ausente no ambiente.[39m
+[31m[Nest] 11268  - [39m24/08/2026, 08:44:51 [31m  ERROR[39m [38;5;3m[RequestPasswordResetUseCase] [39m[31mCódigo gerado, mas o envio pelo WhatsApp falhou[39m
+[31m[Nest] 11268  - [39m24/08/2026, 08:44:51 [31m  ERROR[39m [38;5;3m[RequestPasswordResetUseCase] [39m[31mObject:[39m
+{
+  "userId": "1242f9b1-6305-449f-bc11-482938bcef08"
+}
+
+PASS test/integration/password-reset.spec.ts (23.241 s)
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:09 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:09 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mObservabilityModule dependencies initialized[39m[38;5;3m +42ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:09 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:09 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMessagingModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:09 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:09 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:09 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:09 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mEventEmitterModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:09 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mWhatsAppModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:09 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mBootstrapModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmCoreModule dependencies initialized[39m[38;5;3m +381ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSecurityModule dependencies initialized[39m[38;5;3m +8ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPlanModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPersistenceModule dependencies initialized[39m[38;5;3m +3ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRepositoriesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mModuleModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCompanyModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mFieldConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPaymentConditionModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPriceListModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAccountModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRoleModule dependencies initialized[39m[38;5;3m +9ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mStockModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUserModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mProductModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mContactModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mFinanceModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mIntentModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mBillingModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRouteModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCommissionModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mOrderModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mHttpModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHealthController {/api/health}:[39m[38;5;3m +17ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/health, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/auth}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/login, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/refresh, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/me, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/request-password-reset, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/reset-password, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/change-password, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAccountController {/api/account}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/account, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/account/plans, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/account, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/account/preferences, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/account/cancellation, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCompanyController {/api/companies}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/companies, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/companies/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/companies, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/companies/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/companies/:id/status, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mContactController {/api/contacts}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contacts, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contacts/field-catalog, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contacts/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contacts, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contacts/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mProductController {/api/products}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/field-catalog, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:id/components, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mFieldConfigController {/api/field-config}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/field-config/entities, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/field-config/:entity, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/field-config/:entity, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOrderController {/api/orders}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/quote, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/confirm, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/complete, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/open-consignment, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/start-settlement, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/close-consignment, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/cancel, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStockController {/api/stock}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/balance, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/reservations, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/locations, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/locations, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/movements, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/movements, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/transfers, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPaymentConditionController {/api/payment-conditions}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/payment-conditions, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/payment-conditions, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/payment-conditions/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPriceListController {/api/price-lists}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/price-lists, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/price-lists/resolve, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/price-lists, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/price-lists/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCommissionController {/api/commission}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/tiers, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/tiers, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/b-tiers, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/b-tiers, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/targets, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/targets, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/model-a, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/model-a/payable, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mFinanceController {/api/finance}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/dashboard, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/accounts, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/accounts, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/accounts/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/categories, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/categories, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/categories/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/receivables, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/receivables, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/titles/:id/settle, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/payables, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/payables, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/payables/recurring, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mRouteController {/api/routes}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/routes, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/routes, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/routes/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/routes/commercial-rules/:userId, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/routes/commercial-rules/:userId, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTripController {/api/trips}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/closure, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/cargo, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/depart, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/arrive, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/cancel, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/wallet/build, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/receipts, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/receipts/:receiptId/effectuate, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/returns, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/exchanges, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/expenses, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/close, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mConsignmentController {/api/consignment/orders}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/consignment/orders/:id/evidences, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/consignment/orders/:id/gps-change, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/consignment/orders/:id/promissory, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mModuleController {/api/modules}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modules, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modules/:code, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mRoleController {/api/roles}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles/catalog, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles/read-phrase, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUserController {/api/users}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id/status, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mIntentController {/api/intent}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/intent/capabilities, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/intent/transcribe, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/intent, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/intent/draft, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/intent/approve, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBillingController {/api/billing}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/config, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/config, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/config/test, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/charges, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/charges, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/dunning/rule, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/dunning/rule, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/dunning/run, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/dunning/events, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/dunning/events/:id/approve, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/renegotiations, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBillingWebhookController {/api/billing/webhook}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/webhook/:accountId/:configId, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[DatabaseBootstrapService] [39m[32mNenhuma migration pendente.[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[DatabaseBootstrapService] [39m[32mInvariantes de isolamento verificados.[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[DatabaseBootstrapService] [39m[32mConexão de runtime confirmada como "veertex_app", sujeita ao RLS.[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[DatabaseBootstrapService] [39m[32mCatálogo de módulos reconciliado: 0 inserido(s), 9 atualizado(s).[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[DatabaseBootstrapService] [39m[32mCatálogo de planos reconciliado: 0 inserido(s), 3 já existente(s).[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:10 [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +6ms[39m
+{"level":30,"time":1787571910881,"pid":11268,"hostname":"INV012952","msg":"Server listening at http://127.0.0.1:49677"}
+{"level":30,"time":1787571910891,"pid":11268,"hostname":"INV012952","reqId":"req-1","req":{"method":"POST","url":"/api/auth/login","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49678},"msg":"incoming request"}
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:11 [32m    LOG[39m [38;5;3m[LoginUseCase] [39m[32mUsuário autenticado[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:11 [32m    LOG[39m [38;5;3m[LoginUseCase] [39m[32mObject:[39m
+{
+  "userId": "e3accb12-7ffd-4bcd-93c5-f16df3ba3585",
+  "accountId": "862d63fc-3498-4f47-9823-bd653b8cd21c"
+}
+
+{"level":30,"time":1787571911278,"pid":11268,"hostname":"INV012952","reqId":"req-1","res":{"statusCode":200},"responseTime":387.196799993515,"msg":"request completed"}
+{"level":30,"time":1787571911283,"pid":11268,"hostname":"INV012952","reqId":"req-2","req":{"method":"GET","url":"/api/roles","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49681},"msg":"incoming request"}
+{"level":30,"time":1787571911297,"pid":11268,"hostname":"INV012952","reqId":"req-2","res":{"statusCode":200},"responseTime":14.16839998960495,"msg":"request completed"}
+{"level":30,"time":1787571911300,"pid":11268,"hostname":"INV012952","reqId":"req-3","req":{"method":"POST","url":"/api/users","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49678},"msg":"incoming request"}
+{"level":30,"time":1787571911616,"pid":11268,"hostname":"INV012952","reqId":"req-3","res":{"statusCode":201},"responseTime":315.5576999783516,"msg":"request completed"}
+{"level":30,"time":1787571911618,"pid":11268,"hostname":"INV012952","reqId":"req-4","req":{"method":"POST","url":"/api/auth/login","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49681},"msg":"incoming request"}
+[31m[Nest] 11268  - [39m24/08/2026, 08:45:12 [31m  ERROR[39m [38;5;3m[IntentController] [39m[31mFalha ao aprovar intenção[39m
+[31m[Nest] 11268  - [39m24/08/2026, 08:45:12 [31m  ERROR[39m [38;5;3m[IntentController] [39m[31mObject:[39m
+{
+  "command": "SetRolePermissions",
+  "draftId": "9c54fa2a-0168-4a13-ae43-8d0209e30ae2",
+  "actingUserId": "0e553fbf-54d2-4b28-818b-0ccdcf810d49"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:12 [32m    LOG[39m [38;5;3m[LoginUseCase] [39m[32mUsuário autenticado[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:12 [32m    LOG[39m [38;5;3m[LoginUseCase] [39m[32mObject:[39m
+{
+  "userId": "0e553fbf-54d2-4b28-818b-0ccdcf810d49",
+  "accountId": "862d63fc-3498-4f47-9823-bd653b8cd21c"
+}
+
+{"level":30,"time":1787571912034,"pid":11268,"hostname":"INV012952","reqId":"req-4","res":{"statusCode":200},"responseTime":416.2954000234604,"msg":"request completed"}
+{"level":30,"time":1787571912038,"pid":11268,"hostname":"INV012952","reqId":"req-5","req":{"method":"POST","url":"/api/intent/approve","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49678},"msg":"incoming request"}
+[33m[Nest] 11268  - [39m24/08/2026, 08:45:12 [33m   WARN[39m [38;5;3m[AuthorizeIntentCommandUseCase] [39m[33mComando de intenção recusado por falta de permissão[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:45:12 [33m   WARN[39m [38;5;3m[AuthorizeIntentCommandUseCase] [39m[33mObject:[39m
+{
+  "command": "SetRolePermissions",
+  "required": "roles.update"
+}
+
+{"level":30,"time":1787571912050,"pid":11268,"hostname":"INV012952","reqId":"req-5","res":{"statusCode":403},"responseTime":11.651700019836426,"msg":"request completed"}
+{"level":30,"time":1787571912058,"pid":11268,"hostname":"INV012952","reqId":"req-6","req":{"method":"POST","url":"/api/intent/draft","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49678},"msg":"incoming request"}
+[33m[Nest] 11268  - [39m24/08/2026, 08:45:12 [33m   WARN[39m [38;5;3m[AuthorizeIntentCommandUseCase] [39m[33mComando de intenção recusado por falta de permissão[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:45:12 [33m   WARN[39m [38;5;3m[AuthorizeIntentCommandUseCase] [39m[33mObject:[39m
+{
+  "command": "SetRolePermissions",
+  "required": "roles.update"
+}
+
+{"level":30,"time":1787571912068,"pid":11268,"hostname":"INV012952","reqId":"req-6","res":{"statusCode":403},"responseTime":9.999300003051758,"msg":"request completed"}
+{"level":30,"time":1787571912072,"pid":11268,"hostname":"INV012952","reqId":"req-7","req":{"method":"POST","url":"/api/intent","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49681},"msg":"incoming request"}
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:12 [32m    LOG[39m [38;5;3m[ParseIntentUseCase] [39m[32mNenhum comando disponível para este ator[39m
+{"level":30,"time":1787571912082,"pid":11268,"hostname":"INV012952","reqId":"req-7","res":{"statusCode":200},"responseTime":9.884700000286102,"msg":"request completed"}
+{"level":30,"time":1787571912085,"pid":11268,"hostname":"INV012952","reqId":"req-8","req":{"method":"POST","url":"/api/intent/approve","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49678},"msg":"incoming request"}
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:12 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:12 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "SetRolePermissions",
+  "draftId": "93700b77-00d1-4c8f-8a1c-ce73828fe008",
+  "actingUserId": "e3accb12-7ffd-4bcd-93c5-f16df3ba3585"
+}
+
+{"level":30,"time":1787571912114,"pid":11268,"hostname":"INV012952","reqId":"req-8","res":{"statusCode":200},"responseTime":28.098699986934662,"msg":"request completed"}
+[31m[Nest] 11268  - [39m24/08/2026, 08:45:12 [31m  ERROR[39m [38;5;3m[IntentController] [39m[31mFalha ao aprovar intenção[39m
+[31m[Nest] 11268  - [39m24/08/2026, 08:45:12 [31m  ERROR[39m [38;5;3m[IntentController] [39m[31mObject:[39m
+{
+  "command": "CreateCompany",
+  "draftId": "56c63b7b-f059-444a-a39d-8d006f39dc3a",
+  "actingUserId": "e3accb12-7ffd-4bcd-93c5-f16df3ba3585"
+}
+
+{"level":30,"time":1787571912120,"pid":11268,"hostname":"INV012952","reqId":"req-9","req":{"method":"POST","url":"/api/intent/approve","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49678},"msg":"incoming request"}
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:12 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:12 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "CreateCompany",
+  "draftId": "4514ebc1-1094-4d42-b589-fd8806cc7968",
+  "actingUserId": "e3accb12-7ffd-4bcd-93c5-f16df3ba3585"
+}
+
+{"level":30,"time":1787571912152,"pid":11268,"hostname":"INV012952","reqId":"req-9","res":{"statusCode":200},"responseTime":31.28580003976822,"msg":"request completed"}
+{"level":30,"time":1787571912153,"pid":11268,"hostname":"INV012952","reqId":"req-a","req":{"method":"GET","url":"/api/companies","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49681},"msg":"incoming request"}
+{"level":30,"time":1787571912167,"pid":11268,"hostname":"INV012952","reqId":"req-a","res":{"statusCode":200},"responseTime":13.77920001745224,"msg":"request completed"}
+{"level":30,"time":1787571912170,"pid":11268,"hostname":"INV012952","reqId":"req-b","req":{"method":"POST","url":"/api/intent/approve","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49678},"msg":"incoming request"}
+{"level":30,"time":1787571912180,"pid":11268,"hostname":"INV012952","reqId":"req-b","res":{"statusCode":400},"responseTime":9.864400029182434,"msg":"request completed"}
+{"level":30,"time":1787571912182,"pid":11268,"hostname":"INV012952","reqId":"req-c","req":{"method":"GET","url":"/api/companies","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49681},"msg":"incoming request"}
+{"level":30,"time":1787571912194,"pid":11268,"hostname":"INV012952","reqId":"req-c","res":{"statusCode":200},"responseTime":11.884199976921082,"msg":"request completed"}
+{"level":30,"time":1787571912197,"pid":11268,"hostname":"INV012952","reqId":"req-d","req":{"method":"POST","url":"/api/intent/approve","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49678},"msg":"incoming request"}
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:12 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:12 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "UpdateCompany",
+  "draftId": "0f6bd4e7-6711-4d49-b29a-023c0371ba3f",
+  "actingUserId": "e3accb12-7ffd-4bcd-93c5-f16df3ba3585"
+}
+
+{"level":30,"time":1787571912217,"pid":11268,"hostname":"INV012952","reqId":"req-d","res":{"statusCode":200},"responseTime":20.64800000190735,"msg":"request completed"}
+[31m[Nest] 11268  - [39m24/08/2026, 08:45:12 [31m  ERROR[39m [38;5;3m[IntentController] [39m[31mFalha ao aprovar intenção[39m
+[31m[Nest] 11268  - [39m24/08/2026, 08:45:12 [31m  ERROR[39m [38;5;3m[IntentController] [39m[31mObject:[39m
+{
+  "command": "SetRolePermissions",
+  "draftId": "685ae41a-f76f-4bc1-8092-4ad41fb520f7",
+  "actingUserId": "e3accb12-7ffd-4bcd-93c5-f16df3ba3585"
+}
+
+{"level":30,"time":1787571912221,"pid":11268,"hostname":"INV012952","reqId":"req-e","req":{"method":"POST","url":"/api/intent","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49678},"msg":"incoming request"}
+{"level":30,"time":1787571912222,"pid":11268,"hostname":"INV012952","reqId":"req-e","res":{"statusCode":401},"responseTime":0.7346000075340271,"msg":"request completed"}
+{"level":30,"time":1787571912224,"pid":11268,"hostname":"INV012952","reqId":"req-f","req":{"method":"POST","url":"/api/intent/approve","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49681},"msg":"incoming request"}
+{"level":30,"time":1787571912232,"pid":11268,"hostname":"INV012952","reqId":"req-f","res":{"statusCode":400},"responseTime":7.570299983024597,"msg":"request completed"}
+{"level":30,"time":1787571912234,"pid":11268,"hostname":"INV012952","reqId":"req-g","req":{"method":"POST","url":"/api/intent/approve","hostname":"127.0.0.1:49677","remoteAddress":"127.0.0.1","remotePort":49678},"msg":"incoming request"}
+{"level":30,"time":1787571912242,"pid":11268,"hostname":"INV012952","reqId":"req-g","res":{"statusCode":400},"responseTime":7.379599988460541,"msg":"request completed"}
+PASS test/execution/intent-authorization.spec.ts (17.259 s)
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mObservabilityModule dependencies initialized[39m[38;5;3m +131ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +3ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMessagingModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mEventEmitterModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mWhatsAppModule dependencies initialized[39m[38;5;3m +3ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mBootstrapModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmCoreModule dependencies initialized[39m[38;5;3m +316ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMikroOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSecurityModule dependencies initialized[39m[38;5;3m +7ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPlanModule dependencies initialized[39m[38;5;3m +4ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPersistenceModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRepositoriesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mModuleModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCompanyModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mFieldConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPaymentConditionModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPriceListModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAccountModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRoleModule dependencies initialized[39m[38;5;3m +9ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mStockModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUserModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mProductModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mContactModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mFinanceModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mIntentModule dependencies initialized[39m[38;5;3m +4ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mBillingModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRouteModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCommissionModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mOrderModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mHttpModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHealthController {/api/health}:[39m[38;5;3m +9ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/health, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/auth}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/login, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/refresh, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/me, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/request-password-reset, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/reset-password, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/change-password, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAccountController {/api/account}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/account, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/account/plans, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/account, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/account/preferences, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/account/cancellation, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCompanyController {/api/companies}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/companies, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/companies/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/companies, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/companies/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/companies/:id/status, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mContactController {/api/contacts}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contacts, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contacts/field-catalog, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contacts/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contacts, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/contacts/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mProductController {/api/products}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/field-catalog, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/products/:id/components, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mFieldConfigController {/api/field-config}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/field-config/entities, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/field-config/:entity, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/field-config/:entity, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOrderController {/api/orders}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/quote, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/confirm, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/complete, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/open-consignment, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/start-settlement, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/close-consignment, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/orders/:id/cancel, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStockController {/api/stock}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/balance, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/reservations, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/locations, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/locations, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/movements, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/movements, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stock/transfers, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPaymentConditionController {/api/payment-conditions}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/payment-conditions, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/payment-conditions, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/payment-conditions/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPriceListController {/api/price-lists}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/price-lists, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/price-lists/resolve, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/price-lists, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/price-lists/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCommissionController {/api/commission}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/tiers, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/tiers, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/b-tiers, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/b-tiers, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/targets, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/targets, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/model-a, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/commission/model-a/payable, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mFinanceController {/api/finance}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/dashboard, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/accounts, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/accounts, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/accounts/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/categories, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/categories, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/categories/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/receivables, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/receivables, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/titles/:id/settle, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/payables, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/payables, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/finance/payables/recurring, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mRouteController {/api/routes}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/routes, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/routes, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/routes/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/routes/commercial-rules/:userId, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/routes/commercial-rules/:userId, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTripController {/api/trips}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/closure, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/cargo, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/depart, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/arrive, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/cancel, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/wallet/build, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/receipts, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/receipts/:receiptId/effectuate, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/returns, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/exchanges, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/expenses, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/trips/:id/close, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mConsignmentController {/api/consignment/orders}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/consignment/orders/:id/evidences, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/consignment/orders/:id/gps-change, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/consignment/orders/:id/promissory, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mModuleController {/api/modules}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modules, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/modules/:code, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mRoleController {/api/roles}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles/catalog, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles/read-phrase, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/roles/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUserController {/api/users}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id/status, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mIntentController {/api/intent}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/intent/capabilities, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/intent/transcribe, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/intent, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/intent/draft, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/intent/approve, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBillingController {/api/billing}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/config, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/config, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/config/test, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/charges, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/charges, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/dunning/rule, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/dunning/rule, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/dunning/run, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/dunning/events, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/dunning/events/:id/approve, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/renegotiations, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBillingWebhookController {/api/billing/webhook}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:27 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/billing/webhook/:accountId/:configId, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:28 [32m    LOG[39m [38;5;3m[DatabaseBootstrapService] [39m[32mNenhuma migration pendente.[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:28 [32m    LOG[39m [38;5;3m[DatabaseBootstrapService] [39m[32mInvariantes de isolamento verificados.[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:28 [32m    LOG[39m [38;5;3m[DatabaseBootstrapService] [39m[32mConexão de runtime confirmada como "veertex_app", sujeita ao RLS.[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:28 [32m    LOG[39m [38;5;3m[DatabaseBootstrapService] [39m[32mCatálogo de módulos reconciliado: 0 inserido(s), 9 atualizado(s).[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:28 [32m    LOG[39m [38;5;3m[DatabaseBootstrapService] [39m[32mCatálogo de planos reconciliado: 0 inserido(s), 3 já existente(s).[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:28 [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +5ms[39m
+{"level":30,"time":1787571928375,"pid":11268,"hostname":"INV012952","msg":"Server listening at http://127.0.0.1:54405"}
+{"level":30,"time":1787571928824,"pid":11268,"hostname":"INV012952","reqId":"req-1","req":{"method":"GET","url":"/api/health","hostname":"127.0.0.1:54405","remoteAddress":"127.0.0.1","remotePort":55721},"msg":"incoming request"}
+{"level":30,"time":1787571928827,"pid":11268,"hostname":"INV012952","reqId":"req-1","res":{"statusCode":200},"responseTime":1.868499994277954,"msg":"request completed"}
+{"level":30,"time":1787571928837,"pid":11268,"hostname":"INV012952","reqId":"req-2","req":{"method":"GET","url":"/api/auth/me","hostname":"127.0.0.1:54405","remoteAddress":"127.0.0.1","remotePort":55722},"msg":"incoming request"}
+{"level":30,"time":1787571928838,"pid":11268,"hostname":"INV012952","reqId":"req-2","res":{"statusCode":401},"responseTime":1.163599967956543,"msg":"request completed"}
+{"level":30,"time":1787571928843,"pid":11268,"hostname":"INV012952","reqId":"req-3","req":{"method":"POST","url":"/api/auth/login","hostname":"127.0.0.1:54405","remoteAddress":"127.0.0.1","remotePort":55721},"msg":"incoming request"}
+[33m[Nest] 11268  - [39m24/08/2026, 08:45:29 [33m   WARN[39m [38;5;3m[LoginUseCase] [39m[33mFalha na autenticação[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:45:29 [33m   WARN[39m [38;5;3m[LoginUseCase] [39m[33mObject:[39m
+{
+  "reason": "invalid_password",
+  "userId": "df0a16f7-7223-4fed-86e3-5c1b68803aa8",
+  "ip": "127.0.0.1"
+}
+
+{"level":30,"time":1787571929330,"pid":11268,"hostname":"INV012952","reqId":"req-3","res":{"statusCode":401},"responseTime":486.8080999851227,"msg":"request completed"}
+{"level":30,"time":1787571929332,"pid":11268,"hostname":"INV012952","reqId":"req-4","req":{"method":"POST","url":"/api/auth/login","hostname":"127.0.0.1:54405","remoteAddress":"127.0.0.1","remotePort":55722},"msg":"incoming request"}
+[33m[Nest] 11268  - [39m24/08/2026, 08:45:29 [33m   WARN[39m [38;5;3m[LoginUseCase] [39m[33mFalha na autenticação[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:45:29 [33m   WARN[39m [38;5;3m[LoginUseCase] [39m[33mObject:[39m
+{
+  "reason": "unknown_email",
+  "ip": "127.0.0.1"
+}
+
+{"level":30,"time":1787571929660,"pid":11268,"hostname":"INV012952","reqId":"req-4","res":{"statusCode":401},"responseTime":327.4631000161171,"msg":"request completed"}
+{"level":30,"time":1787571929664,"pid":11268,"hostname":"INV012952","reqId":"req-5","req":{"method":"POST","url":"/api/auth/login","hostname":"127.0.0.1:54405","remoteAddress":"127.0.0.1","remotePort":55721},"msg":"incoming request"}
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:30 [32m    LOG[39m [38;5;3m[LoginUseCase] [39m[32mUsuário autenticado[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:45:30 [32m    LOG[39m [38;5;3m[LoginUseCase] [39m[32mObject:[39m
+{
+  "userId": "df0a16f7-7223-4fed-86e3-5c1b68803aa8",
+  "accountId": "3a46bb27-612f-494d-a429-4c5af9be264e"
+}
+
+{"level":30,"time":1787571930959,"pid":11268,"hostname":"INV012952","reqId":"req-5","res":{"statusCode":200},"responseTime":1294.9455999732018,"msg":"request completed"}
+{"level":30,"time":1787571930961,"pid":11268,"hostname":"INV012952","reqId":"req-6","req":{"method":"GET","url":"/api/auth/me","hostname":"127.0.0.1:54405","remoteAddress":"127.0.0.1","remotePort":55722},"msg":"incoming request"}
+{"level":30,"time":1787571930991,"pid":11268,"hostname":"INV012952","reqId":"req-6","res":{"statusCode":200},"responseTime":30.014800012111664,"msg":"request completed"}
+{"level":30,"time":1787571930994,"pid":11268,"hostname":"INV012952","reqId":"req-7","req":{"method":"POST","url":"/api/auth/refresh","hostname":"127.0.0.1:54405","remoteAddress":"127.0.0.1","remotePort":55721},"msg":"incoming request"}
+{"level":30,"time":1787571931025,"pid":11268,"hostname":"INV012952","reqId":"req-7","res":{"statusCode":200},"responseTime":31.18879997730255,"msg":"request completed"}
+{"level":30,"time":1787571931027,"pid":11268,"hostname":"INV012952","reqId":"req-8","req":{"method":"POST","url":"/api/auth/refresh","hostname":"127.0.0.1:54405","remoteAddress":"127.0.0.1","remotePort":55722},"msg":"incoming request"}
+[95m[Nest] 11268  - [39m24/08/2026, 08:45:31 [95m  DEBUG[39m [38;5;3m[JwtTokenService] [39m[95mToken rejeitado[39m
+[95m[Nest] 11268  - [39m24/08/2026, 08:45:31 [95m  DEBUG[39m [38;5;3m[JwtTokenService] [39m[95mObject:[39m
+{
+  "reason": "JsonWebTokenError"
+}
+
+{"level":30,"time":1787571931037,"pid":11268,"hostname":"INV012952","reqId":"req-8","res":{"statusCode":401},"responseTime":10.066600024700165,"msg":"request completed"}
+{"level":30,"time":1787571931529,"pid":11268,"hostname":"INV012952","reqId":"req-9","req":{"method":"GET","url":"/api/health","hostname":"127.0.0.1:54405","remoteAddress":"127.0.0.1","remotePort":55723},"msg":"incoming request"}
+{"level":30,"time":1787571931531,"pid":11268,"hostname":"INV012952","reqId":"req-9","res":{"statusCode":200},"responseTime":1.0264000296592712,"msg":"request completed"}
+{"level":30,"time":1787571931541,"pid":11268,"hostname":"INV012952","reqId":"req-a","req":{"method":"GET","url":"/api/auth/me","hostname":"127.0.0.1:54405","remoteAddress":"127.0.0.1","remotePort":55724},"msg":"incoming request"}
+{"level":30,"time":1787571931542,"pid":11268,"hostname":"INV012952","reqId":"req-a","res":{"statusCode":401},"responseTime":0.9199000000953674,"msg":"request completed"}
+{"level":30,"time":1787571931546,"pid":11268,"hostname":"INV012952","reqId":"req-b","req":{"method":"POST","url":"/api/auth/login","hostname":"127.0.0.1:54405","remoteAddress":"127.0.0.1","remotePort":55723},"msg":"incoming request"}
+[33m[Nest] 11268  - [39m24/08/2026, 08:45:32 [33m   WARN[39m [38;5;3m[LoginUseCase] [39m[33mFalha na autenticação[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:45:32 [33m   WARN[39m [38;5;3m[LoginUseCase] [39m[33mObject:[39m
+{
+  "reason": "invalid_password",
+  "userId": "df0a16f7-7223-4fed-86e3-5c1b68803aa8",
+  "ip": "127.0.0.1"
+}
+
+{"level":30,"time":1787571932012,"pid":11268,"hostname":"INV012952","reqId":"req-b","res":{"statusCode":401},"responseTime":465.7416999936104,"msg":"request completed"}
+{"level":30,"time":1787571932015,"pid":11268,"hostname":"INV012952","reqId":"req-c","req":{"method":"POST","url":"/api/auth/login","hostname":"127.0.0.1:54405","remoteAddress":"127.0.0.1","remotePort":55724},"msg":"incoming request"}
+[33m[Nest] 11268  - [39m24/08/2026, 08:45:32 [33m   WARN[39m [38;5;3m[LoginUseCase] [39m[33mFalha na autenticação[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:45:32 [33m   WARN[39m [38;5;3m[LoginUseCase] [39m[33mObject:[39m
+{
+  "reason": "unknown_email",
+  "ip": "127.0.0.1"
+}
+
+{"level":30,"time":1787571932493,"pid":11268,"hostname":"INV012952","reqId":"req-c","res":{"statusCode":401},"responseTime":477.5209999680519,"msg":"request completed"}
+{"level":30,"time":1787571932495,"pid":11268,"hostname":"INV012952","reqId":"req-d","req":{"method":"POST","url":"/api/auth/login","hostname":"127.0.0.1:54405","remoteAddress":"127.0.0.1","remotePort":55723},"msg":"incoming request"}
+[33m[Nest] 11268  - [39m24/08/2026, 08:45:33 [33m   WARN[39m [38;5;3m[LoginUseCase] [39m[33mFalha na autenticação[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:45:33 [33m   WARN[39m [38;5;3m[LoginUseCase] [39m[33mObject:[39m
+{
+  "reason": "invalid_password",
+  "userId": "df0a16f7-7223-4fed-86e3-5c1b68803aa8",
+  "ip": "127.0.0.1"
+}
+
+{"level":30,"time":1787571933849,"pid":11268,"hostname":"INV012952","reqId":"req-d","res":{"statusCode":401},"responseTime":1353.9642999768257,"msg":"request completed"}
+PASS test/execution/smoke-auth.spec.ts (21.985 s)
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  override existing env vars with { override: true }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/integration/role-administration-lockout.spec.ts (18.726 s)
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+FAIL test/unit/route-metadata.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+  ● Metadata das rotas HTTP › toda rota não pública tem guard
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 3
+
+    - Array []
+    + Array [
+    +   "BillingWebhookController.receive",
+    + ]
+
+    [0m [90m 151 |[39m       [33m.[39mmap((route) [33m=>[39m route[33m.[39mid)[33m;[39m
+     [90m 152 |[39m
+    [31m[1m>[22m[39m[90m 153 |[39m     expect(offenders)[33m.[39mtoEqual([])[33m;[39m
+     [90m     |[39m                       [31m[1m^[22m[39m
+     [90m 154 |[39m   })[33m;[39m
+     [90m 155 |[39m
+     [90m 156 |[39m   it([32m'toda rota não pública declara permissão (salvo autoatendimento e autorização por comando)'[39m[33m,[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (test/unit/route-metadata.spec.ts:153:23)
+
+  ● Metadata das rotas HTTP › toda rota não pública declara permissão (salvo autoatendimento e autorização por comando)
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 3
+
+    - Array []
+    + Array [
+    +   "BillingWebhookController.receive",
+    + ]
+
+    [0m [90m 166 |[39m       [33m.[39mmap((route) [33m=>[39m route[33m.[39mid)[33m;[39m
+     [90m 167 |[39m
+    [31m[1m>[22m[39m[90m 168 |[39m     expect(offenders)[33m.[39mtoEqual([])[33m;[39m
+     [90m     |[39m                       [31m[1m^[22m[39m
+     [90m 169 |[39m   })[33m;[39m
+     [90m 170 |[39m
+     [90m 171 |[39m   it([32m'nenhuma rota pública carrega guard (indício de exceção desatualizada)'[39m[33m,[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (test/unit/route-metadata.spec.ts:168:23)
+
+PASS test/integration/module-lifecycle.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/execution/verify.cli.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/intent-catalog-contract.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "CreateCompany",
+  "draftId": "draft-1",
+  "actingUserId": "99999999-9999-4999-8999-999999999999"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "UpdateCompany",
+  "draftId": "draft-1",
+  "actingUserId": "99999999-9999-4999-8999-999999999999"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "InviteUser",
+  "draftId": "draft-1",
+  "actingUserId": "99999999-9999-4999-8999-999999999999"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "UpdateUser",
+  "draftId": "draft-1",
+  "actingUserId": "99999999-9999-4999-8999-999999999999"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "AssignRole",
+  "draftId": "draft-1",
+  "actingUserId": "99999999-9999-4999-8999-999999999999"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "CreateRole",
+  "draftId": "draft-1",
+  "actingUserId": "99999999-9999-4999-8999-999999999999"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "SetRolePermissions",
+  "draftId": "draft-1",
+  "actingUserId": "99999999-9999-4999-8999-999999999999"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "CreateContact",
+  "draftId": "draft-1",
+  "actingUserId": "99999999-9999-4999-8999-999999999999"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "UpdateContact",
+  "draftId": "draft-1",
+  "actingUserId": "99999999-9999-4999-8999-999999999999"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "CreateProduct",
+  "draftId": "draft-1",
+  "actingUserId": "99999999-9999-4999-8999-999999999999"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "UpdateProduct",
+  "draftId": "draft-1",
+  "actingUserId": "99999999-9999-4999-8999-999999999999"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "ToggleModule",
+  "draftId": "draft-1",
+  "actingUserId": "99999999-9999-4999-8999-999999999999"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[BuildIntentDraftUseCase] [39m[32mRascunho montado[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[BuildIntentDraftUseCase] [39m[32mObject:[39m
+{
+  "command": "CreateRole",
+  "camposEmRevisao": 0
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[BuildIntentDraftUseCase] [39m[32mRascunho montado[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[BuildIntentDraftUseCase] [39m[32mObject:[39m
+{
+  "command": "CreateRole",
+  "camposEmRevisao": 0
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[BuildIntentDraftUseCase] [39m[32mRascunho montado[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[BuildIntentDraftUseCase] [39m[32mObject:[39m
+{
+  "command": "CreateRole",
+  "camposEmRevisao": 0
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[BuildIntentDraftUseCase] [39m[32mRascunho montado[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[BuildIntentDraftUseCase] [39m[32mObject:[39m
+{
+  "command": "CreateRole",
+  "camposEmRevisao": 0
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "CreateRole",
+  "draftId": "d",
+  "actingUserId": "99999999-9999-4999-8999-999999999999"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mIntenção aprovada e executada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[ApproveIntentUseCase] [39m[32mObject:[39m
+{
+  "command": "ToggleModule",
+  "draftId": "d",
+  "actingUserId": "99999999-9999-4999-8999-999999999999"
+}
+
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:02 [95m  DEBUG[39m [38;5;3m[DeterministicPermissionPhraseTranslator] [39m[95mFrase traduzida por palavra-chave[39m
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:02 [95m  DEBUG[39m [38;5;3m[DeterministicPermissionPhraseTranslator] [39m[95mObject:[39m
+{
+  "vereditos": 2
+}
+
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:02 [95m  DEBUG[39m [38;5;3m[DeterministicPermissionPhraseTranslator] [39m[95mFrase traduzida por palavra-chave[39m
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:02 [95m  DEBUG[39m [38;5;3m[DeterministicPermissionPhraseTranslator] [39m[95mObject:[39m
+{
+  "vereditos": 1
+}
+
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:02 [95m  DEBUG[39m [38;5;3m[DeterministicPermissionPhraseTranslator] [39m[95mFrase traduzida por palavra-chave[39m
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:02 [95m  DEBUG[39m [38;5;3m[DeterministicPermissionPhraseTranslator] [39m[95mObject:[39m
+{
+  "vereditos": 1
+}
+
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:02 [95m  DEBUG[39m [38;5;3m[DeterministicPermissionPhraseTranslator] [39m[95mFrase traduzida por palavra-chave[39m
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:02 [95m  DEBUG[39m [38;5;3m[DeterministicPermissionPhraseTranslator] [39m[95mObject:[39m
+{
+  "vereditos": 0
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[GeminiPermissionPhraseTranslator] [39m[32mFrase traduzida[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[GeminiPermissionPhraseTranslator] [39m[32mObject:[39m
+{
+  "vereditos": 1
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[GeminiPermissionPhraseTranslator] [39m[32mFrase traduzida[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[GeminiPermissionPhraseTranslator] [39m[32mObject:[39m
+{
+  "vereditos": 1
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[GeminiPermissionPhraseTranslator] [39m[32mFrase traduzida[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[GeminiPermissionPhraseTranslator] [39m[32mObject:[39m
+{
+  "vereditos": 1
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[GeminiPermissionPhraseTranslator] [39m[32mFrase traduzida[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[GeminiPermissionPhraseTranslator] [39m[32mObject:[39m
+{
+  "vereditos": 1
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[GeminiPermissionPhraseTranslator] [39m[32mFrase traduzida[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[GeminiPermissionPhraseTranslator] [39m[32mObject:[39m
+{
+  "vereditos": 0
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[GeminiPermissionPhraseTranslator] [39m[32mFrase traduzida[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:02 [32m    LOG[39m [38;5;3m[GeminiPermissionPhraseTranslator] [39m[32mObject:[39m
+{
+  "vereditos": 0
+}
+
+PASS test/unit/permission-phrase.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/database-url-diagnostico.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/module-guard.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/intent-question-guard.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  suppress all logs with { quiet: true }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:05 [95m  DEBUG[39m [38;5;3m[DeterministicIntentParser] [39m[95mFrase interrogativa — nenhum comando de escrita é proposto[39m
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:05 [95m  DEBUG[39m [38;5;3m[DeterministicIntentParser] [39m[95mFrase interrogativa — nenhum comando de escrita é proposto[39m
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:05 [95m  DEBUG[39m [38;5;3m[DeterministicIntentParser] [39m[95mFrase interrogativa — nenhum comando de escrita é proposto[39m
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:05 [95m  DEBUG[39m [38;5;3m[DeterministicIntentParser] [39m[95mFrase interrogativa — nenhum comando de escrita é proposto[39m
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:05 [95m  DEBUG[39m [38;5;3m[DeterministicIntentParser] [39m[95mFrase interrogativa — nenhum comando de escrita é proposto[39m
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:05 [95m  DEBUG[39m [38;5;3m[DeterministicIntentParser] [39m[95mFrase interrogativa — nenhum comando de escrita é proposto[39m
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:05 [95m  DEBUG[39m [38;5;3m[DeterministicIntentParser] [39m[95mFrase interrogativa — nenhum comando de escrita é proposto[39m
+[95m[Nest] 11268  - [39m24/08/2026, 08:46:05 [95m  DEBUG[39m [38;5;3m[DeterministicIntentParser] [39m[95mFrase interrogativa — nenhum comando de escrita é proposto[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mComando de escrita proposto para frase interrogativa — descartado[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mObject:[39m
+{
+  "command": "SetRolePermissions"
+}
+
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mComando de escrita proposto para frase interrogativa — descartado[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mObject:[39m
+{
+  "command": "SetRolePermissions"
+}
+
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mComando de escrita proposto para frase interrogativa — descartado[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mObject:[39m
+{
+  "command": "SetRolePermissions"
+}
+
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mComando de escrita proposto para frase interrogativa — descartado[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mObject:[39m
+{
+  "command": "SetRolePermissions"
+}
+
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mComando de escrita proposto para frase interrogativa — descartado[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mObject:[39m
+{
+  "command": "SetRolePermissions"
+}
+
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mComando de escrita proposto para frase interrogativa — descartado[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mObject:[39m
+{
+  "command": "SetRolePermissions"
+}
+
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mComando de escrita proposto para frase interrogativa — descartado[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mObject:[39m
+{
+  "command": "SetRolePermissions"
+}
+
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mComando de escrita proposto para frase interrogativa — descartado[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:05 [33m   WARN[39m [38;5;3m[GeminiIntentParser] [39m[33mObject:[39m
+{
+  "command": "SetRolePermissions"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:05 [32m    LOG[39m [38;5;3m[GeminiIntentParser] [39m[32mIntenção traduzida[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:05 [32m    LOG[39m [38;5;3m[GeminiIntentParser] [39m[32mObject:[39m
+{
+  "command": "CreateRole",
+  "camposEmRevisao": 0
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:05 [32m    LOG[39m [38;5;3m[GeminiIntentParser] [39m[32mIntenção traduzida[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:05 [32m    LOG[39m [38;5;3m[GeminiIntentParser] [39m[32mObject:[39m
+{
+  "command": "CreateRole",
+  "camposEmRevisao": 0
+}
+
+PASS test/unit/rot-fechamento.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/fin-due-rule-clamp.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  suppress all logs with { quiet: true }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/intent-image.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:06 [32m    LOG[39m [38;5;3m[GeminiIntentParser] [39m[32mIntenção traduzida[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:06 [32m    LOG[39m [38;5;3m[GeminiIntentParser] [39m[32mObject:[39m
+{
+  "command": "CreateContact",
+  "camposEmRevisao": 0
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:06 [32m    LOG[39m [38;5;3m[GeminiIntentParser] [39m[32mIntenção traduzida[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:06 [32m    LOG[39m [38;5;3m[GeminiIntentParser] [39m[32mObject:[39m
+{
+  "command": "CreateContact",
+  "camposEmRevisao": 0
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:06 [32m    LOG[39m [38;5;3m[GeminiIntentParser] [39m[32mIntenção traduzida[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:06 [32m    LOG[39m [38;5;3m[GeminiIntentParser] [39m[32mObject:[39m
+{
+  "command": "CreateContact",
+  "camposEmRevisao": 0
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:06 [32m    LOG[39m [38;5;3m[GeminiIntentParser] [39m[32mIntenção traduzida[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:06 [32m    LOG[39m [38;5;3m[GeminiIntentParser] [39m[32mObject:[39m
+{
+  "command": "CreateContact",
+  "camposEmRevisao": 0
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:06 [32m    LOG[39m [38;5;3m[ParseIntentUseCase] [39m[32mAviso ao titular exibido antes do envio de imagem[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:06 [32m    LOG[39m [38;5;3m[ParseIntentUseCase] [39m[32mObject:[39m
+{
+  "accountId": "conta-1",
+  "actingUserId": "user-1",
+  "exibidoEm": "2026-08-15T12:00:00.000Z",
+  "mimeType": "image/jpeg"
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:06 [32m    LOG[39m [38;5;3m[ParseIntentUseCase] [39m[32mIntenção processada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:06 [32m    LOG[39m [38;5;3m[ParseIntentUseCase] [39m[32mObject:[39m
+{
+  "reconhecido": false,
+  "comandosDisponiveis": 12
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:06 [32m    LOG[39m [38;5;3m[ParseIntentUseCase] [39m[32mIntenção processada[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:06 [32m    LOG[39m [38;5;3m[ParseIntentUseCase] [39m[32mObject:[39m
+{
+  "reconhecido": false,
+  "comandosDisponiveis": 12
+}
+
+PASS test/unit/rot-acabamento.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/stock-location.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  enable debug logging with { debug: true }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/stock-register-movement.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/integration/tenant-isolation.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+    console.log
+      ✅ sem escopo: "companies" devolve zero linhas
+      ✅ sem escopo: "roles" devolve zero linhas
+      ✅ sem escopo: "users" devolve zero linhas
+      ✅ sem escopo: "password_reset_codes" devolve zero linhas
+      ✅ sem escopo: "account_modules" devolve zero linhas
+      ✅ sem escopo: "contacts" devolve zero linhas
+      ✅ sem escopo: "contact_emails" devolve zero linhas
+      ✅ sem escopo: "contact_phones" devolve zero linhas
+      ✅ sem escopo: "contact_addresses" devolve zero linhas
+      ✅ sem escopo: "accounts" devolve zero linhas
+      ✅ GUC vazio não abre nada
+      ✅ escopo da conta A enxerga só a conta A
+      ✅ id da outra conta devolve vazio, não erro
+      ✅ o escopo morre no commit (não vaza pelo pool)
+      ✅ INSERT com account_id alheio é recusado (WITH CHECK)
+      ✅ UPDATE em linha de outra conta afeta zero linhas
+      ✅ o papel de runtime não tem DELETE
+
+      at Object.<anonymous> (test/integration/tenant-isolation.spec.ts:118:13)
+
+PASS test/unit/rot-acerto.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/rot-trip.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/rot-evidencias.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:08 [33m   WARN[39m [38;5;3m[ChangeOrderGpsUseCase] [39m[33mGPS do pedido alterado por ação explícita[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:08 [33m   WARN[39m [38;5;3m[ChangeOrderGpsUseCase] [39m[33mObject:[39m
+{
+  "orderId": "22222222-2222-4222-8222-222222222222",
+  "by": "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
+}
+
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:08 [33m   WARN[39m [38;5;3m[ChangeOrderGpsUseCase] [39m[33mGPS do pedido alterado por ação explícita[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:08 [33m   WARN[39m [38;5;3m[ChangeOrderGpsUseCase] [39m[33mObject:[39m
+{
+  "orderId": "22222222-2222-4222-8222-222222222222",
+  "by": "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
+}
+
+PASS test/unit/price-list-resolve.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  suppress all logs with { quiet: true }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+[31m[Nest] 11268  - [39m24/08/2026, 08:46:08 [31m  ERROR[39m [38;5;3m[GeminiAudioTranscriber] [39m[31mFalha ao transcrever áudio[39m
+[31m[Nest] 11268  - [39m24/08/2026, 08:46:08 [31m  ERROR[39m [38;5;3m[GeminiAudioTranscriber] [39m[31mObject:[39m
+{
+  "reason": "AxiosError",
+  "ms": 11
+}
+
+[31m[Nest] 11268  - [39m24/08/2026, 08:46:08 [31m  ERROR[39m [38;5;3m[GeminiAudioTranscriber] [39m[31mTranscrição indisponível: GEMINI_API_KEY ausente no ambiente.[39m
+PASS test/unit/audio-transcriber.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:08 [32m    LOG[39m [38;5;3m[GeminiAudioTranscriber] [39m[32mÁudio transcrito[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:08 [32m    LOG[39m [38;5;3m[GeminiAudioTranscriber] [39m[32mObject:[39m
+{
+  "ms": 11,
+  "caracteres": 37
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:08 [32m    LOG[39m [38;5;3m[GeminiAudioTranscriber] [39m[32mÁudio transcrito[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:08 [32m    LOG[39m [38;5;3m[GeminiAudioTranscriber] [39m[32mObject:[39m
+{
+  "ms": 4,
+  "caracteres": 37
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:08 [32m    LOG[39m [38;5;3m[GeminiAudioTranscriber] [39m[32mÁudio transcrito[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:08 [32m    LOG[39m [38;5;3m[GeminiAudioTranscriber] [39m[32mObject:[39m
+{
+  "ms": 4,
+  "caracteres": 37
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:08 [32m    LOG[39m [38;5;3m[GeminiAudioTranscriber] [39m[32mÁudio transcrito[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:08 [32m    LOG[39m [38;5;3m[GeminiAudioTranscriber] [39m[32mObject:[39m
+{
+  "ms": 2,
+  "caracteres": 37
+}
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:08 [32m    LOG[39m [38;5;3m[GeminiAudioTranscriber] [39m[32mÁudio transcrito[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:08 [32m    LOG[39m [38;5;3m[GeminiAudioTranscriber] [39m[32mObject:[39m
+{
+  "ms": 3,
+  "caracteres": 37
+}
+
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:08 [33m   WARN[39m [38;5;3m[GeminiAudioTranscriber] [39m[33mTranscrição vazia[39m
+[33m[Nest] 11268  - [39m24/08/2026, 08:46:08 [33m   WARN[39m [38;5;3m[TranscribeAudioUseCase] [39m[33mTranscrição de áudio pedida com a flag desligada[39m
+PASS test/unit/payment-condition.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/est-reservas-expiracao.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  suppress all logs with { quiet: true }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/order-payment.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:09 [32m    LOG[39m [38;5;3m[ListStockReservationsUseCase] [39m[32mReservas expiradas marcadas na leitura[39m
+[32m[Nest] 11268  - [39m24/08/2026, 08:46:09 [32m    LOG[39m [38;5;3m[ListStockReservationsUseCase] [39m[32mObject:[39m
+{
+  "total": 1
+}
+
+PASS test/unit/order.domain.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/field-config.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/stock-bundle.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  override existing env vars with { override: true }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/fin-dashboard.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/finance-title.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/integration/contact-carteirizacao.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  suppress all logs with { quiet: true }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/account-preferences.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/order.use-cases.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/commission-compute.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/product.use-cases.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/product.domain.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  override existing env vars with { override: true }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/rot-client-uuid.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/finance-seed.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/integration/runtime-identity.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/commission-model-a.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: ⚙️  suppress all logs with { quiet: true }
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/route.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/commission-model-b.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/stock-balance.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+PASS test/unit/fin-customer-credit.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+
+Summary of all failing tests
+FAIL test/unit/route-metadata.spec.ts
+  ● Metadata das rotas HTTP › toda rota não pública tem guard
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 3
+
+    - Array []
+    + Array [
+    +   "BillingWebhookController.receive",
+    + ]
+
+    [0m [90m 151 |[39m       [33m.[39mmap((route) [33m=>[39m route[33m.[39mid)[33m;[39m
+     [90m 152 |[39m
+    [31m[1m>[22m[39m[90m 153 |[39m     expect(offenders)[33m.[39mtoEqual([])[33m;[39m
+     [90m     |[39m                       [31m[1m^[22m[39m
+     [90m 154 |[39m   })[33m;[39m
+     [90m 155 |[39m
+     [90m 156 |[39m   it([32m'toda rota não pública declara permissão (salvo autoatendimento e autorização por comando)'[39m[33m,[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (test/unit/route-metadata.spec.ts:153:23)
+
+  ● Metadata das rotas HTTP › toda rota não pública declara permissão (salvo autoatendimento e autorização por comando)
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 3
+
+    - Array []
+    + Array [
+    +   "BillingWebhookController.receive",
+    + ]
+
+    [0m [90m 166 |[39m       [33m.[39mmap((route) [33m=>[39m route[33m.[39mid)[33m;[39m
+     [90m 167 |[39m
+    [31m[1m>[22m[39m[90m 168 |[39m     expect(offenders)[33m.[39mtoEqual([])[33m;[39m
+     [90m     |[39m                       [31m[1m^[22m[39m
+     [90m 169 |[39m   })[33m;[39m
+     [90m 170 |[39m
+     [90m 171 |[39m   it([32m'nenhuma rota pública carrega guard (indício de exceção desatualizada)'[39m[33m,[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (test/unit/route-metadata.spec.ts:168:23)
+
+
+Test Suites: 1 failed, 50 passed, 51 total
+Tests:       2 failed, 468 passed, 470 total
+Snapshots:   0 total
+Time:        302.75 s
+Ran all test suites.
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path C:\HD\Eliab\Veertex\apps\Veertex\backend
+npm error workspace @gitspread/veertex-backend@1.0.0
+npm error location C:\HD\Eliab\Veertex\apps\Veertex\backend
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c jest --passWithNoTests

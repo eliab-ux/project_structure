@@ -1,5 +1,5 @@
 import { Charge } from '../../../domain/entities/charge.entity';
-import { DunningEvent, DunningRule } from '../../../domain/entities/dunning.entity';
+import { DunningEvent, DunningRule } from '../../../domain/entities/dunning-rule.entity';
 
 export const CHARGE_REPOSITORY = Symbol('CHARGE_REPOSITORY');
 

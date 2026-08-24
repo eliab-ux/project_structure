@@ -84,3 +84,16 @@ export class NotAConsignmentOrderException extends DomainException {
     super(`O ciclo de consignação é exclusivo de pedidos de rota (origem atual: "${origin}").`);
   }
 }
+
+/**
+ * Bloqueio por inadimplência (06 §2.5): cliente com título vencido além do limite da conta não
+ * compra de novo — a mensagem nomeia o valor e a idade, e diz qual permissão libera a exceção.
+ */
+export class OverdueCustomerException extends DomainException {
+  constructor(overdueAmount: string, days: number) {
+    super(
+      `Cliente com R$ ${overdueAmount} vencidos há mais de ${days} dia(s). ` +
+        'Venda bloqueada pela política da conta; a exceção exige a permissão orders.overdue.override.',
+    );
+  }
+}

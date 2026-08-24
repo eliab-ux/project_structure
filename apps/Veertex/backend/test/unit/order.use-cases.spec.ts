@@ -74,6 +74,12 @@ const produtoFalso: OrderProductLookupPort = {
 
 const uowFalso: UnitOfWorkPort = { execute: async (fn) => fn() } as UnitOfWorkPort;
 
+/** Sem inadimplência e com o bloqueio DESLIGADO — o comportamento pré-COB dos testes de crédito. */
+const semInadimplencia = { overdueAmount: async () => 0 } as never;
+const prefsSemBloqueio = {
+  forAccount: async () => ({ overdueBlockEnabled: false, overdueBlockDays: 30 }),
+} as never;
+
 /** Reserva de estoque que não faz nada — o teste de reserva de verdade vive no EST. */
 const reservaFalsa = {
   reserve: async () => undefined,
@@ -191,6 +197,8 @@ describe('ChangeOrderStatusUseCase — crédito na confirmação (§2.2)', () =>
       repo,
       customerFalso({ creditLimit: 5000 }),
       reservaFalsa,
+      semInadimplencia,
+      prefsSemBloqueio,
       uowFalso,
     );
 
@@ -206,6 +214,8 @@ describe('ChangeOrderStatusUseCase — crédito na confirmação (§2.2)', () =>
       repo,
       customerFalso({ creditLimit: 5000 }),
       reservaFalsa,
+      semInadimplencia,
+      prefsSemBloqueio,
       uowFalso,
     );
     const dto = await uc.execute(new ChangeOrderStatusCommand(alvo.id.value, 'confirm'));
@@ -219,6 +229,8 @@ describe('ChangeOrderStatusUseCase — crédito na confirmação (§2.2)', () =>
       repo,
       customerFalso({ creditLimit: null }),
       reservaFalsa,
+      semInadimplencia,
+      prefsSemBloqueio,
       uowFalso,
     );
     const dto = await uc.execute(new ChangeOrderStatusCommand(alvo.id.value, 'confirm'));
@@ -279,5 +291,58 @@ describe('CreateOrder/UpdateOrder — condição de pagamento (§3.6 do 02)', ()
       new UpdateOrderCommand(criado.id, true, { paymentConditionId: CONDICAO_EXPLICITA }),
     );
     expect(dto.paymentConditionId).toBe(CONDICAO_EXPLICITA);
+  });
+});
+
+describe('Bloqueio por inadimplência na confirmação (06 §2.5)', () => {
+  function pedidoRascunho(total = 100) {
+    return Order.create({
+      accountId: CONTA,
+      companyId: EMPRESA,
+      contactId: CLIENTE,
+      number: 1,
+      origin: 'pdv',
+      items: [
+        OrderItem.create({ productId: PRODUTO, description: 'X', quantity: 1, unitPrice: total }),
+      ],
+    });
+  }
+
+  const prefsComBloqueio = {
+    forAccount: async () => ({ overdueBlockEnabled: true, overdueBlockDays: 30 }),
+  } as never;
+
+  function ucCom(overdueAmount: number, canOverride = false) {
+    return (async () => {
+      const { repo } = repoFalso([pedidoRascunho(100)]);
+      const alvo = (await repo.list({}))[0];
+      const uc = new ChangeOrderStatusUseCase(
+        repo,
+        customerFalso({ creditLimit: null }),
+        reservaFalsa,
+        { overdueAmount: async () => overdueAmount } as never,
+        prefsComBloqueio,
+        uowFalso,
+      );
+      return uc.execute(
+        new ChangeOrderStatusCommand(alvo.id.value, 'confirm', [], canOverride),
+      );
+    })();
+  }
+
+  it('cliente com vencido além de N dias é BLOQUEADO, nomeando valor e permissão de exceção', async () => {
+    const p = ucCom(543.21);
+    await expect(p).rejects.toThrow('543.21');
+    await expect(p).rejects.toThrow('orders.overdue.override');
+  });
+
+  it('a permissão de override LIBERA (exceção granular, decidida no token)', async () => {
+    const dto = await ucCom(543.21, true);
+    expect(dto.status).toBe('confirmado');
+  });
+
+  it('sem vencidos, confirma normal', async () => {
+    const dto = await ucCom(0);
+    expect(dto.status).toBe('confirmado');
   });
 });
