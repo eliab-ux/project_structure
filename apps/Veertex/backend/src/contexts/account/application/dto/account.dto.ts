@@ -10,6 +10,8 @@ export class AccountPreferencesDto {
   stockAllowNegative!: boolean;
   commissionDueRule!: string;
   commissionDueDay!: number;
+  overdueBlockEnabled!: boolean;
+  overdueBlockDays!: number;
 
   static fromDomain(account: Account): AccountPreferencesDto {
     const dto = new AccountPreferencesDto();
@@ -20,6 +22,8 @@ export class AccountPreferencesDto {
     dto.stockAllowNegative = account.preferences.stockAllowNegative;
     dto.commissionDueRule = account.preferences.commissionDueRule;
     dto.commissionDueDay = account.preferences.commissionDueDay;
+    dto.overdueBlockEnabled = account.preferences.overdueBlockEnabled;
+    dto.overdueBlockDays = account.preferences.overdueBlockDays;
     return dto;
   }
 }

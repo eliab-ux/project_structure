@@ -43,6 +43,13 @@ export interface AccountPreferencesProps {
   commissionDueRule: CommissionDueRule;
   /** O dia N da regra `day_n_next_month` (1–28 — 29+ não existe em todo mês). Default 5. */
   commissionDueDay: number;
+  /**
+   * Bloqueio por inadimplência (06 §2.5): nova venda é BLOQUEADA quando o cliente tem título
+   * vencido além de N dias. Default LIGADO com N=30 — o desenho do 06 pede bloqueio por default;
+   * a exceção é a permissão granular `orders.overdue.override`, nunca uma preferência frouxa.
+   */
+  overdueBlockEnabled: boolean;
+  overdueBlockDays: number;
 }
 
 /**
@@ -77,6 +84,8 @@ export class AccountPreferences extends ValueObject<AccountPreferencesProps> {
     stockAllowNegative: false,
     commissionDueRule: 'last_day_of_period',
     commissionDueDay: 5,
+    overdueBlockEnabled: true,
+    overdueBlockDays: 30,
   };
 
   private constructor(props: AccountPreferencesProps) {
@@ -111,6 +120,9 @@ export class AccountPreferences extends ValueObject<AccountPreferencesProps> {
             ? 'last_day_of_period'
             : AccountPreferences.DEFAULTS.commissionDueRule,
       commissionDueDay: clampDueDay(partial?.commissionDueDay),
+      overdueBlockEnabled:
+        partial?.overdueBlockEnabled ?? AccountPreferences.DEFAULTS.overdueBlockEnabled,
+      overdueBlockDays: clampOverdueDays(partial?.overdueBlockDays),
     });
   }
 
@@ -140,6 +152,18 @@ export class AccountPreferences extends ValueObject<AccountPreferencesProps> {
   get commissionDueDay(): number {
     return this.props.commissionDueDay;
   }
+  get overdueBlockEnabled(): boolean {
+    return this.props.overdueBlockEnabled;
+  }
+  get overdueBlockDays(): number {
+    return this.props.overdueBlockDays;
+  }
+}
+
+/** 0–365: N dias de tolerância do bloqueio por inadimplência. */
+function clampOverdueDays(value: unknown): number {
+  const days = typeof value === 'number' && Number.isFinite(value) ? Math.trunc(value) : 30;
+  return Math.min(365, Math.max(0, days));
 }
 
 /** 1–28: dia 29+ não existe em todo mês, e a regra de vencimento não pode depender do calendário. */

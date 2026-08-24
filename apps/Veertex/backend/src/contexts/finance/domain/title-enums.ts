@@ -26,5 +26,11 @@ export type TitleStatus = (typeof TITLE_STATUSES)[number];
  * `consignment` (ciclo do ROT) e `commission` (apuração → conta a pagar) entram quando os módulos
  * donos ligarem — reservados no enum para o schema não migrar depois.
  */
-export const TITLE_ORIGINS = ['manual', 'invoicing', 'consignment', 'commission'] as const;
+export const TITLE_ORIGINS = [
+  'manual',
+  'invoicing',
+  'consignment',
+  'commission',
+  'renegotiation',
+] as const;
 export type TitleOrigin = (typeof TITLE_ORIGINS)[number];

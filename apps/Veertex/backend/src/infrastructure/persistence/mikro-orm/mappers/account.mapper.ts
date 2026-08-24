@@ -31,6 +31,8 @@ export class AccountMapper {
         stockAllowNegative: orm.stockAllowNegative,
         commissionDueRule: orm.commissionDueRule as CommissionDueRule,
         commissionDueDay: orm.commissionDueDay,
+        overdueBlockEnabled: orm.overdueBlockEnabled,
+        overdueBlockDays: orm.overdueBlockDays,
       }),
       createdAt: orm.createdAt,
     });
@@ -55,6 +57,8 @@ export class AccountMapper {
       stockAllowNegative: account.preferences.stockAllowNegative,
       commissionDueRule: account.preferences.commissionDueRule,
       commissionDueDay: account.preferences.commissionDueDay,
+      overdueBlockEnabled: account.preferences.overdueBlockEnabled,
+      overdueBlockDays: account.preferences.overdueBlockDays,
       createdAt: account.createdAt,
       updatedAt: new Date(),
     };

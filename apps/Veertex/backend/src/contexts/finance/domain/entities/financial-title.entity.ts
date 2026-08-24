@@ -118,6 +118,16 @@ export class FinancialTitle extends AggregateRoot {
   }
 
   /**
+   * Renegociação mínima (06 §2.6): o título antigo é SINALIZADO — os novos títulos nascem com
+   * origem `renegotiation`. Pagamento posterior continua vencendo a sinalização (getter).
+   */
+  flagRenegotiated(): void {
+    if (this.status !== 'settled') {
+      this._flaggedStatus = 'renegotiated';
+    }
+  }
+
+  /**
    * Registra uma baixa. O principal não pode exceder o saldo em aberto (baixa não vira crédito — isso
    * é `customer_credit`, fatia posterior). Título já quitado recusa nova baixa.
    */

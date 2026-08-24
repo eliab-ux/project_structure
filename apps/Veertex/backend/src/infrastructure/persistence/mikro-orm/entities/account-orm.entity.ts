@@ -78,6 +78,12 @@ export class AccountOrmEntity {
   @Property({ fieldName: 'commission_due_day' })
   commissionDueDay: number = 5;
 
+  @Property({ fieldName: 'overdue_block_enabled' })
+  overdueBlockEnabled: boolean = true;
+
+  @Property({ fieldName: 'overdue_block_days' })
+  overdueBlockDays: number = 30;
+
   /** Juros ao mês (%) por atraso — parâmetro da conta (§2.1 do 05). Default 0. */
   @Property({ type: 'numeric', precision: 6, scale: 2, fieldName: 'fin_monthly_interest_percent' })
   finMonthlyInterestPercent = '0';

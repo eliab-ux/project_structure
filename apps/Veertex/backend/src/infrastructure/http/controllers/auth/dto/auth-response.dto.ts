@@ -44,6 +44,8 @@ export class AccountPreferencesResponseDto {
   stockAllowNegative!: boolean;
   commissionDueRule!: string;
   commissionDueDay!: number;
+  overdueBlockEnabled!: boolean;
+  overdueBlockDays!: number;
 }
 
 export class AccountResponseDto {
@@ -71,6 +73,8 @@ export class AccountResponseDto {
       stockAllowNegative: account.preferences.stockAllowNegative,
       commissionDueRule: account.preferences.commissionDueRule,
       commissionDueDay: account.preferences.commissionDueDay,
+      overdueBlockEnabled: account.preferences.overdueBlockEnabled,
+      overdueBlockDays: account.preferences.overdueBlockDays,
     };
     return dto;
   }

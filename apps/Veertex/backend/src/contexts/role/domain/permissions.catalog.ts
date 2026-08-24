@@ -78,6 +78,9 @@ export const PERMISSIONS = {
     // valores string). A sub-permissão granular vive no VALOR ('orders.discount.grant'), que o
     // `grants()` resolve por wildcard segmento a segmento.
     discountGrant: 'orders.discount.grant',
+    // Liberar venda a cliente com título vencido além do limite da conta (06 §2.5) — exceção
+    // granular; o bloqueio é o default. Mesmo desenho do desconto: decide o TOKEN, nunca o corpo.
+    overdueOverride: 'orders.overdue.override',
   },
   // Estoque (EST, §03). `read` para ver saldo/custo/movimentos; `move` para registrar movimento.
   // Sem `delete`: movimento é append-only — estorno é movimento novo, nunca exclusão.
@@ -114,6 +117,10 @@ export const PERMISSIONS = {
     read: 'rot.read',
     settings: 'rot.settings',
     trip: 'rot.trip.manage',
+  },
+  cob: {
+    read: 'cob.read',
+    manage: 'cob.manage',
   },
 } as const;
 

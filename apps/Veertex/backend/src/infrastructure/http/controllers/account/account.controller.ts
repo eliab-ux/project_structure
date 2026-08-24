@@ -95,6 +95,16 @@ export class UpdateAccountPreferencesRequestDto {
   stockAllowNegative?: boolean;
 
   @IsOptional()
+  @IsBoolean()
+  overdueBlockEnabled?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(365)
+  overdueBlockDays?: number;
+
+  @IsOptional()
   @IsIn(['last_day_of_period', 'day_n_next_month'])
   commissionDueRule?: 'last_day_of_period' | 'day_n_next_month';
 
@@ -184,6 +194,8 @@ export class AccountController {
         productSkuMode: dto.productSkuMode as CodeNumberingMode | undefined,
         contactCarteirizacao: dto.contactCarteirizacao,
         stockAllowNegative: dto.stockAllowNegative,
+        overdueBlockEnabled: dto.overdueBlockEnabled,
+        overdueBlockDays: dto.overdueBlockDays,
         commissionDueRule: dto.commissionDueRule,
         commissionDueDay: dto.commissionDueDay,
       }),
