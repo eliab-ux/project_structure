@@ -101,11 +101,8 @@ export class SaveDunningRuleUseCase implements UseCase<SaveDunningRuleCommand, D
           accountId: command.accountId,
           steps: command.input.steps,
           maxRebillings: command.input.maxRebillings,
+          actorUserId: command.actorUserId,
         });
-        // `create` não registra o ator do opt-in — reaplica com o ator quando houver etapa auto.
-        if (command.input.steps.some((step) => step.mode === 'auto')) {
-          rule.replaceSteps(command.input.steps, command.actorUserId);
-        }
       }
       return ruleToDto(await this.rules.save(rule));
     });

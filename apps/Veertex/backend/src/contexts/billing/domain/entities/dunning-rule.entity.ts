@@ -44,6 +44,8 @@ export class DunningRule extends AggregateRoot {
     accountId: string;
     steps: Omit<DunningStep, 'id' | 'autoEnabledByUserId' | 'autoEnabledAt'>[];
     maxRebillings?: number | null;
+    /** Obrigatório quando alguma etapa nasce `auto` — o opt-in registra QUEM ativou. */
+    actorUserId?: string | null;
   }): DunningRule {
     const rule = new DunningRule(
       randomUUID(),
@@ -53,7 +55,7 @@ export class DunningRule extends AggregateRoot {
       true,
       new Date(),
     );
-    rule.replaceSteps(params.steps, null);
+    rule.replaceSteps(params.steps, params.actorUserId ?? null);
     return rule;
   }
 
