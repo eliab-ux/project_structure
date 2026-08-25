@@ -253,3 +253,22 @@ entra no histórico do git não sai mais.
 
 Os próprios arquivos recomendam rotacionar as credenciais que circularam. Vale fazer antes de
 descartá-los.
+
+### ⚠️ Uma senha ESCAPOU no commit `84b88cb`, e já foi empurrada
+
+Na varredura eu procurei por *padrões* (`postgres://user:senha@`, `senha: X`, `AIza…`) e não pelos
+**valores conhecidos**. A senha do banco do EMDR Remoto estava citada dentro de uma transcrição em
+`docs/historico-ia/2026-08-08-b24599e6.md`, numa frase que avisava que ela era uma senha — formato que
+nenhum dos meus padrões pegava.
+
+O trecho foi redigido no commit seguinte, **mas isso não desfaz nada**: ela está no histórico do
+`84b88cb`, que foi para o GitHub. Quem clonar o repositório a recupera com um `git log -p`.
+
+**A remediação é rotacionar a senha do banco do EMDR Remoto.** Reescrever o histórico é possível
+(`git filter-repo`), mas não devolve o segredo — quem já clonou continua com ele, e a credencial deve
+ser tratada como comprometida de qualquer forma. Nota: o próprio `HISTORICO_ClaudeIA.md` já pedia essa
+rotação desde antes, porque a senha "circulou no chat".
+
+**A lição, para a próxima varredura:** procurar por padrão encontra o segredo em forma canônica;
+procurar pelos **valores que você sabe que existem** encontra o segredo citado em prosa. As duas
+buscas são necessárias, e a segunda é a que eu pulei.
