@@ -1,0 +1,40 @@
+{
+  "name": "@gitspread/emdr-remoto-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Frontend do EMDR Remoto — plataforma de sessões EMDR remotas (Next.js 14 + MUI)",
+  "scripts": {
+    "dev": "next dev -p 3006",
+    "build": "next build",
+    "start": "next start -p 3006",
+    "lint": "next lint --max-warnings=0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@emotion/cache": "^11.11.0",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@hookform/resolvers": "^3.9.0",
+    "@mui/icons-material": "^5.16.7",
+    "@mui/material": "^5.16.7",
+    "@mui/material-nextjs": "^5.16.6",
+    "axios": "^1.7.7",
+    "date-fns": "^3.6.0",
+    "next": "^14.2.15",
+    "notistack": "^3.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.53.0",
+    "react-imask": "^7.6.1",
+    "socket.io-client": "^4.7.5",
+    "yup": "^1.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.15",
+    "typescript": "^5.4.5"
+  }
+}

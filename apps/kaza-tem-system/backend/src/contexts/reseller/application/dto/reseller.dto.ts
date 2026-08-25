@@ -1,0 +1,77 @@
+import { Reseller } from '../../domain/entities/reseller.entity';
+
+export class ResellerDto {
+  id!: string;
+  userId!: string;
+  uniqueLink!: string;
+  fullName!: string;
+  cpf!: string;
+  type!: 'pf' | 'pj';
+  birthDate!: Date | null;
+  addressZipCode!: string | null;
+  addressStreet!: string | null;
+  addressNumber!: string | null;
+  addressComplement!: string | null;
+  addressNeighborhood!: string | null;
+  addressCity!: string | null;
+  addressState!: string | null;
+  status!: string;
+  level!: string;
+  canSetCustomPrice!: boolean;
+  approvedAt!: Date | null;
+  approvedBy!: string | null;
+  rejectedAt!: Date | null;
+  rejectedReason!: string | null;
+  phone!: string | null;
+  bankName!: string | null;
+  bankCode!: string | null;
+  bankAgency!: string | null;
+  bankAccount!: string | null;
+  bankAccountType!: string | null;
+  bankHolderName!: string | null;
+  bankHolderCpf!: string | null;
+  pixKey!: string | null;
+  pixKeyType!: string | null;
+  totalSoldYear!: number;
+  createdAt!: Date;
+  updatedAt!: Date;
+
+  static fromDomain(reseller: Reseller): ResellerDto {
+    const dto = new ResellerDto();
+    dto.id = reseller.id.value;
+    dto.userId = reseller.userId;
+    dto.uniqueLink = reseller.uniqueLink.value;
+    dto.fullName = reseller.fullName;
+    dto.cpf = reseller.cpf.value;
+    dto.type = reseller.type;
+    dto.birthDate = reseller.birthDate;
+    dto.addressZipCode = reseller.addressZipCode;
+    dto.addressStreet = reseller.addressStreet;
+    dto.addressNumber = reseller.addressNumber;
+    dto.addressComplement = reseller.addressComplement;
+    dto.addressNeighborhood = reseller.addressNeighborhood;
+    dto.addressCity = reseller.addressCity;
+    dto.addressState = reseller.addressState;
+    dto.status = reseller.status.value;
+    dto.level = reseller.level.value;
+    dto.canSetCustomPrice = reseller.canSetCustomPrice;
+    dto.approvedAt = reseller.approvedAt;
+    dto.approvedBy = reseller.approvedBy;
+    dto.rejectedAt = reseller.rejectedAt;
+    dto.rejectedReason = reseller.rejectedReason;
+    dto.phone = reseller.phone;
+    dto.bankName = reseller.bankName;
+    dto.bankCode = reseller.bankCode;
+    dto.bankAgency = reseller.bankAgency;
+    dto.bankAccount = reseller.bankAccount;
+    dto.bankAccountType = reseller.bankAccountType;
+    dto.bankHolderName = reseller.bankHolderName;
+    dto.bankHolderCpf = reseller.bankHolderCpf;
+    dto.pixKey = reseller.pixKey;
+    dto.pixKeyType = reseller.pixKeyType;
+    dto.totalSoldYear = reseller.totalSoldYear;
+    dto.createdAt = reseller.createdAt;
+    dto.updatedAt = reseller.updatedAt;
+    return dto;
+  }
+}

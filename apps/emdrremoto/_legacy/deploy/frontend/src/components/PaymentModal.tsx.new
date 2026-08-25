@@ -1,0 +1,94 @@
+import React, { useState } from 'react';
+import * as FaIcons from 'react-icons/fa';
+import * as FiIcons from 'react-icons/fi';
+import * as SiIcons from 'react-icons/si';
+import { formatCPF } from '../utils/formatters';
+
+interface PaymentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  plan: {
+    id: number;
+    name: string;
+    price: number;
+    cycle: 'monthly' | 'yearly';
+    maxInstallments: number;
+  };
+  onSubmit: (paymentData: any) => void;
+}
+
+const PaymentModal: React.FC<PaymentModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  plan, 
+  onSubmit 
+}) => {
+  const [paymentMethod, setPaymentMethod] = useState<'credit_card' | 'boleto'>('credit_card');
+  const [installments, setInstallments] = useState(1);
+  const [cardData, setCardData] = useState({
+    number: '',
+    name: '',
+    expiry: '',
+    cvv: ''
+  });
+  const [cpf, setCpf] = useState('');
+  const [errors, setErrors] = useState({
+    cpf: '',
+    cardNumber: '',
+    expiry: '',
+    cvv: '',
+    cardName: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [cardType, setCardType] = useState<string | null>(null);
+  const [cardTypeName, setCardTypeName] = useState<string>('');
+
+  if (!isOpen) return null;
+
+  // Detecta o tipo de cartão pelo número
+  const detectCardType = (number: string): { type: string | null; name: string } => {
+    const cleaned = number.replace(/\s+/g, '');
+    
+    // Visa: começa com 4
+    if (cleaned.startsWith('4')) return { type: 'visa', name: 'Visa' };
+    
+    // Mastercard: começa com 51-55
+    if (/^5[1-5]/.test(cleaned)) return { type: 'mastercard', name: 'Mastercard' };
+    
+    // American Express: começa com 34 ou 37
+    if (cleaned.startsWith('34') || cleaned.startsWith('37')) return { type: 'amex', name: 'American Express' };
+    
+    // Discover: começa com 6011, 644-649, 65 ou 622126-622925
+    if (
+      cleaned.startsWith('6011') ||
+      cleaned.startsWith('65') ||
+      /^64[4-9]/.test(cleaned) ||
+      (cleaned.length >= 6 && 
+       Number(cleaned.substring(0, 6)) >= 622126 && 
+       Number(cleaned.substring(0, 6)) <= 622925)
+    ) {
+      return { type: 'discover', name: 'Discover' };
+    }
+    
+    // Diners Club: começa com 300-305, 36 ou 38-39
+    if (
+      /^3(0[0-5]|[68][0-9])/.test(cleaned) ||
+      cleaned.startsWith('36')
+    ) {
+      return { type: 'diners', name: 'Diners Club' };
+    }
+    
+    // JCB: começa com 3528-3589
+    if (
+      cleaned.length >= 4 &&
+      Number(cleaned.substring(0, 4)) >= 3528 &&
+      Number(cleaned.substring(0, 4)) <= 3589
+    ) {
+      return { type: 'jcb', name: 'JCB' };
+    }
+    
+    return { type: null, name: 'Cartão' };
+  };
+
+  // Rest of the file remains the same...
+  // [Previous code content...]

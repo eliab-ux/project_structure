@@ -1,6 +1,6 @@
-# Getting Started - GitSpread Monorepo
+# Getting Started - GITVEERT Monorepo
 
-Guia rápido para começar a desenvolver no monorepo GitSpread com arquitetura hexagonal.
+Guia rápido para começar a desenvolver no monorepo GITVEERT com arquitetura hexagonal.
 
 ## ⚡ Quick Start (5 minutos)
 
@@ -15,7 +15,7 @@ Certifique-se de ter instalado:
 
 ```bash
 # Clone o repositório
-cd GitSpread
+cd GITVEERT
 
 # Instale as dependências de TODOS os workspaces
 npm install

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Plano Diário">
+  <!--
+    Ícone do app (Next.js serve app/icon.svg como favicon automaticamente).
+    Precisa ser legível a 16px, então é uma forma só: o verde do tema (palette.primary.main)
+    com um "play" branco — a leitura do dia é um vídeo.
+  -->
+  <rect width="32" height="32" rx="7" fill="#1E6F5C" />
+  <path d="M12.5 9.5 23 16l-10.5 6.5z" fill="#ffffff" />
+  <rect x="7.5" y="9.5" width="2.5" height="13" rx="1.25" fill="#ffffff" opacity=".85" />
+</svg>

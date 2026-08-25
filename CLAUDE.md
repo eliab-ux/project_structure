@@ -2,13 +2,111 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **Projeto pessoal e independente.** O GITVEERT é uma plataforma própria de e-commerce
+> com sistema de revendedores. **Não tem qualquer vínculo com sistemas de autenticação
+> corporativa de terceiros.** Toda a autenticação é **própria** (JWT emitido pelo próprio
+> backend). Nunca introduza dependências, URLs, secrets ou fluxos de autenticação ligados
+> a provedores de identidade externos ou a qualquer infraestrutura corporativa de terceiros.
+
+## Comportamento Obrigatório — Leia Antes de Qualquer Coisa
+
+**Claude Code DEVE seguir estas regras em TODO código gerado neste projeto,
+sem precisar que o usuário solicite explicitamente:**
+
+1. **Security by Design é inegociável** — segurança não é uma feature, é estrutural.
+   Aplique os padrões de segurança mesmo que o requisito não mencione segurança.
+
+2. **Todo endpoint protegido DEVE ter o guard adequado** — `@UseGuards(JwtAuthGuard)`
+   para qualquer usuário autenticado, `@UseGuards(AdminGuard)` para área administrativa,
+   `@UseGuards(ResellerGuard)` para área do revendedor. Endpoint que expõe dados sem guard
+   é um **bug**, não uma escolha — exceções (rotas públicas) precisam de comentário explicando o motivo.
+
+3. **Todo DTO de request DEVE ter validações `class-validator`** em todos os campos.
+   Nunca gere um DTO sem decorators de validação.
+
+4. **Nunca exponha domain entity via HTTP** — sempre mapeie para ResponseDto.
+   Nunca inclua campos sensíveis (senha, hash, token, secret) em response DTOs.
+
+5. **Nunca hardcode secrets** — qualquer valor sensível (JWT secret, senha de banco,
+   chave do Supabase, SMTP) vai para `.env`. Se criar nova variável de ambiente,
+   atualize também o `.env.example`.
+
+6. **Erros internos nunca chegam ao cliente** — use o GlobalExceptionFilter.
+   Mensagem genérica para o cliente; detalhe completo no log interno.
+
+7. **Se o usuário pedir algo que viola segurança**, implemente de forma segura
+   e explique o motivo da diferença. Nunca implemente o padrão inseguro.
+
+8. **Alterações de banco** seguem o padrão MikroORM (migrations versionadas) ou, quando
+   indicado, scripts SQL idempotentes em `deploy/sql/`. Nunca altere o schema direto no
+   banco de produção sem deixar o artefato versionado no repositório.
+
+9. **Toda entidade que faz login DEVE ter nome, e-mail e WhatsApp — os três obrigatórios.**
+   Não existe usuário autenticável sem WhatsApp, porque a **recuperação de senha é por código
+   enviado no WhatsApp** (ver *Recuperação de Senha por Código no WhatsApp*). Um usuário sem
+   número cadastrado é um usuário que perde a conta no primeiro esquecimento de senha — e o
+   suporte só consegue devolvê-la com acesso ao banco. A obrigatoriedade vale nas três camadas:
+   - **Request DTO**: os três campos obrigatórios, nunca `@IsOptional()`;
+   - **Domínio**: o telefone é Value Object (`PhoneE164`), nunca `string` solta;
+   - **Schema**: coluna `NOT NULL`.
+
+   Único caso em que o telefone pode ser nulo: coluna adicionada a uma tabela que **já tem
+   linhas** em produção. Aí entra como nullable, e a migration seguinte a torna `NOT NULL`
+   depois do backfill — a nulidade é transitória e documentada, não um padrão.
+
+10. **Se a aplicação for em Python (não-NestJS), o `CLAUDE_PYTHON.md` é leitura
+    obrigatória ANTES de gerar qualquer código.** Ele define a arquitetura
+    **Hexagonal Python** (FastAPI + SQLAlchemy + Pydantic; port no limite da persistência;
+    `import-linter`; exceções tipadas; `response_model`). Todas as regras transversais deste
+    `CLAUDE.md` (autenticação JWT própria, Security by Design, CORS, validação, frontend)
+    continuam valendo — o `CLAUDE_PYTHON.md` define apenas COMO aplicá-las na stack Python.
+
+---
+
+## Communication Language
+
+**IMPORTANT**: All conversations with the user MUST be conducted in **Portuguese (pt-BR)**.
+- Respond to user questions in Portuguese
+- Provide explanations and documentation in Portuguese
+- Code comments can remain in English (following standard conventions)
+- Variable names, function names, and technical identifiers MUST remain in English
+
 ## Monorepo Overview
 
-This is an **npm workspaces monorepo** implementing **Hexagonal Architecture** (Ports & Adapters) with:
-- **packages/**: Shared libraries (`domain-primitives`, `shared-kernel`)
-- **apps/**: Independent applications (currently `system-example`)
+This is an **npm workspaces monorepo** implementing **Hexagonal Architecture** (Ports & Adapters):
+- **packages/**: Shared libraries (`@gitspread/domain-primitives`, `@gitspread/shared-kernel`)
+- **apps/<app>-system/**: The GITVEERT application, split into:
+  - `backend/` — API NestJS + Fastify + MikroORM (PostgreSQL/Supabase)
+  - `frontend/` — Next.js 14 (App Router) + Material-UI
 
-Stack: NestJS + Fastify + MikroORM + SQL Server + TypeScript (strict mode)
+> O nome do escopo de pacotes (`@gitspread/*`) é legado do template de arquitetura.
+> Trate-o apenas como namespace npm — **não implica nenhum vínculo com terceiros**.
+
+### Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Backend framework | **NestJS 10** + **Fastify** (adapter) |
+| ORM | **MikroORM 6** (driver PostgreSQL) |
+| Banco | **PostgreSQL** — o GITVEERT usa **Supabase** (sugestão padrão); ver nota abaixo |
+| Storage de arquivos | **Supabase Storage** (`@supabase/supabase-js`) |
+| Auth | **JWT próprio** (`jsonwebtoken` + `bcryptjs`) — sem terceiros de identidade |
+| E-mail | **nodemailer** (reset de senha, notificações) |
+| Frontend | **Next.js 14** (App Router) + **Material-UI** + Emotion/styled-components |
+| Forms | **react-hook-form** + **yup** |
+| Notificações UI | **notistack** |
+| Linguagem | **TypeScript** (strict mode) |
+
+> **Escolha do banco é por projeto.** O **Supabase (PostgreSQL gerenciado)** é a **sugestão
+> padrão** — Postgres + storage + auth opcional + dashboard sem ops — e é o que o GITVEERT
+> usa. Mas cada projeto pessoal pode escolher outro banco (Postgres self-hosted, MySQL,
+> SQLite, etc.). Ao trocar, ajuste o driver MikroORM e as variáveis de ambiente
+> correspondentes; o resto da arquitetura (ports, repositórios, mappers) permanece igual.
+
+### Contexts (bounded contexts do backend)
+
+`auth`, `user`, `reseller`, `order`, `commission`, `product`, `subscription`,
+`withdrawal`, `analytics`, `coupon`, `materials`.
 
 ## Essential Commands
 
@@ -16,30 +114,48 @@ Stack: NestJS + Fastify + MikroORM + SQL Server + TypeScript (strict mode)
 ```bash
 npm install                    # Install all workspace dependencies
 npm run build                  # Build all workspaces
-npm run lint                   # Lint entire codebase
+npm run lint                   # Lint + fix entire codebase
 npm run format                 # Format with Prettier
 npm run typecheck              # TypeScript type checking
+npm run test:unit              # Unit tests
+npm run test:integration       # Integration tests
+npm run test:e2e               # E2E tests
 ```
 
-### Application-level (apps/system-example)
+### Backend (`apps/<app>-system/backend`)
 ```bash
-cd apps/system-example
+cd apps/<app>-system/backend
 
 # Development
-npm run dev                    # Start with watch mode
+npm run dev                    # Start with watch mode (porta 3001)
 npm run dev:debug              # Start with debugging enabled
 
-# Database
+# Database (MikroORM + PostgreSQL/Supabase)
 npm run migration:create -- --name=YourMigrationName
 npm run migration:up           # Run pending migrations
 npm run migration:down         # Rollback last migration
-npm run schema:fresh           # Drop schema + run migrations
+npm run schema:fresh           # Drop schema + run migrations (CUIDADO: apaga dados)
+npm run seed                   # Run database seeders
+
+# Operação
+npm run create:admin           # Cria usuário admin
+npm run reset:password         # Reset de senha de um usuário
 
 # Testing
 npm run test                   # Run all tests
 npm run test:watch             # Watch mode
-npm run test:cov               # Generate coverage report
-npm run test -- path/to/test.spec.ts  # Run single test file
+npm run test:cov               # Coverage report
+npm run test -- path/to/test.spec.ts  # Single test file
+```
+
+### Frontend (`apps/<app>-system/frontend`)
+```bash
+cd apps/<app>-system/frontend
+
+npm run dev                    # Next.js dev server (porta 3003)
+npm run build                  # Production build
+npm run start                  # Serve production build (porta 3003)
+npm run lint                   # ESLint (--max-warnings=0)
 ```
 
 ## Architecture Principles
@@ -50,7 +166,7 @@ npm run test -- path/to/test.spec.ts  # Run single test file
 
 ```
 ┌─────────────────────────────────┐
-│     Infrastructure Layer        │  ← Adapters (HTTP, DB, Messaging)
+│     Infrastructure Layer        │  ← Adapters (HTTP, DB, Messaging, Storage)
 │  ┌───────────────────────────┐  │
 │  │   Application Layer       │  │  ← Use Cases, Ports (interfaces), DTOs
 │  │  ┌─────────────────────┐  │  │
@@ -78,12 +194,303 @@ npm run test -- path/to/test.spec.ts  # Run single test file
 - **Commands/Queries**: Input structures for use cases
 
 #### 3. Infrastructure Layer (`src/infrastructure/`)
-- **HTTP Adapter** (`http/`): NestJS controllers, request/response DTOs
+- **HTTP Adapter** (`http/`): NestJS controllers, request/response DTOs, guards
+- **Security** (`security/`): JWT token service, guards (`JwtAuthGuard`, `AdminGuard`, `ResellerGuard`)
 - **Persistence Adapter** (`persistence/mikro-orm/`):
   - `entities/`: ORM entities with MikroORM decorators (suffix: `-orm.entity.ts`)
   - `repositories/`: Implement domain repository ports
   - `mappers/`: Convert between domain entities and ORM entities
+  - `migrations/`: MikroORM migrations
 - **Messaging Adapter** (`messaging/`): Event publishers/subscribers
+- **Storage Adapter**: Supabase Storage (uploads de imagens, materiais, etc.)
+
+## Security by Design
+
+**Todo desenvolvimento neste projeto aplica Security by Design.**
+Segurança é incorporada em cada decisão de código e arquitetura —
+não adicionada depois como correção.
+
+### Princípio 1 — Minimize a Superfície de Ataque
+
+Exponha apenas o estritamente necessário. Cada endpoint, campo e método
+público é uma superfície potencial de ataque.
+
+```typescript
+// ❌ ERRADO — sem guard, expõe domain entity, sem tipagem de retorno
+@Get(':id')
+async getUser(@Param('id') id: string) {
+  return this.userRepository.findById(id); // expõe internals do domínio
+}
+
+// ✅ CORRETO — superfície controlada em todas as dimensões
+@Get(':id')
+@UseGuards(AdminGuard)
+async getUser(@Param('id') id: string): Promise<UserResponseDto> {
+  return this.getUserUseCase.execute({ id });
+  // getUserUseCase retorna UserResponseDto — nunca a domain entity
+}
+```
+
+**Regras:**
+- Guard adequado (`JwtAuthGuard` / `AdminGuard` / `ResellerGuard`) em todo controller ou método que expõe dados
+- Response DTOs com `static fromDomain()` — nunca retornar domain entity diretamente
+- Campos sensíveis (`passwordHash`, `token`, `secret`) **nunca** aparecem em response DTOs
+- Endpoint público (marketplace/checkout sem login, health) deve ter comentário explicando o motivo
+
+### Princípio 2 — Nunca Confie em Inputs Externos (Never Trust Input)
+
+Todo dado que vem de fora é potencialmente malicioso. Valide em **duas camadas
+independentes** — cada camada valida o que lhe pertence, sem assumir que a
+camada anterior já garantiu a segurança.
+
+**Camada 1 — HTTP (Request DTO):** rejeita dados malformados antes do Use Case
+
+```typescript
+// ✅ Todo campo validado — comprimento, formato, caracteres permitidos
+export class CreateUserRequestDto {
+  @IsEmail()
+  @MaxLength(255)
+  @Transform(({ value }) => value?.toLowerCase().trim())
+  email: string;
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  @Matches(/^[a-zA-ZÀ-ÿ\s]+$/, { message: 'Nome deve conter apenas letras' })
+  name: string;
+
+  // ❌ NUNCA: campo sem nenhum decorator de validação
+  // unsafeField: string;
+}
+```
+
+**Camada 2 — Domain (Value Object):** garante invariantes de negócio
+
+```typescript
+// ✅ Value Object valida no construtor — entidade nunca em estado inválido
+export class CPF extends ValueObject<{ value: string }> {
+  private constructor(props: { value: string }) {
+    super(props);
+    if (!this.isValid(props.value)) {
+      throw new InvalidCpfException(props.value);
+    }
+  }
+
+  static create(value: string): CPF {
+    return new CPF({ value: onlyDigits(value) });
+  }
+
+  private isValid(cpf: string): boolean {
+    return ValidationUtil.isValidCPF(cpf);
+  }
+}
+```
+
+### Princípio 3 — Falhe com Segurança (Fail Securely)
+
+Erros internos **nunca** expõem detalhes de infraestrutura ao cliente.
+Stack traces, queries SQL e mensagens de ORM ficam nos logs internos.
+
+```typescript
+// ❌ ERRADO — vaza stack trace e detalhes internos para o cliente
+catch (error) {
+  return res.status(500).json({
+    error: error.message,   // pode conter query SQL, path de arquivo, etc.
+    stack: error.stack,     // NUNCA expor ao cliente
+  });
+}
+
+// ✅ CORRETO — mensagem genérica para o cliente, detalhe no log
+catch (error) {
+  this.logger.error('Erro ao processar solicitação', {
+    error,
+    userId: command.userId, // contexto útil para debug, sem dados sensíveis
+  });
+  throw new InternalServerErrorException('Erro ao processar solicitação');
+}
+```
+
+**GlobalExceptionFilter — recomendado em `src/main.ts`:**
+
+```typescript
+// src/infrastructure/http/filters/global-exception.filter.ts
+@Catch()
+export class GlobalExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(GlobalExceptionFilter.name);
+
+  catch(exception: unknown, host: ArgumentsHost): void {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse();
+    const request = ctx.getRequest();
+
+    // DomainException → 400 Bad Request (mensagem de negócio é segura de expor)
+    if (exception instanceof DomainException) {
+      response.status(400).send({ message: exception.message });
+      return;
+    }
+
+    // HttpException do NestJS → repassa status e mensagem controlada
+    if (exception instanceof HttpException) {
+      response.status(exception.getStatus()).send(exception.getResponse());
+      return;
+    }
+
+    // Qualquer outro erro → 500 genérico (nunca expõe detalhes)
+    this.logger.error('Unhandled exception', {
+      exception,
+      path: request.url,
+      method: request.method,
+    });
+    response.status(500).send({ message: 'Erro interno. Tente novamente.' });
+  }
+}
+
+// src/main.ts — registrar globalmente
+app.useGlobalFilters(new GlobalExceptionFilter());
+```
+
+### Princípio 4 — Defense in Depth (Defesa em Profundidade)
+
+Múltiplas camadas independentes de proteção. Se uma falhar, as outras protegem.
+**Nunca assuma que a camada anterior garantiu a segurança.**
+
+```
+Request HTTP
+  → [1] CORS              — apenas origens autorizadas (CORS_ORIGIN no .env)
+  → [2] Guard (JWT)       — token JWT válido e não expirado; role correta
+  → [3] ValidationPipe    — DTO válido (class-validator em todos os campos)
+  → [4] Use Case          — regras de negócio e autorização contextual
+  → [5] Domain Entity     — invariantes de domínio (Value Objects no construtor)
+  → [6] ORM (MikroORM)    — queries parametrizadas (previne SQL Injection)
+```
+
+Cada camada é **independente** — a falha de uma não compromete as demais.
+
+### Princípio 5 — Menor Privilégio
+
+Cada componente acessa apenas o que precisa, nada além.
+
+```typescript
+// ❌ ERRADO — Use Case acessa EntityManager (acesso irrestrito ao banco)
+@Injectable()
+export class GetUserUseCase {
+  constructor(private readonly em: EntityManager) {} // acesso total ao banco
+}
+
+// ✅ CORRETO — Use Case acessa apenas a interface que precisa
+@Injectable()
+export class GetUserUseCase {
+  constructor(
+    @Inject(USER_REPOSITORY)
+    private readonly userRepository: UserRepositoryPort, // interface mínima
+  ) {}
+}
+```
+
+**Regras:**
+- Use Cases injetam apenas os repositórios do seu contexto
+- JWT payload com apenas os claims necessários (`sub`, `role`, `resellerId`) — sem dados desnecessários
+- Guards aplicados no nível mais restritivo (método > controller)
+- Revendedor só acessa os próprios dados — validar `resellerId` do token no Use Case
+
+### Princípio 6 — Separação e Isolamento
+
+Componentes isolados limitam o impacto de uma falha ou comprometimento.
+
+```typescript
+// ✅ Domain Layer completamente isolada — sem dependências externas
+export class Reseller extends AggregateRoot {
+  // SEM imports de NestJS, MikroORM, Fastify, axios, Supabase, etc.
+  // Apenas TypeScript puro e packages do próprio monorepo
+  private constructor(
+    private readonly _id: ResellerId,   // Value Object — valida no construtor
+    private _cpf: CPF,                   // Value Object — valida no construtor
+    private _name: string,
+  ) { super(); }
+}
+```
+
+**Secrets exclusivamente em `.env`** — nunca em código, nunca em logs:
+
+```typescript
+// ❌ NUNCA — secret hardcodado no código
+const JWT_SECRET = 'minha-chave-super-secreta';
+
+// ❌ NUNCA — logar dados sensíveis
+this.logger.log(`Token gerado: ${token}`);
+this.logger.log(`Senha recebida: ${password}`);
+
+// ✅ CORRETO — secret via variável de ambiente
+const JWT_SECRET = process.env.JWT_ACCESS_SECRET;
+if (!JWT_SECRET) throw new Error('JWT_ACCESS_SECRET não configurado');
+
+// ✅ CORRETO — log sem dados sensíveis
+this.logger.log('Usuário autenticado', { userId: user.id, role: user.role });
+```
+
+### Regras Absolutas — Nunca Violadas
+
+```
+❌ Hardcodar secrets, senhas ou tokens no código
+❌ Logar dados sensíveis (senhas, hashes, tokens, CPF, dados de cartão/pagamento)
+❌ Retornar stack traces ou mensagens de ORM para o cliente
+❌ Criar endpoint protegido sem guard sem comentário documentando o motivo
+❌ Criar campo em DTO sem decorator de validação class-validator
+❌ Retornar domain entity diretamente via HTTP (sempre usar ResponseDto)
+❌ Usar `any` em dados vindos de fora (HTTP, banco, eventos externos)
+❌ Criar nova variável de ambiente sem adicionar ao .env.example
+❌ Introduzir qualquer dependência/URL/fluxo ligado a provedores de identidade externos
+```
+
+### Response DTO — Campo Sensível Nunca Mapeado
+
+```typescript
+// ❌ ERRADO — expõe campos internos e sensíveis
+export class UserResponseDto {
+  id: string;
+  email: string;
+  passwordHash: string;  // NUNCA
+  resetToken: string;    // NUNCA
+}
+
+// ✅ CORRETO — apenas o que o cliente precisa ver, mapeado explicitamente
+export class UserResponseDto {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  createdAt: Date;
+
+  static fromDomain(user: User): UserResponseDto {
+    const dto = new UserResponseDto();
+    dto.id = user.id.value;
+    dto.email = user.email.value;
+    dto.name = user.name;
+    dto.role = user.role;
+    dto.createdAt = user.createdAt;
+    // passwordHash nunca é mapeado — ausência intencional
+    return dto;
+  }
+}
+```
+
+### Endpoint Público — Exceção Documentada
+
+Alguns endpoints do marketplace (catálogo de produtos, checkout de visitante, health check)
+genuinamente não exigem autenticação:
+
+```typescript
+// Endpoint público — catálogo de produtos visível para visitantes
+// Não requer autenticação pois: (1) é a vitrine pública da loja,
+// (2) não expõe dados sensíveis de usuários ou revendedores
+// @UseGuards(...) — intencionalmente ausente (ver motivo acima)
+@Get('products')
+async listPublicProducts(@Query() query: ListProductsQueryDto): Promise<ProductResponseDto[]> {
+  return this.listProductsUseCase.execute(query);
+}
+```
+
+---
 
 ## Critical Patterns
 
@@ -128,7 +535,7 @@ export class User extends AggregateRoot {
 }
 ```
 
-**ORM Entity** (with MikroORM decorators):
+**ORM Entity** (with MikroORM decorators — PostgreSQL):
 ```typescript
 // src/infrastructure/persistence/mikro-orm/entities/user-orm.entity.ts
 @Entity({ tableName: 'users' })
@@ -149,32 +556,38 @@ export class UserMapper {
 }
 ```
 
-### 3. Unit of Work Pattern
+### 3. Unit of Work / EntityManager
 
-Never inject `EntityManager` directly into use cases. Use `UnitOfWorkPort`:
+> **⚠️ MikroORM nota importante (do histórico do projeto):** `EntityRepository` **não**
+> possui `persistAndFlush`. Repositórios que precisam persistir devem **injetar o
+> `EntityManager`** e chamar `em.persistAndFlush(...)`. Nunca chame `repository.persistAndFlush()`.
+
+Prefira a abstração `UnitOfWorkPort` nos use cases para controlar transação:
 
 ```typescript
 // Use case
-async execute(command: CreateUserCommand): Promise<UserDto> {
+async execute(command: CreateOrderCommand): Promise<OrderDto> {
   return this.unitOfWork.execute(async () => {
     // All operations here run in a transaction
-    return this.userRepository.save(user);
+    const saved = await this.orderRepository.save(order);
+    await this.commissionRepository.save(commission);
+    return OrderDto.fromDomain(saved);
   });
 }
 ```
 
 ### 4. Domain Events Flow
 
-1. **Entity emits**: `this.addDomainEvent(new UserCreatedEvent(...))`
+1. **Entity emits**: `this.addDomainEvent(new ResellerSuspendedEvent(...))`
 2. **Repository publishes** (after successful persistence):
    ```typescript
-   const events = user.pullDomainEvents();
+   const events = reseller.pullDomainEvents();
    await this.eventPublisher.publishAll(events);
    ```
 3. **Handlers react**:
    ```typescript
-   @OnEvent('user.created')
-   async handle(event: UserCreatedEvent) { /*...*/ }
+   @OnEvent('reseller.suspended')
+   async handle(event: ResellerSuspendedEvent) { /*...*/ }
    ```
 
 ## Adding New Features
@@ -186,32 +599,44 @@ async execute(command: CreateUserCommand): Promise<UserDto> {
    - `application/` (use-cases, ports, DTOs)
    - `<context-name>.module.ts`
 
-2. **Domain Layer**:
-   - Create entities (extend `AggregateRoot` for roots)
-   - Create value objects (extend `ValueObject`)
-   - Define domain events (extend `DomainEvent`)
-   - Define domain exceptions (extend `DomainException`)
+2. **Domain Layer**: entities (extend `AggregateRoot`), value objects (extend `ValueObject`),
+   domain events (extend `DomainEvent`), domain exceptions (extend `DomainException`)
 
-3. **Application Layer**:
-   - Define repository ports in `application/ports/output/`
-   - Create use cases implementing `UseCase<TCommand, TResult>`
-   - Create DTOs for data transfer
+3. **Application Layer**: repository ports in `application/ports/output/`,
+   use cases implementing `UseCase<TCommand, TResult>`, DTOs
 
-4. **Infrastructure Layer**:
-   - Create ORM entities in `infrastructure/persistence/mikro-orm/entities/`
-   - Implement repositories in `infrastructure/persistence/mikro-orm/repositories/`
-   - Create mappers in `infrastructure/persistence/mikro-orm/mappers/`
-   - Create HTTP controllers in `infrastructure/http/controllers/<context>/`
+4. **Infrastructure Layer**: ORM entities, repositories, mappers, HTTP controllers + guards
 
-5. **Module Configuration**:
-   - Configure DI in `<context-name>.module.ts`
-   - Import `MikroOrmModule.forFeature([OrmEntity])`
-   - Register repositories with Symbol tokens
-   - Export use cases
+5. **Module Configuration**: DI in `<context-name>.module.ts`,
+   `MikroOrmModule.forFeature([OrmEntity])`, repositories with Symbol tokens, export use cases
 
-6. **Register Module**:
-   - Import in `app.module.ts`
-   - Import in `http.module.ts` (if exposing HTTP endpoints)
+6. **Register Module**: import in `app.module.ts`
+
+7. **Security by Design Checklist** — verificar antes de considerar a feature completa.
+   Claude Code aplica estes itens automaticamente; use como validação final:
+
+   **Autenticação e Autorização:**
+   - [ ] Todos os endpoints protegidos têm guard (`JwtAuthGuard`/`AdminGuard`/`ResellerGuard`) ou comentário documentando ausência
+   - [ ] Endpoints de revendedor validam `resellerId` do token no Use Case (revendedor só vê os próprios dados)
+
+   **Validação de Dados:**
+   - [ ] Todos os campos do Request DTO têm decorators `class-validator`
+   - [ ] Value Objects validam invariantes no construtor (nunca estado inválido)
+   - [ ] `ValidationPipe` ativo globalmente no `main.ts` (`whitelist: true`, `forbidNonWhitelisted: true`)
+
+   **Exposição de Dados:**
+   - [ ] Response DTOs não contêm campos sensíveis (`passwordHash`, tokens, etc.)
+   - [ ] `static fromDomain()` mapeia explicitamente — nunca retorna domain entity direta
+   - [ ] Erros internos não vazam para o cliente
+
+   **Configuração e Secrets:**
+   - [ ] Nenhum secret hardcodado — tudo em `.env`
+   - [ ] Novas variáveis de ambiente adicionadas ao `.env.example`
+   - [ ] `CORS_ORIGIN` configurado no `.env` do ambiente
+
+   **Logs:**
+   - [ ] Dados sensíveis ausentes dos logs (senhas, tokens, CPF, dados de pagamento)
+   - [ ] Erros logados com contexto suficiente para debug
 
 ### Adding a New Use Case (Example)
 
@@ -246,27 +671,436 @@ export class UpdateUserNameUseCase implements UseCase<UpdateUserNameCommand, Use
 }
 
 // 3. Register in module providers + exports
-// 4. Inject in controller and create endpoint
+// 4. Inject in controller and create endpoint with the proper guard
 ```
 
-## Package References
+> **Atenção aos paths relativos:** de `use-cases/<name>/` até `domain/` são **3 níveis**
+> (`../../../domain/`), não 2. Erro comum ao criar use cases novos.
 
-Shared packages are referenced via TypeScript path aliases:
+## Authentication System (Própria — sem terceiros)
+
+> **O GITVEERT tem autenticação 100% própria.** Não há provedor de identidade externo
+> nem iframe de terceiros. O backend emite e valida seus próprios JWTs.
+
+### Fluxo
+
+1. **Login** — usuário envia **CPF + senha** (`/api/auth/login`). O backend valida a senha
+   com `bcryptjs`, emite um **access token** (JWT curto) e um **refresh token**.
+2. **Login admin** — fluxo separado (`/api/auth/login-admin`) para a área administrativa.
+3. **Refresh** — `/api/auth/refresh` troca o refresh token por um novo access token.
+4. **Me** — `/api/auth/me` retorna o usuário autenticado a partir do token.
+5. **Reset de senha** — `request-password-reset` envia e-mail (nodemailer) com token;
+   `reset-password` troca a senha.
+
+### JWT — Token Service e Payload
+
+O `TokenServicePort` (Symbol `TOKEN_SERVICE`) abstrai a emissão/validação de tokens.
+A implementação concreta (`jwt-token.service.ts`) usa `jsonwebtoken` com secrets do `.env`.
+
+```typescript
+// AuthTokenPayload — claims mínimos (Princípio do Menor Privilégio)
+interface AuthTokenPayload {
+  sub: string;          // user id
+  role: 'admin' | 'reseller' | 'customer';
+  resellerId?: string;  // presente apenas para revendedores
+}
+```
+
+### Guards
+
+| Guard | Local | Regra |
+|---|---|---|
+| `JwtAuthGuard` | `infrastructure/security/guards/jwt-auth.guard.ts` | Exige Bearer token válido; popula `request.user` |
+| `AdminGuard` | `infrastructure/security/guards/admin.guard.ts` | `JwtAuthGuard` + `role === 'admin'` |
+| `ResellerGuard` | `infrastructure/security/guards/reseller.guard.ts` | `JwtAuthGuard` + `role === 'reseller'` + `resellerId` |
+| `MarketplaceAuthGuard` | `infrastructure/http/guards/marketplace-auth.guard.ts` | Autenticação do cliente/marketplace |
+
+```typescript
+@Controller('admin/resellers')
+@UseGuards(AdminGuard)   // protege todos os métodos
+export class AdminResellerController {
+  @Get()
+  async list(): Promise<ResellerResponseDto[]> { /* ... */ }
+}
+
+@Controller('reseller/dashboard')
+@UseGuards(ResellerGuard)
+export class ResellerDashboardController {
+  @Get('summary')
+  async summary(@Req() req): Promise<DashboardDto> {
+    const { resellerId } = req.user as AuthTokenPayload; // só os próprios dados
+    return this.getSummaryUseCase.execute({ resellerId });
+  }
+}
+```
+
+### Acessando o usuário autenticado
+
+`request.user` é populado pelo `JwtAuthGuard`. Para tipar e extrair o `resellerId`,
+use o payload — nunca confie em `resellerId` vindo do body/query do cliente:
+
+```typescript
+const payload = request.user as AuthTokenPayload;
+const resellerId = this.ensureResellerId(payload); // helper que valida presença
+```
+
+### Recuperação de Senha por Código no WhatsApp
+
+**Padrão da casa para todo sistema novo** (implementado no Plano Diário e no Batuta): a
+recuperação de senha é um **código de 6 dígitos enviado no WhatsApp** pela Evolution API, não um
+link por e-mail. O motivo é prático — o usuário lê o WhatsApp em segundos, e-mail de sistema cai em
+spam — e é o que torna o WhatsApp obrigatório no cadastro (regra 9).
+
+> O reset por link de e-mail do próprio GITVEERT é anterior a este padrão e continua como está.
+> Sistema **novo** nasce com o código no WhatsApp.
+
+O envio usa o **card padrão** do Evolution: `POST /message/sendText/{instância}` com
+`{ number, text }` e a **apikey da instância** no header (nunca a chave global — enviar mensagem
+não precisa de poder para criar ou apagar instância).
+
+```typescript
+// Texto curto e SEM LINK de propósito: código acompanhado de link é o formato que golpista imita.
+private buildText(message: PasswordResetMessage): string {
+  return [
+    `Olá, ${message.name}!`,
+    '',
+    `Seu código para redefinir a senha do ${APP_NAME} é *${message.code}*.`,
+    '',
+    `O código vale por ${message.expiresInMinutes} minutos e só pode ser usado uma vez.`,
+    'Se não foi você que pediu, ignore esta mensagem — sua senha continua a mesma.',
+  ].join('\n');
+}
+```
+
+**Regras do fluxo — todas obrigatórias:**
+
+| Regra | Motivo |
+|---|---|
+| Código de 6 dígitos com `randomInt` do `node:crypto` | `Math.random()` é previsível e não serve para gerar segredo |
+| Guardar **só o hash** (bcrypt) do código | Nem dump de banco nem log revelam o valor |
+| TTL curto (15 min) e **uso único** | O canal é instantâneo; não há motivo para valer uma hora |
+| **Máximo de 5 tentativas** por código, contadas **antes** de recusar | Transforma 1.000.000 de combinações em 5 chances |
+| Um só código vivo por usuário (pedir novo invalida o anterior) | Dois códigos válidos dobram a superfície de adivinhação |
+| Limite de solicitações por hora, contando **envios** e não tentativas | O WhatsApp do usuário não pode virar canal de spam. Contar tentativa faria falha de infraestrutura consumir a cota |
+| O canal é verificado **antes** de olhar o usuário | Se o erro só aparecesse no envio, e-mail real falharia e e-mail inexistente responderia 204 — entregando quais contas existem |
+| Toda recusa levanta a **mesma** exceção e todo pedido responde igual | Sem oráculo de enumeração de contas |
+| Instância **de sistema**, nunca um número de cliente/tenant | Chip de campanha cai; canal de recuperação não pode cair com ele |
+| O código **jamais** entra em log — nem em erro | CLAUDE.md, regra de logs |
+
+```env
+EVOLUTION_API_URL=https://evo2.techbs.com.br
+EVOLUTION_SYSTEM_INSTANCE=    # instância de sistema (avisos da plataforma)
+EVOLUTION_SYSTEM_APIKEY=      # apikey DA INSTÂNCIA — menor privilégio
+```
+
+### Variáveis de Ambiente (Auth)
+
+```env
+JWT_ACCESS_SECRET=<segredo-forte-aleatório>
+JWT_REFRESH_SECRET=<outro-segredo-forte-aleatório>
+JWT_ACCESS_EXPIRATION=15m
+JWT_REFRESH_EXPIRATION=7d
+
+# SMTP (reset de senha / notificações)
+SMTP_HOST=...
+SMTP_PORT=587
+SMTP_USER=...
+SMTP_PASSWORD=...
+SMTP_FROM=no-reply@<dominio>
+```
+
+## Shared Packages
+
+### @gitspread/domain-primitives
+Base classes para DDD: `AggregateRoot`, `Entity`, `ValueObject`, `DomainEvent`, `DomainException`.
+Framework-agnostic (TypeScript puro).
+
+> **`DomainException` recebe APENAS 1 argumento** (`super(message)`) — nunca 2.
+
+### @gitspread/shared-kernel
+Tipos e utilitários comuns: `Result<T>`, `PaginatedResult<T>`, `PaginationParams`,
+`UseCase<TCommand, TResult>`, `IRepository<T>`, `DateUtil`, `ValidationUtil`
+(`isValidEmail`, `isValidCPF`).
+
+### Package References (path aliases)
 - `@gitspread/domain-primitives` → `packages/domain-primitives/src`
 - `@gitspread/shared-kernel` → `packages/shared-kernel/src`
 
-Within an app:
+Dentro do backend:
 - `@domain/*` → `src/contexts/*/domain/*`
 - `@application/*` → `src/contexts/*/application/*`
 - `@infrastructure/*` → `src/infrastructure/*`
 
-## MikroORM Specifics
+**Importante:** packages têm ZERO dependências das apps e são framework-agnostic.
 
-- Config: `src/infrastructure/persistence/mikro-orm/config/mikro-orm.config.ts`
-- Migrations folder: `src/infrastructure/persistence/mikro-orm/migrations/`
-- Always use `persistAndFlush()` in repositories
-- ORM entities must have `-orm.entity.ts` suffix
-- Database: SQL Server (MSSQL driver)
+## MikroORM & PostgreSQL/Supabase Specifics
+
+- Config: `apps/<app>-system/backend/mikro-orm.config.ts` (driver PostgreSQL)
+- Conexão via **`DATABASE_URL`** (string de conexão do Supabase) — obrigatória
+- ORM entities devem ter o sufixo `-orm.entity.ts`
+- Migrations em `src/infrastructure/persistence/mikro-orm/migrations/`
+- Seeders em `src/infrastructure/persistence/mikro-orm/seeders/`
+
+### Padrão de persistência
+
+```typescript
+// ✅ Repositório injeta o EntityManager para persistir
+@Injectable()
+export class MikroOrmUserRepository implements UserRepositoryPort {
+  constructor(
+    @InjectRepository(UserOrmEntity)
+    private readonly repo: EntityRepository<UserOrmEntity>,
+    private readonly em: EntityManager,   // necessário para persistAndFlush
+    private readonly mapper: UserMapper,
+  ) {}
+
+  async save(user: User): Promise<User> {
+    const orm = this.mapper.toOrm(user);
+    await this.em.persistAndFlush(orm);   // ✅ no EntityManager, NUNCA no repo
+    return this.mapper.toDomain(orm);
+  }
+}
+```
+
+### Filtro de conta SEMPRE inline na consulta
+
+Em sistema multiconta sem RLS, o `account_id` (ou a chave de escopo equivalente) vai **dentro da
+chamada** do `find`/`findOne`/`count`/`nativeDelete`/`nativeUpdate` — nunca montado antes numa
+variável.
+
+```typescript
+// ❌ ERRADO — o escopo sumiu do ponto da chamada
+const where: FilterQuery<PreOrderOrmEntity> = { accountId: accountId.value };
+if (statuses?.length) Object.assign(where, { status: { $in: statuses } });
+const rows = await this.repo.find(where, { orderBy: { createdAt: 'DESC' } });
+
+// ✅ CORRETO — quem lê a linha vê a conta
+const rows = await this.repo.find(
+  {
+    accountId: accountId.value,
+    ...(statuses?.length ? { status: { $in: statuses } } : {}),
+  },
+  { orderBy: { createdAt: 'DESC' } },
+);
+```
+
+**Dois motivos, e nenhum é estilo:**
+
+1. **Revisão humana.** `this.repo.find(where)` não diz nada sobre conta. Quem revisa precisaria
+   subir duas linhas — e é exatamente o tipo de coisa que passa quando o diff é grande.
+2. **Verificação automática.** O script `check:tenant-scope` lê o argumento da chamada. Filtro
+   construído fora dela esconde o escopo justamente de quem existe para conferi-lo, e a "correção"
+   natural (declarar uma exceção) enfraquece a checagem inteira por causa de uma variável.
+
+> Regra descoberta na prática, no Kortex: uma consulta com filtro em variável passava despercebida
+> na revisão e derrubava o verificador. O verificador também deve **ignorar comentários e strings**
+> antes de varrer — senão um comentário que menciona uma consulta vira falso positivo, e falso
+> positivo em ferramenta de segurança treina quem lê a ignorá-la.
+
+### Supabase Storage (uploads)
+
+- O upload usa **base64 em JSON** (Fastify) — **não** usar `multer`/multipart do Express.
+  Endpoints de upload recebem `fileBase64: string`, `fileName: string`, `fileMimeType: string`.
+- `supabase.storage.from(bucket).getPublicUrl(path)` retorna `{ data: { publicUrl } }`
+  — **não há** campo `error` nesse retorno.
+
+### Queries SQL diretas (métricas/admin)
+
+Quando precisar de SQL bruto (ex.: métricas administrativas), use
+`em.getKnex().raw(...)` com placeholders `?` (queries parametrizadas — nunca concatenar string).
+
+### Variáveis de Ambiente (Banco / Storage)
+
+```env
+DATABASE_URL=postgresql://<user>:<password>@<host>:5432/postgres   # Supabase
+
+SUPABASE_URL=https://<project>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key>   # secret — nunca no frontend
+SUPABASE_STORAGE_BUCKET=...
+```
+
+## CORS Configuration
+
+Configurado em `src/main.ts` via variável `CORS_ORIGIN`:
+
+```typescript
+app.enableCors({
+  origin: process.env.CORS_ORIGIN || '*',
+  credentials: true,
+});
+```
+
+**Regras:**
+- Em produção, `CORS_ORIGIN` deve listar as origens reais do frontend (nunca `*` com credenciais)
+- Em desenvolvimento, a origem típica é `http://localhost:3003` (frontend Next.js)
+
+```env
+# Desenvolvimento
+CORS_ORIGIN=http://localhost:3003
+# Produção (exemplo)
+CORS_ORIGIN=https://app.<dominio>,https://<dominio>
+```
+
+## Error Reporting — Port de Monitoramento (preparação para um Guard próprio)
+
+> Haverá uma ferramenta **própria** de captura/monitoramento de cenários de erro, o
+> **`VEXGuard`** (ainda **não existe** — será desenvolvido por nós). **É uma ferramenta
+> própria, sem qualquer vínculo com terceiros.** Todo sistema deve **já nascer preparado**
+> para plugá-la, sem refatoração futura.
+
+A preparação é arquitetural: um **port** de error-reporting (fire-and-forget) com um
+**adapter no-op** registrado por padrão. Quando o `VEXGuard` existir, troca-se a
+implementação do provider — **nada mais muda**.
+
+### 1. Port (Application/Infra boundary)
+
+```typescript
+// src/infrastructure/observability/ports/error-reporter.port.ts
+export const ERROR_REPORTER = Symbol('ERROR_REPORTER');
+
+export interface ErrorScenario {
+  exceptionType: string;
+  message: string;
+  stack?: string;
+  method?: string;
+  path?: string;
+  context?: Record<string, unknown>; // já sanitizado (sem dados sensíveis)
+  occurredAt: string;
+}
+
+export interface ErrorReporterPort {
+  // Fire-and-forget: NUNCA lança, NUNCA bloqueia a resposta ao cliente.
+  report(scenario: ErrorScenario): void;
+}
+```
+
+### 2. Adapter no-op (default — registrado já)
+
+```typescript
+// src/infrastructure/observability/noop-error-reporter.ts
+@Injectable()
+export class NoopErrorReporter implements ErrorReporterPort {
+  report(_scenario: ErrorScenario): void {
+    // Sem ferramenta configurada → não faz nada. Não é erro.
+  }
+}
+
+// PersistenceModule/AppModule (global)
+providers: [{ provide: ERROR_REPORTER, useClass: NoopErrorReporter }],
+exports: [ERROR_REPORTER],
+```
+
+### 3. Disparo no ponto único (GlobalExceptionFilter)
+
+O `GlobalExceptionFilter` é o lugar de captura — cobertura total e automática.
+**Só reporta erro real (500 / exceção inesperada)** — nunca 4xx esperado
+(`DomainException` → 400, `HttpException` 401/403/404, validação).
+
+```typescript
+@Catch()
+export class GlobalExceptionFilter implements ExceptionFilter {
+  constructor(@Inject(ERROR_REPORTER) private readonly reporter: ErrorReporterPort) {}
+
+  catch(exception: unknown, host: ArgumentsHost): void {
+    // ... DomainException → 400, HttpException → status (NÃO reporta) ...
+
+    // Qualquer outro erro → 500 genérico + reporta o cenário (fire-and-forget)
+    this.reporter.report({
+      exceptionType: (exception as Error)?.name ?? 'UnknownError',
+      message: (exception as Error)?.message ?? 'unknown',
+      stack: (exception as Error)?.stack,
+      method: request.method,
+      path: request.url,
+      occurredAt: new Date().toISOString(),
+    });
+    response.status(500).send({ message: 'Erro interno. Tente novamente.' });
+  }
+}
+```
+
+### Regras do reporter (quando o `VEXGuard` for implementado)
+
+- **Fire-and-forget**: o disparo roda fora do caminho da resposta (não bloqueia, não
+  adiciona latência) e está dentro do próprio `try/catch` — uma falha de monitoramento
+  **jamais** gera uma segunda exceção que mascare a original.
+- **Sanitização na origem**: o `context` nunca contém senha, token, CPF, dados de pagamento.
+- **O que reporta**: apenas 500 / exceções inesperadas. **Não** reporta 4xx esperado
+  (negócio, validação, not found, forbidden).
+- **Entrega por API key própria** (`ERROR_REPORTER_API_KEY`), nunca o JWT do usuário.
+- Variáveis genéricas (adicionar ao `.env.example` quando implementar):
+  ```env
+  ERROR_REPORTER_URL=        # endpoint de ingestão do seu Guard (vazio = no-op)
+  ERROR_REPORTER_API_KEY=    # secret de ingestão
+  ```
+
+## Real-time Adapter (WebSocket) — Socket.IO via NestJS Gateway
+
+Quando um sistema precisar de comunicação em tempo real (ex.: EMDR Remoto —
+estímulo bilateral, chat de sessão, presença), o transporte padrão é **Socket.IO**,
+integrado como **inbound adapter** via **NestJS Gateway** (`@nestjs/websockets` +
+`@nestjs/platform-socket.io`). **Não usar WebSocket nativo** (reimplementaria rooms,
+reconexão, heartbeat e acks manualmente) nem servidor Socket.IO paralelo fora do
+container de DI.
+
+**Regras (mesmas do HTTP Adapter, aplicadas ao socket):**
+- O Gateway vive em `src/infrastructure/realtime/` e é **fino**: valida, autentica,
+  chama Use Case, emite. **Nenhuma regra de negócio no Gateway.**
+- **Autenticação no handshake** via `WsJwtGuard`, que reusa o `TokenServicePort`.
+  Token em `handshake.auth.token` — nunca na query string.
+- **Autorização contextual**: antes de entrar numa room ou emitir, um Use Case
+  confirma que o usuário autenticado pertence àquela sessão (menor privilégio).
+- **Todo payload é um DTO com `class-validator`** (WS `ValidationPipe` com
+  `whitelist: true`). Proibido `any` ou `[key: string]: any`.
+- **Rooms** (`session:<code>`) para roteamento — nunca persistir `socket_id` no banco.
+- **CORS** do Gateway lido de `CORS_ORIGIN` (nunca `*` com credenciais).
+- Erros → `WsException` com mensagem genérica; 500/inesperado reportado pelo
+  `error_reporter` port (fire-and-forget). Nunca vazar stack pelo socket.
+- **Fastify**: registrar `app.useWebSocketAdapter(new IoAdapter(app))` no `main.ts`;
+  o Socket.IO sobe na mesma porta do backend (um único domínio no Dokploy).
+
+**Estrutura:**
+`realtime/{gateways, dto, guards, realtime.module.ts}`. Um Gateway por
+domínio de eventos (session, emdr, chat), todos importando os Use Cases do context
+correspondente. Contrato de eventos versionado (nomes de eventos como constantes
+compartilhadas entre back e front).
+
+## Integração WhatsApp (Evolution API)
+
+Alguns sistemas (ex.: EMDR Remoto) enviam o link da sessão ao paciente por **WhatsApp** via
+**Evolution API** (self-hosted em `https://evo2.techbs.com.br`). A integração é um **adapter de
+saída** (`EvolutionGatewayPort` → `EvolutionGateway`) na infraestrutura; a aplicação nunca fala
+com o Evolution direto.
+
+**Dois tipos de chave (nunca confundir):**
+- **Chave GLOBAL** (`AUTHENTICATION_API_KEY` do servidor Evolution — a mesma do Evolution
+  Manager). Autoriza operações administrativas: **criar/deletar instâncias**. Vai na env
+  **`EVOLUTION_API_KEY`**. Necessária só para o modo "instância própria" (psicólogo pareia o
+  próprio número por QR).
+- **Chave POR INSTÂNCIA** (o token de uma instância específica, ex.: a `emdr`). Autoriza só
+  aquela instância: **enviar mensagem**, QR, status. Vai na env **`EVOLUTION_SHARED_APIKEY`**.
+
+**Regra de segurança (inegociável):** os **valores** dessas chaves ficam **apenas** no `.env`
+do backend (ou na UI do Dokploy em produção) — **nunca** neste CLAUDE.md, no código, no
+frontend, nem em qualquer arquivo versionado. A chave global é mestra (controle total do
+Evolution); se vazar, **rotacionar** no servidor. O frontend jamais recebe qualquer chave do
+Evolution.
+
+**Endpoints Evolution v2 usados:** `POST /instance/create` (global), `GET /instance/connect/{name}`
+e `/instance/connectionState/{name}` (chave da instância), `POST /message/sendText/{name}`
+(chave da instância), `DELETE /instance/logout|delete/{name}`.
+
+**Variáveis de ambiente (adicionar ao `.env.example`; valores só no `.env`/Dokploy):**
+```env
+EVOLUTION_API_URL=https://evo2.techbs.com.br
+EVOLUTION_API_KEY=          # chave GLOBAL (AUTHENTICATION_API_KEY) — só p/ criar instância própria
+EVOLUTION_SHARED_INSTANCE=  # nome da instância compartilhada (ex.: emdr)
+EVOLUTION_SHARED_APIKEY=    # apikey da instância compartilhada
+APP_PUBLIC_URL=             # domínio público do frontend (https://) — p/ o link ficar clicável no WhatsApp
+```
+
+> **Nota sobre links no WhatsApp:** o WhatsApp só transforma URLs com **domínio real** em link
+> clicável — `http://localhost` fica como texto puro. Por isso os links de convite usam
+> `APP_PUBLIC_URL` (domínio de produção); em dev use o deploy ou um túnel.
 
 ## Testing Strategy
 
@@ -274,583 +1108,354 @@ Within an app:
 - **Integration tests** (`test/integration/`): Repository implementations, database interactions
 - **E2E tests** (`test/e2e/`): Full HTTP request/response cycles
 
+Padrões:
+- **Arrange-Act-Assert**; nomes descritivos; mock de dependências externas
+- Resetar mocks em `beforeEach`; testar edge cases (null/empty/boundary)
+- Cobertura alvo: > 80% nas camadas domain e application
+
 Run specific test: `npm run test -- path/to/file.spec.ts`
-
-## Common Pitfalls to Avoid
-
-1. ❌ **Don't** add MikroORM decorators to domain entities
-2. ❌ **Don't** inject `EntityManager` into use cases (use `UnitOfWorkPort`)
-3. ❌ **Don't** put business logic in controllers (belongs in domain/use cases)
-4. ❌ **Don't** expose domain entities directly via HTTP (use DTOs)
-5. ❌ **Don't** skip mappers between Domain ↔ ORM ↔ HTTP DTOs
-6. ❌ **Don't** forget to publish domain events after persistence
-7. ❌ **Don't** use string tokens for DI (use Symbols)
-
-## Environment Setup
-
-1. Copy `.env.example` to `.env` in `apps/system-example/`
-2. Configure SQL Server connection (or use Docker: `docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=..." -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest`)
-3. Create database
-4. Run migrations: `npm run migration:up`
 
 ## Development Best Practices (Backend)
 
 ### Controller Guidelines
 
 **NEVER:**
-- Open direct database connections
-- Use manual SQL (always use ORM with mapped entities)
+- Open direct database connections / manual SQL (always use ORM with mapped entities)
 - Have multiple `catch` blocks in a single method
-- Return `Ok()` for DELETE operations (use 204 No Content)
+- Return body for DELETE (use 204 No Content)
+- Put business logic in controllers (belongs in domain/use cases)
 
 **ALWAYS:**
-- Have exactly ONE `try-catch` per controller method
-- Use constructor injection for dependencies
-- Use Mappers for DTO ↔ Domain conversion
+- Exactly ONE `try-catch` per controller method (when needed)
+- Constructor injection for dependencies
+- Mappers / Response DTOs for DTO ↔ Domain conversion
 - Delegate complex logic to Use Cases
-- Return `204 No Content` for successful DELETE
 
-### Error Handling Standards
-
-**Controller Error Pattern:**
+### Controller Seguro (template)
 
 ```typescript
-@Get(':id')
-async getItem(@Param('id') id: string) {
-  try {
-    const item = await this.repository.findById(UserId.from(id));
-    if (!item) {
-      throw new NotFoundException('Item not found');
-    }
+@Controller('items')
+@UseGuards(JwtAuthGuard) // guard no nível do controller — protege todos os métodos
+export class ItemController {
+  private readonly logger = new Logger(ItemController.name);
 
-    return ItemDto.fromDomain(item);
-  } catch (error) {
-    this.logger.error('Error getting item', error);
-    throw; // Re-throw to preserve stack trace
+  constructor(
+    private readonly createItemUseCase: CreateItemUseCase,
+    private readonly getItemUseCase: GetItemUseCase,
+  ) {}
+
+  @Post()
+  @HttpCode(201)
+  async create(
+    @Body() dto: CreateItemRequestDto,        // validado pelo ValidationPipe
+    @Req() req,
+  ): Promise<ItemResponseDto> {
+    const user = req.user as AuthTokenPayload;
+    try {
+      return await this.createItemUseCase.execute({ ...dto, createdBy: user.sub });
+    } catch (error) {
+      this.logger.error('Erro ao criar item', { error, userId: user.sub });
+      throw error; // tratado pelo exception filter do Nest / GlobalExceptionFilter
+    }
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  async delete(@Param('id') id: string): Promise<void> {
+    await this.deleteItemUseCase.execute({ id });
   }
 }
 ```
-
-**Rules:**
-- ONE `catch` block per controller method
-- NEVER: Empty catch blocks
-- NEVER: Rethrow with `throw error` (use `throw;` to preserve stack trace in some contexts, or just `throw error` in NestJS)
-- ALWAYS: Log errors with context
-- Services can propagate exceptions; controller handles final error response
 
 ### HTTP Status Code Standards
 
-- **200 OK**: Successful GET/PUT with content
-- **201 Created**: Successful POST; include `Location` header with new resource URI
-- **204 No Content**: Successful DELETE (no response body)
-- **400 Bad Request**: Validation failed or business rule violation
-- **404 Not Found**: Resource not found
-- **401 Unauthorized**: Authentication failed
-- **403 Forbidden**: Insufficient permissions
-- **500 Internal Server Error**: Unhandled exceptions (let NestJS exception filter handle)
+- **200 OK**: GET/PUT com conteúdo
+- **201 Created**: POST com sucesso
+- **204 No Content**: DELETE com sucesso (sem body)
+- **400 Bad Request**: validação falhou ou violação de regra de negócio
+- **401 Unauthorized**: autenticação falhou
+- **403 Forbidden**: sem permissão (role incorreta)
+- **404 Not Found**: recurso não encontrado
+- **500 Internal Server Error**: exceção não tratada
 
-### Service Layer Patterns
+### Service Layer / Transações
 
-**Command/Query Separation:**
-- **Commands**: Write operations (Create, Update, Delete) with transaction management
-- **Queries**: Read operations optimized for performance (projections, caching)
+- Transações gerenciadas em **Use Cases**, nunca em Controllers
+- Usar `UnitOfWorkPort` — nunca injetar `EntityManager` no use case
+- Domain events publicados **após** a persistência bem-sucedida
+- `throw` propaga o erro e dispara o rollback
 
-**Transaction Management:**
-
-```typescript
-async saveEntity(entity: MyEntity): Promise<MyEntity> {
-  return this.unitOfWork.execute(async () => {
-    const saved = await this.repository.save(entity);
-
-    // All operations here are in the same transaction
-    await this.otherRepository.update(relatedData);
-
-    return saved;
-  });
-  // Auto-commit on success, auto-rollback on error
-}
-```
-
-**Rules:**
-- Transactions managed in Use Cases, NOT Controllers
-- Use `UnitOfWorkPort` abstraction (never inject EntityManager directly)
-- Domain events published AFTER successful persistence
-- Use `throw` to propagate errors and trigger rollback
-
-### Strategy Pattern for Extensibility
-
-When you have multiple implementations of the same interface, use Strategy pattern:
+### O que NÃO logar vs. O que logar
 
 ```typescript
-// Define interface
-export interface IFieldWriter {
-  canHandle(dbType: string): boolean;
-  write(field: KnowledgeField, value: any): KnowledgeData;
-}
+// ❌ NUNCA logar dados sensíveis
+this.logger.log(`Autenticando: cpf=${cpf} senha=${password}`);
+this.logger.log(`Token: ${authToken}`);
 
-// Create implementations
-@Injectable()
-export class VarcharWriter implements IFieldWriter {
-  canHandle(dbType: string) { return dbType === 'varchar'; }
-  write(field: KnowledgeField, value: any) { /* ... */ }
-}
-
-@Injectable()
-export class GuidWriter implements IFieldWriter {
-  canHandle(dbType: string) { return dbType === 'uniqueidentifier'; }
-  write(field: KnowledgeField, value: any) { /* ... */ }
-}
-
-// Use in service
-@Injectable()
-export class KnowledgeService {
-  constructor(
-    @Inject('FIELD_WRITERS')
-    private readonly fieldWriters: IFieldWriter[],
-  ) {}
-
-  saveData(field: KnowledgeField, value: any) {
-    const writer = this.fieldWriters.find(w => w.canHandle(field.type));
-    if (!writer) throw new Error(`No writer for type: ${field.type}`);
-
-    return writer.write(field, value);
-  }
-}
-
-// Register in module
-providers: [
-  VarcharWriter,
-  GuidWriter,
-  // ... other writers
-  {
-    provide: 'FIELD_WRITERS',
-    useFactory: (varchar: VarcharWriter, guid: GuidWriter) => [varchar, guid],
-    inject: [VarcharWriter, GuidWriter],
-  },
-],
+// ✅ Logar contexto útil sem dados sensíveis
+this.logger.log('Tentativa de autenticação', { userId });
+this.logger.error('Falha na autenticação', { userId, reason: 'invalid_password' });
 ```
 
-### Validation & Invariants
+## Common Pitfalls to Avoid
 
-**Domain Validation:**
-- Validate in entity constructors and domain methods
-- Throw specific exception types from `@gitspread/domain-primitives`
-- Ensure entities are always in valid state
-
-**DTO Validation:**
-- Use `class-validator` decorators on request DTOs
-- Validation pipe auto-validates before reaching controller
-
-### Nullability Best Practices
-
-- Align TypeScript types with database schema
-- Use `!` or `?` operators appropriately for nullable fields
-- Make required relationships non-nullable in types
-- Document nullability expectations in interfaces
-
-## Key Files to Reference
-
-- **Domain example**: `apps/system-example/src/contexts/user/domain/entities/user.entity.ts`
-- **Use case example**: `apps/system-example/src/contexts/user/application/use-cases/create-user/create-user.use-case.ts`
-- **Repository implementation**: `apps/system-example/src/infrastructure/persistence/mikro-orm/repositories/user.repository.ts`
-- **Mapper example**: `apps/system-example/src/infrastructure/persistence/mikro-orm/mappers/user.mapper.ts`
-- **Controller example**: `apps/system-example/src/infrastructure/http/controllers/user/user.controller.ts`
+1. ❌ Adicionar decorators MikroORM em domain entities → mantenha domain puro
+2. ❌ Injetar `EntityManager` em use cases → use `UnitOfWorkPort`
+3. ❌ Chamar `repository.persistAndFlush()` → `EntityRepository` não tem esse método; use `em.persistAndFlush()`
+4. ❌ Lógica de negócio em controllers → vai para domain/use cases
+5. ❌ Expor domain entities via HTTP → use Response DTOs
+6. ❌ Pular mappers entre Domain ↔ ORM ↔ HTTP DTOs
+7. ❌ Esquecer de publicar domain events após persistência
+8. ❌ Usar string tokens para DI → use Symbols
+9. ❌ Usar `multer`/multipart com Fastify → uploads em base64 JSON
+10. ❌ Passar 2 argumentos para `DomainException` → recebe apenas `super(message)`
+11. ❌ Paths relativos errados de use-cases para domain (são **3 níveis**: `../../../domain/`)
+12. ❌ Introduzir qualquer dependência ligada a provedores de identidade externos
 
 ---
 
-# Frontend Development Guidelines
+# Frontend Development Guidelines (Next.js 14 + MUI)
 
-## Project Structure (When Adding Frontend)
+O frontend é um app **Next.js 14 (App Router)** com **Material-UI**. Roda na porta 3003.
 
-Frontend applications should be placed in a separate directory within the monorepo:
+## 1. Estrutura
 
-```
-GitSpread/
-├── apps/
-│   ├── system-example/          # Backend
-│   └── system-example-web/      # Frontend (if needed)
-└── packages/
-```
+- Páginas/rotas em `app/` (App Router): `app/admin/`, `app/auth/`, `app/products/`,
+  `app/cart/`, `app/checkout/`, `app/r/` (revendedor), etc.
+- Componentes gerais em `src/components/{ComponentName}/`
+- Serviços HTTP por recurso: `src/services/{resource}Service.ts`
+- Cliente axios em `src/services/api.ts` — **sempre com interceptor de token JWT**
 
-## Frontend Best Practices
-
-### 1. Component Structure
-
-#### Pages
-- Main page files in `src/pages/{PageName}/index.tsx` and `styles.ts`
-- **CRITICAL**: Every protected page MUST use authentication wrapper component
-- Page subcomponents in `src/pages/{PageName}/components/`
-- **Dialog components**: Always implement as subcomponents, never inline
-
-#### Components
-- General-purpose components in `src/components/{ComponentName}/index.tsx`
-- Create `styles.ts` when styling is needed
-- Use named exports (avoid `export default` for components)
-
-#### Services
-- Organize by resource: `src/services/{resource}Service.ts`
-- Configure axios in `src/services/api.ts`
-
-**Service Pattern:**
+### `src/services/api.ts` — interceptor JWT obrigatório
 
 ```typescript
-import api from 'src/services/api';
+import axios from 'axios';
 
-async function getById(id: number) {
-  return api.get<IUser>(`users/${id}`);
-}
-
-async function create(user: CreateUserDto) {
-  return api.post('users', user);
-}
-
-async function update(id: string, user: UpdateUserDto) {
-  return api.put(`users/${id}`, user);
-}
-
-const userService = {
-  getById,
-  create,
-  update,
-};
-
-export default userService;
-```
-
-### 2. Coding Standards
-
-#### Component Declarations
-
-**✅ CORRECT:**
-```typescript
-export function MyPage() {
-  return <div>Content</div>;
-}
-```
-
-**❌ INCORRECT:**
-```typescript
-const MyPage = () => <div>Content</div>; // NEVER do this
-export default MyPage; // Avoid default exports
-```
-
-#### Variable and Function Declarations
-
-- Use `const` only for hooks or variables
-- Use `function` for all function declarations
-- In utils/helpers: `export function` instead of `export const`
-
-#### Exports
-
-- **Avoid `export default`** for components
-- `export default` acceptable only for service modules
-- Use named exports: `export function convertTime`
-
-#### TypeScript
-
-- **Avoid `any`**: Use explicit types
-- **Local vs Global Types**:
-  - Types used only within component: declare at file beginning (outside function)
-  - Reusable types: place in `src/types/{entity}.ts`
-  - **NEVER declare types inside functions**
-
-**Component Props Naming:**
-
-```typescript
-interface MyPageProps {
-  userId: string;
-  onSave: () => void;
-}
-
-export function MyPage(props: MyPageProps) {
-  // implementation
-}
-```
-
-### 3. HTML & Semantic Markup
-
-**ALWAYS use semantic HTML** - this is mandatory:
-
-**Common semantic elements:**
-- `<header>` - Headers, navigation bars
-- `<main>` - Main content area
-- `<nav>` - Navigation, pagination
-- `<section>` - Thematic content grouping
-- `<article>` - Self-contained content (cards, list items)
-- `<aside>` - Sidebar, complementary info
-- `<footer>` - Footers
-
-**✅ CORRECT:**
-```tsx
-<Container>
-  <Header>
-    <Navbar>...</Navbar>
-  </Header>
-
-  <Main>
-    <Section>
-      <Article>Card content</Article>
-    </Section>
-
-    <Nav aria-label="Pagination">
-      <Pagination />
-    </Nav>
-  </Main>
-</Container>
-```
-
-**❌ INCORRECT:**
-```tsx
-<div>
-  <div className="header">...</div>
-  <div className="content">...</div>
-</div>
-```
-
-**Accessibility:**
-- Add ARIA roles: `role="status"` for loading, `role="alert"` for errors
-- Use `aria-label` for sections
-- Ensure keyboard navigation works
-
-### 4. Styling Guidelines
-
-#### Material-UI (MUI)
-
-- Always consult documentation before using MUI components
-- Use MUI components for all UI elements
-- For complex styles, move to `styles.ts` using MUI's `styled`
-- Use Material-UI Icons
-
-#### Styled Components Best Practices
-
-**CRITICAL RULES:**
-
-1. **NEVER use inline styles**
-2. **One styled component per visual element**
-3. **Hybrid approach**: Use both `styled-components` and `@mui/material/styles`
-4. **Semantic element mapping**: Wrap semantic HTML elements
-
-**❌ INCORRECT:**
-
-```typescript
-// styles.ts - BAD
-export const Container = styled.div`
-  .header { margin-bottom: 1rem; }
-  .content { padding: 1rem; }
-`;
-
-// index.tsx - BAD
-<Container>
-  <div className="header">...</div>
-  <span style={{ color: 'red' }}>Error</span> {/* inline! */}
-</Container>
-```
-
-**✅ CORRECT:**
-
-```typescript
-// styles.ts - GOOD
-import styled from 'styled-components';
-import { styled as muiStyled } from '@mui/material/styles';
-
-// Simple layouts with styled-components
-export const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-export const Header = styled.header`
-  margin-bottom: 1rem;
-`;
-
-// Theme access with MUI styled
-export const ErrorText = muiStyled('span')(({ theme }) => ({
-  color: theme.palette.error.main,
-  fontSize: theme.typography.body2.fontSize,
-}));
-
-// index.tsx - GOOD
-<Container>
-  <Header>...</Header>
-  <ErrorText>Error message</ErrorText>
-</Container>
-```
-
-**Key principles:**
-- Each visual element = one styled component
-- Use `styled` from `styled-components` for simple layouts
-- Use `styled as muiStyled` from `@mui/material/styles` for theme access
-- Access MUI theme: `muiStyled('span')(({ theme }) => ({ ... }))`
-- Never use `className` or `style` props
-
-#### Colors
-
-- **Never use inline colors** (RGB/hex)
-- Always use `theme.palette` colors
-- Customize theme in `src/styles/theme.ts`
-- Extend types in `src/@types/theme.d.ts`
-
-### 5. Form Handling
-
-- Use **react-hook-form** with **yup** validation
-- Consult documentation before implementing validations
-
-```typescript
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-
-const validationSchema = yup.object({
-  email: yup.string().email('Invalid email').required('Email required'),
-  name: yup.string().required('Name required'),
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
 });
 
-export function MyForm() {
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: yupResolver(validationSchema),
-  });
+// Injeta o access token em todas as requisições
+api.interceptors.request.use((config) => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('<app>_access_token') : null;
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
-  const onSubmit = (data) => {
-    // handle form submission
-  };
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <input {...register('email')} />
-      {errors.email && <span>{errors.email.message}</span>}
-    </form>
-  );
-}
+export default api;
 ```
 
-### 6. User Notifications
-
-**ALWAYS use notification context/hook** for user feedback:
+### Service Pattern
 
 ```typescript
-import { useSnackbar } from 'src/contexts/snackbarContext';
-
-export function MyPage() {
-  const { showMessage } = useSnackbar();
-
-  async function loadData() {
-    try {
-      const data = await service.getData();
-      showMessage('Data loaded successfully', 'success');
-    } catch (error: any) {
-      showMessage(error.message || 'Error loading data', 'error');
-    }
-  }
-
-  // ...
-}
-```
-
-**Severity types:**
-- `'error'` - Red alert
-- `'success'` - Green alert
-- `'warning'` - Orange alert
-- `'info'` - Blue alert (default)
-
-### 7. Import Configuration
-
-**ALWAYS use `src/` imports:**
-
-```typescript
-// ✅ CORRECT
 import api from 'src/services/api';
-import { useAuth } from 'src/hooks/useAuth';
 
-// ❌ INCORRECT
-import api from '../../services/api';
-import { useAuth } from '../../../hooks/useAuth';
+async function getAll(params: { filter?: string; page?: number; limit?: number }) {
+  const response = await api.get('/products', { params });
+  return response.data; // { items, total, page, totalPages }
+}
+
+async function create(item: CreateProductDto) {
+  const response = await api.post('/admin/products', item);
+  return response.data;
+}
+
+const productService = { getAll, create };
+export default productService;
 ```
 
-### 8. Environment Variables
+## 2. Coding Standards
 
-- Use `.env.development`, `.env.production`, `.env.example`
-- Prefix with `VITE_` for Vite or `REACT_APP_` for Create React App
-- Never commit actual `.env` files
+- **Componentes**: `export function MyPage() {}` — nunca arrow + `export default`
+- **Funções**: `function` para declarações; `const` só para hooks/variáveis
+- **Exports**: nomeados; `export default` apenas em módulos de service
+- **TypeScript**: evitar `any`; tipos reutilizáveis em `src/types/{entity}.ts`;
+  nunca declarar tipos dentro de funções
+- **Imports**: usar paths a partir de `src/` — nunca `../../../`
+- **Client vs Server Components**: marque com `'use client'` componentes que usam estado,
+  efeitos, ou acessam `localStorage`/`window`
+
+## 3. HTML Semântico (obrigatório)
+
+Usar `<header>`, `<main>`, `<nav>`, `<section>`, `<article>`, `<aside>`, `<footer>`.
+Acessibilidade: `role="status"` para loading, `role="alert"` para erros, `aria-label` em seções.
+
+## 4. Styling
+
+- **Material-UI** para todos os elementos de UI; Material-UI Icons para ícones
+- Estilos complexos em `styles.ts` (styled-components / `@mui/material/styles`)
+- **Nunca** inline styles nem cores hardcoded (RGB/hex) — usar `theme.palette`
+- Um styled component por elemento visual; mapear elementos semânticos
+
+## 5. Forms
+
+- **react-hook-form** + **yup** (resolver `@hookform/resolvers/yup`)
+- `react-imask` para máscaras (CPF, telefone, etc.)
+
+```typescript
+const validationSchema = yup.object({
+  cpf: yup.string().required('CPF obrigatório'),
+  password: yup.string().min(6, 'Mínimo 6 caracteres').required('Senha obrigatória'),
+});
+```
+
+## 6. Notificações ao usuário
+
+Usar **notistack** (`useSnackbar`) para feedback:
+
+```typescript
+const { enqueueSnackbar } = useSnackbar();
+enqueueSnackbar('Operação realizada com sucesso', { variant: 'success' });
+enqueueSnackbar(error?.response?.data?.message || 'Erro ao processar', { variant: 'error' });
+```
+
+## 7. Environment Variables (Frontend)
+
+- Variáveis expostas ao browser **devem** ter prefixo `NEXT_PUBLIC_`
+- Secrets (chaves de service role do Supabase, etc.) **nunca** vão para o frontend
+- Nunca commitar `.env.local`/`.env.production`
 
 ```env
-VITE_BACKEND_URL=http://localhost:3000
-VITE_APP_VERSION=1.0.0
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
 ```
 
-### 9. State Management
+## 8. Naming Conventions
 
-- Use React Context API for global state
-- Create context providers for feature-specific state
-- Use custom hooks to consume contexts
+- **Código e comentários**: inglês
+- **Labels e mensagens de UI**: português
+- **Arquivos**: camelCase para utils, PascalCase para componentes
+- **Variáveis**: camelCase · **Componentes**: PascalCase · **Constantes**: UPPER_SNAKE_CASE
 
-```typescript
-// contexts/authContext.tsx
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+## 9. State Management
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+- React Context API para estado global (ex: carrinho, usuário autenticado)
+- Custom hooks para consumir contexts (`useAuth`, `useCart`)
 
-  return (
-    <AuthContext.Provider value={{ user, setUser }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+## Key Files to Reference
 
-// hooks/useAuth.ts
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
-}
-```
+**Auth (próprio):**
+- `apps/<app>-system/backend/src/contexts/auth/` — login, refresh, reset de senha
+- `apps/<app>-system/backend/src/infrastructure/security/guards/` — JwtAuthGuard, AdminGuard, ResellerGuard
+- `apps/<app>-system/backend/src/infrastructure/security/jwt-token.service.ts`
 
-### 10. Error Handling in Services
+**Domain/Application/Infra (exemplos):**
+- Domain: `src/contexts/reseller/domain/entities/reseller.entity.ts`
+- Use case: `src/contexts/<context>/application/use-cases/<name>/<name>.use-case.ts`
+- Repository: `src/infrastructure/persistence/mikro-orm/repositories/`
+- Mapper: `src/infrastructure/persistence/mikro-orm/mappers/`
+- Controller: `src/infrastructure/http/controllers/`
 
-**Standard error handling pattern:**
+**Configuração:**
+- App module: `src/app.module.ts`
+- Bootstrap: `src/main.ts`
+- MikroORM: `mikro-orm.config.ts`
 
-```typescript
-async function loadData() {
-  try {
-    setLoading(true);
-    const response = await service.getData();
-    setData(response.data);
-  } catch (error: any) {
-    showMessage(error.userMessage || 'Error loading data', 'error');
-    console.error('Load data error:', error);
-  } finally {
-    setLoading(false);
-  }
-}
-```
+**Shared packages:**
+- `packages/domain-primitives/src/` · `packages/shared-kernel/src/`
 
-### 11. Naming Conventions
+**Documentação de entregas/pendências:**
+- `docs/modulos/` — planos de entrega e análises de pendências
 
-- **Code and comments**: English
-- **UI labels and messages**: Portuguese (or target language)
-- **Files**: camelCase for utilities, PascalCase for components
-- **Variables**: camelCase
-- **Components**: PascalCase
-- **Constants**: UPPER_SNAKE_CASE
+---
 
-### 12. Frontend Testing (When Implemented)
+# Deploy no Servidor mdantas (Dokploy) — Playbook
 
-- **Unit tests**: Component logic, utilities
-- **Integration tests**: Component interactions
-- **E2E tests**: User workflows
+> **Gatilho:** quando o Eliab disser **"quero subir no mdantas"** (ou "deploy no mdantas"),
+> seguir este playbook. Primeiro definir **qual projeto** e **qual domínio**, depois executar.
+> Este processo foi validado no deploy do **Ecoa** (jul/2026).
 
-Use Vitest + React Testing Library for testing:
+## Infra fixa do servidor mdantas
 
-```typescript
-import { render, screen } from '@testing-library/react';
-import { MyComponent } from './MyComponent';
+| Item | Valor |
+|---|---|
+| Plataforma | **Dokploy** em `https://dokploy.mdantas.com.br` (conta `eliab@techbs.com.br`) |
+| Reverse proxy / HTTPS | **Traefik + Let's Encrypt** (automático, gerenciado pelo Dokploy) |
+| **IP público do servidor** | **`72.61.43.90`** |
+| DNS | **Cloudflare** (conta `hostmaster@mdantas.com.br`) |
+| Git dos apps | **GitLab** (`git@gitlab.com:eliab1/<projeto>.git`), via provedor **Git + Deploy Key** |
 
-describe('MyComponent', () => {
-  it('should render correctly', () => {
-    render(<MyComponent />);
-    expect(screen.getByText('Hello')).toBeInTheDocument();
-  });
-});
-```
+### Projetos existentes no Dokploy (cada cliente = um "project")
+
+| Project (Dokploy) | Domínio principal (Cloudflare) | Observação |
+|---|---|---|
+| `psi` | **`equipamentospsi.com`** | Cliente PSI Equipamentos — onde vive o **Ecoa** (`ecoa.equipamentospsi.com`) + site WordPress |
+| `techbs` | `techbs.com.br` | |
+| `emdrremoto` | `emdrremoto.com.br` | |
+| `kazatemimports` | — | |
+
+> Ao subir um app novo, **perguntar em qual project** ele entra (ou criar um novo) e **qual subdomínio**.
+
+## Pré-requisitos do repositório (antes de tocar no Dokploy)
+
+O Dokploy builda a partir de um **repo Git** com **Dockerfile**. Para um monorepo (workspaces + pacotes compartilhados):
+
+1. **Repo no GitLab** (`eliab1/<projeto>`), branch `main`.
+2. **Dockerfiles monorepo-aware** (contexto = raiz do repo): copiam `package.json`+`package-lock.json`, os `packages/`, e o app; buildam os pacotes (`tsc`) e o app.
+   - **Base `node:22-alpine`** (o `@supabase/*` exige node ≥ 22).
+   - Backend NestJS: `node dist/main` (usa imports relativos → não precisa tsconfig-paths).
+   - Frontend Next.js: `next start`; **API base relativa `/api`** por padrão no `services/api.ts` (domínio único).
+3. **`package-lock.json` versionado** (NÃO gitignorar) — `npm ci` exige.
+4. **`.dockerignore`** na raiz (exclui `node_modules`, `dist`, `.next`, `.env`).
+5. **Nunca commitar segredos**: `.env`/`.env.local` no `.gitignore`; segredos só na **UI do Dokploy**.
+6. **Deploy Key**: cadastrar a **chave pública** da SSH Key do Dokploy em **GitLab → projeto → Settings → Repository → Deploy keys** (read-only). Não usar a integração OAuth do GitLab (dá "Failed to refresh token").
+
+## Passo a passo no Dokploy
+
+Estrutura padrão = **3 serviços** por app: **Redis (Database)** + **Backend (Application)** + **Frontend (Application)**.
+
+### 1. Redis (se o app usar filas/BullMQ)
+`Create Service → Database → Redis`. Depois, na página do serviço, pegar os **dados de conexão INTERNOS**:
+- **Internal Host** (ex.: `psi-ecoaredis-aaa5mv`) — **NÃO** é o nome amigável; é o host gerado.
+- **Internal Port** `6379`, **User** `default`, **Password** (copiar).
+- Garantir que está **Running** (Deploy/Start).
+
+### 2. Backend (Application)
+- **Provider = Git** · URL `git@gitlab.com:eliab1/<projeto>.git` · Branch `main` · SSH Key do Dokploy (Deploy Key no GitLab).
+- **Build Type = Dockerfile** · Docker File `apps/<app>/backend/Dockerfile` · **Docker Context Path = `/`** (⚠️ raiz do repo — sem isso o `COPY` falha com "not found").
+- **Domains → Add**: Host `<sub>.<dominio>` · **Path `/api`** · **Strip Path OFF** (o backend usa `setGlobalPrefix('api')`) · **Container Port** (a real do app, ex. 3005) · **HTTPS ON** (Let's Encrypt).
+- **Environment** (na UI): todas as variáveis (ver abaixo).
+
+### 3. Frontend (Application)
+- Mesmo Provider Git + Deploy Key.
+- **Build Type = Dockerfile** · Docker File `apps/<app>/frontend/Dockerfile` · **Docker Context Path = `/`**.
+- **Domains → Add**: Host `<sub>.<dominio>` · **Path `/`** · **Container Port** (ex. 3003) · **HTTPS ON**.
+- Com API relativa (`/api`) no mesmo domínio, **não precisa** `NEXT_PUBLIC_API_URL`. Se usar domínio separado p/ API, passar `NEXT_PUBLIC_API_URL` como **Build Arg** (é embutido no build).
+
+### 4. DNS (Cloudflare)
+No domínio do projeto → **DNS → Add record**:
+- **Type A** · **Name** `<sub>` · **IPv4 `72.61.43.90`** · **Proxy status = DNS only (nuvem CINZA)** ⚠️
+- Cinza é obrigatório: com "Proxied" (laranja) o Let's Encrypt do Dokploy **não emite** o certificado.
+- Validar com **"Validate DNS"** no domínio do Dokploy (fica verde quando propaga).
+
+### 5. Deploy
+Aba **General → Deploy**. Acompanhar **Deployments** (build) e depois **Logs** (runtime).
+
+## Variáveis de ambiente — regras (vão na UI do Dokploy, NÃO no arquivo)
+
+- **O `.env`/`.env.production.example` são só referência local.** Produção lê da **aba Environment** do Dokploy.
+- **Trocar TODO `<placeholder>`** por valor real (ex.: `<SENHA_REAL>`).
+- `REDIS_HOST` = **Internal Host** do Redis do Dokploy (+ `REDIS_PASSWORD`, `REDIS_USERNAME=default`).
+- Se o app compartilha banco/segredos com o ambiente local, **reusar os mesmos valores** (ex.: `IG_TOKEN_ENCRYPTION_KEY` idêntica, senão tokens criptografados não decriptam).
+- Domínios (CORS, redirect, FRONTEND_URL) apontando para o **domínio público real**.
+- Após alterar Environment: **Save + Redeploy** (env só entra em novo deploy).
+
+## Lições aprendidas (erros que já resolvemos — checar sempre)
+
+| Sintoma no log | Causa | Correção |
+|---|---|---|
+| `COPY ... "/xxx": not found` no build | Docker Context Path errado (pasta do Dockerfile) | **Docker Context Path = `/`** (raiz do repo) |
+| `EBADENGINE ... @supabase ... required node >=22` | Imagem node 20 | Base **`node:22-alpine`** |
+| `queryA ENOTFOUND <dominio>` no Validate DNS | Registro A não existe/propagou | Criar A → `72.61.43.90` (cinza) e revalidar |
+| Let's Encrypt não emite cert | Cloudflare **Proxied (laranja)** | Deixar **DNS only (cinza)** |
+| `EACCES ...:5432` (Supabase) | Conexão **direta** (IPv6-only) | Usar **Session Pooler** (IPv4): `postgres.<ref>@aws-0-<região>.pooler.supabase.com:5432` |
+| `EMAXCONNSESSION max clients ... pool_size: 15` | Pool do ORM > limite do Session Pooler | Limitar pool (ex. MikroORM `pool: {min:0,max:5}`) |
+| `password authentication failed` / `ECIRCUITBREAKER` | Senha errada no `DATABASE_URL` (ou `<SENHA_REAL>` não trocado) | Pôr senha real; aguardar ~2 min o cooldown do Supabase |
+| `getaddrinfo ENOTFOUND ecoa-redis` | `REDIS_HOST` com nome amigável | Usar o **Internal Host** real do Redis |
+| Frontend chama `http://localhost:3001/api` | `NEXT_PUBLIC_API_URL` não embutido no build | API base relativa **`/api`** (mesmo domínio) + **Rebuild com Clean Cache** + `Ctrl+Shift+R` no navegador |
+| Deploy Key / OAuth GitLab "Failed to refresh token" | Integração OAuth do Dokploy instável | Usar provedor **Git + Deploy Key** (chave pública no GitLab) |
+
+## Meta/Instagram após deploy (se o app integra IG)
+Atualizar no app da Meta para o **domínio público**:
+- Facebook Login → **Valid OAuth Redirect URIs**: `https://<sub>.<dominio>/connection/callback`
+- Webhook (`instagram`/`mentions`): `https://<sub>.<dominio>/api/webhooks/instagram` + verify token
+- Detecções/menções e insights de terceiros só valem após **App Review + Business Verification** (ver spec do app).

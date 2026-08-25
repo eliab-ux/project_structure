@@ -46,62 +46,235 @@ Monorepo para desenvolvimento de múltiplos sistemas usando **Arquitetura Hexago
 
 ```
 GitSpread/
-├── packages/                       # Pacotes compartilhados
-│   ├── domain-primitives/          # Base classes DDD
+├── packages/                       # 📦 Pacotes compartilhados
+│   ├── domain-primitives/          # Base classes para DDD
 │   │   ├── src/
-│   │   │   ├── aggregate-root.base.ts
-│   │   │   ├── entity.base.ts
-│   │   │   ├── value-object.base.ts
-│   │   │   ├── domain-event.base.ts
-│   │   │   └── domain-exception.base.ts
+│   │   │   ├── aggregate-root.base.ts    # Raiz de agregados
+│   │   │   ├── entity.base.ts            # Entidades base
+│   │   │   ├── value-object.base.ts      # Value Objects
+│   │   │   ├── domain-event.base.ts      # Eventos de domínio
+│   │   │   └── domain-exception.base.ts  # Exceções de domínio
 │   │   └── package.json
 │   │
-│   └── shared-kernel/              # Types, interfaces, utils
+│   └── shared-kernel/              # Types, interfaces e utils compartilhados
 │       ├── src/
-│       │   ├── types/
-│       │   ├── interfaces/
-│       │   └── utils/
+│       │   ├── types/              # Tipos reutilizáveis
+│       │   │   ├── result.type.ts
+│       │   │   └── pagination.type.ts
+│       │   ├── interfaces/         # Interfaces comuns
+│       │   │   ├── use-case.interface.ts
+│       │   │   └── repository.interface.ts
+│       │   └── utils/              # Utilitários
+│       │       ├── date.util.ts
+│       │       └── validation.util.ts
 │       └── package.json
 │
-└── apps/                           # Aplicações/Sistemas
+└── apps/                           # 🚀 Aplicações/Sistemas
     └── system-example/             # Sistema de exemplo
         ├── src/
-        │   ├── contexts/           # Bounded Contexts
+        │   ├── contexts/           # 🎯 Bounded Contexts (DDD)
         │   │   └── user/
         │   │       ├── domain/              # Camada de Domínio
-        │   │       │   ├── entities/
-        │   │       │   ├── value-objects/
-        │   │       │   ├── events/
-        │   │       │   └── exceptions/
+        │   │       │   ├── entities/        # Agregados e entidades
+        │   │       │   ├── value-objects/   # Objetos de valor
+        │   │       │   ├── events/          # Eventos de domínio
+        │   │       │   └── exceptions/      # Exceções de negócio
         │   │       ├── application/         # Camada de Aplicação
-        │   │       │   ├── use-cases/
-        │   │       │   ├── ports/
-        │   │       │   │   ├── input/
-        │   │       │   │   └── output/
-        │   │       │   └── dto/
-        │   │       └── user.module.ts
+        │   │       │   ├── use-cases/       # Casos de uso
+        │   │       │   ├── ports/           # Portas (interfaces)
+        │   │       │   │   ├── input/       # Comandos/Queries
+        │   │       │   │   └── output/      # Repositories/Gateways
+        │   │       │   └── dto/             # Data Transfer Objects
+        │   │       └── user.module.ts       # Módulo NestJS
         │   │
         │   ├── infrastructure/              # Camada de Infraestrutura
-        │   │   ├── http/
-        │   │   │   ├── controllers/
+        │   │   ├── http/                    # Adapter HTTP
+        │   │   │   ├── controllers/         # Controllers REST
         │   │   │   └── http.module.ts
-        │   │   ├── persistence/
+        │   │   ├── persistence/             # Adapter Persistência
         │   │   │   ├── mikro-orm/
-        │   │   │   │   ├── entities/
-        │   │   │   │   ├── repositories/
-        │   │   │   │   ├── mappers/
-        │   │   │   │   └── config/
-        │   │   │   ├── ports/
+        │   │   │   │   ├── entities/        # Entidades ORM
+        │   │   │   │   ├── repositories/    # Implementações
+        │   │   │   │   ├── mappers/         # Domain ↔ ORM
+        │   │   │   │   ├── migrations/      # Database migrations
+        │   │   │   │   └── config/          # Configuração ORM
+        │   │   │   ├── ports/               # Interfaces globais
         │   │   │   └── persistence.module.ts
-        │   │   └── messaging/
-        │   │       └── publishers/
+        │   │   └── messaging/               # Adapter Mensageria
+        │   │       └── publishers/          # Event publishers
         │   │
-        │   ├── config/
-        │   ├── app.module.ts
-        │   └── main.ts
+        │   ├── config/                      # Configurações da app
+        │   ├── app.module.ts                # Módulo raiz
+        │   └── main.ts                      # Entry point
+        │
+        ├── test/                            # 🧪 Testes
+        │   ├── unit/                        # Testes unitários
+        │   ├── integration/                 # Testes de integração
+        │   └── e2e/                         # Testes E2E
         │
         └── package.json
 ```
+
+## 📦 Packages Compartilhados
+
+### 1. @gitspread/domain-primitives
+
+**Descrição**: Classes base para implementação de Domain-Driven Design.
+
+**Exportações:**
+
+| Classe | Descrição | Uso |
+|--------|-----------|-----|
+| `AggregateRoot` | Base para agregados raiz | Entidades que são ponto de entrada de um agregado |
+| `Entity` | Base para entidades | Objetos com identidade única |
+| `ValueObject` | Base para objetos de valor | Objetos imutáveis sem identidade |
+| `DomainEvent` | Base para eventos de domínio | Eventos que ocorrem no domínio |
+| `DomainException` | Base para exceções de domínio | Violações de regras de negócio |
+
+**Exemplo de uso:**
+
+```typescript
+import { AggregateRoot, ValueObject, DomainEvent } from '@gitspread/domain-primitives';
+
+// Value Object
+export class Email extends ValueObject<{ value: string }> {
+  static create(email: string): Email {
+    if (!email.includes('@')) throw new Error('Email inválido');
+    return new Email({ value: email });
+  }
+}
+
+// Aggregate Root
+export class User extends AggregateRoot {
+  static create(email: Email, name: string): User {
+    const user = new User(/*...*/);
+    user.addDomainEvent(new UserCreatedEvent(user.id));
+    return user;
+  }
+}
+```
+
+**Características:**
+- ✅ Sem dependências de frameworks
+- ✅ 100% TypeScript puro
+- ✅ Suporte a domain events
+- ✅ Comparação por valor (Value Objects) ou identidade (Entities)
+
+### 2. @gitspread/shared-kernel
+
+**Descrição**: Tipos, interfaces e utilitários compartilhados entre todos os sistemas.
+
+**Exportações:**
+
+#### Types
+- **`Result<T>`**: Pattern Result para tratamento de erros
+  ```typescript
+  type Result<T> = { success: true; data: T } | { success: false; error: string };
+  ```
+
+- **`PaginatedResult<T>`**: Estrutura padrão para resultados paginados
+  ```typescript
+  interface PaginatedResult<T> {
+    items: T[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }
+  ```
+
+- **`PaginationParams`**: Parâmetros de paginação
+  ```typescript
+  interface PaginationParams {
+    page: number;
+    pageSize: number;
+  }
+  ```
+
+#### Interfaces
+- **`UseCase<TCommand, TResult>`**: Interface para casos de uso
+  ```typescript
+  interface UseCase<TCommand, TResult> {
+    execute(command: TCommand): Promise<TResult>;
+  }
+  ```
+
+- **`IRepository<T>`**: Interface genérica para repositórios
+  ```typescript
+  interface IRepository<T> {
+    findById(id: string): Promise<T | null>;
+    save(entity: T): Promise<T>;
+    delete(id: string): Promise<void>;
+  }
+  ```
+
+#### Utils
+- **`DateUtil`**: Utilitários para manipulação de datas (usa date-fns)
+  - `formatDate(date, format)`
+  - `addDays(date, days)`
+  - `differenceInDays(dateLeft, dateRight)`
+
+- **`ValidationUtil`**: Funções de validação comuns
+  - `isValidEmail(email)`
+  - `isValidCPF(cpf)`
+  - `isValidCNPJ(cnpj)`
+
+**Exemplo de uso:**
+
+```typescript
+import {
+  UseCase,
+  PaginatedResult,
+  DateUtil,
+  ValidationUtil
+} from '@gitspread/shared-kernel';
+
+// Implementar use case
+export class ListUsersUseCase implements UseCase<ListUsersQuery, PaginatedResult<UserDto>> {
+  async execute(query: ListUsersQuery): Promise<PaginatedResult<UserDto>> {
+    // implementação
+  }
+}
+
+// Usar utilitários
+const formattedDate = DateUtil.formatDate(new Date(), 'dd/MM/yyyy');
+const isValid = ValidationUtil.isValidEmail('user@example.com');
+```
+
+**Características:**
+- ✅ Reutilizável em todos os sistemas
+- ✅ Dependency: `date-fns` para manipulação de datas
+- ✅ Tipos fortemente tipados com TypeScript
+- ✅ Validações comuns prontas para uso
+
+### Como Usar os Packages
+
+**Instalação automática via workspace:**
+```bash
+npm install  # Na raiz do monorepo
+```
+
+**Referência nos projetos:**
+```typescript
+// Em qualquer aplicação (apps/*)
+import { AggregateRoot } from '@gitspread/domain-primitives';
+import { UseCase, DateUtil } from '@gitspread/shared-kernel';
+```
+
+**Build dos packages:**
+```bash
+# Build todos os packages
+npm run build
+
+# Ou build individual
+cd packages/domain-primitives
+npm run build
+```
+
+**Importante:**
+- Packages são compilados para JavaScript em `dist/`
+- TypeScript definitions (.d.ts) são gerados automaticamente
+- Alterações nos packages requerem rebuild antes de usar em apps
 
 ## 🏛️ Arquitetura Hexagonal
 

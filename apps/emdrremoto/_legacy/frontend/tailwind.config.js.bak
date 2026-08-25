@@ -1,0 +1,34 @@
+module.exports = {
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+    "./public/index.html"
+  ],
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          DEFAULT: '#3b82f6',
+          dark: '#2563eb',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+      },
+    },
+  },
+  variants: {
+    extend: {
+      opacity: ['disabled'],
+      backgroundColor: ['active', 'hover', 'focus'],
+      textColor: ['active', 'hover', 'focus'],
+      borderColor: ['active', 'focus', 'hover'],
+      ringWidth: ['focus-visible'],
+      ringColor: ['focus-visible'],
+    },
+  },
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+  ],
+}

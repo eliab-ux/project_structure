@@ -1,0 +1,17 @@
+version: '2'
+services:
+        frontend:
+                build: .
+                command: npm run start
+                working_dir: "/usr/src/app"
+                volumes:
+                        - ./:/usr/src/app
+                        - /usr/src/app/build
+                        - /usr/src/app/node_modules
+                ports:
+                        - "3000:3000"
+                environment:
+                        - REACT_APP_API_URL=https://emdrremoto.com.br/emdr-api
+                        - REACT_APP_CREATE_ROOM_URL=https://emdrremoto.com.br/emdr-api/daily/new-room
+                        - REACT_APP_WEBSOCKET_URL=https://emdrremoto.com.br
+                        - REACT_APP_DAILY_CO_API=https://emdrremoto.daily.co

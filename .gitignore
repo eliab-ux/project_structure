@@ -62,3 +62,14 @@ packages/*/src/**/*.js
 packages/*/src/**/*.js.map
 packages/*/src/**/*.d.ts
 packages/*/src/**/*.d.ts.map
+
+# Cofre de credenciais em texto puro (Gmail, Bling, Supabase, GitHub).
+# NUNCA versionar: historico de git e permanente e nao ha como despublicar.
+# Guarde em gerenciador de senhas, nao no repo.
+DADOS.txt
+
+# Idem, achados na varredura de 24/08/2026 antes de subir o monorepo para o GitHub:
+# senha real do banco do EMDR Remoto e senhas de login de teste (EMDR e Ecoa).
+# Os proprios arquivos recomendam rotacionar o que circulou.
+HISTORICO_ClaudeIA.md
+HISTORICO_ClaudeIA-ECOA.md

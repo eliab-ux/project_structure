@@ -1,0 +1,8 @@
+
+.volume-icon:hover label input{
+    display: block;
+}
+
+.volume-icon label input{
+    display: none;
+}

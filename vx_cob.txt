@@ -1,0 +1,353 @@
+
+> @gitspread/monorepo@1.0.0 test
+> npm run test --workspaces test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+
+> @gitspread/domain-primitives@1.0.0 test
+> jest test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+No tests found, exiting with code 1
+Run with `--passWithNoTests` to exit with code 0
+In C:\HD\Eliab\Veertex\packages\domain-primitives
+  32 files checked.
+  testMatch: **/__tests__/**/*.[jt]s?(x), **/?(*.)+(spec|test).[tj]s?(x) - 0 matches
+  testPathIgnorePatterns: \\node_modules\\ - 32 matches
+  testRegex:  - 0 matches
+Pattern: test\\unit\\cob-dunning.spec.ts|test\\unit\\cob-webhook.spec.ts - 0 matches
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path C:\HD\Eliab\Veertex\packages\domain-primitives
+npm error workspace @gitspread/domain-primitives@1.0.0
+npm error location C:\HD\Eliab\Veertex\packages\domain-primitives
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c jest test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+
+> @gitspread/shared-kernel@1.0.0 test
+> jest test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+No tests found, exiting with code 1
+Run with `--passWithNoTests` to exit with code 0
+In C:\HD\Eliab\Veertex\packages\shared-kernel
+  37 files checked.
+  testMatch: **/__tests__/**/*.[jt]s?(x), **/?(*.)+(spec|test).[tj]s?(x) - 0 matches
+  testPathIgnorePatterns: \\node_modules\\ - 37 matches
+  testRegex:  - 0 matches
+Pattern: test\\unit\\cob-dunning.spec.ts|test\\unit\\cob-webhook.spec.ts - 0 matches
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path C:\HD\Eliab\Veertex\packages\shared-kernel
+npm error workspace @gitspread/shared-kernel@1.0.0
+npm error location C:\HD\Eliab\Veertex\packages\shared-kernel
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c jest test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+
+> @gitspread/kaza-tem-system-backend@1.0.0 test
+> jest test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+No tests found, exiting with code 1
+Run with `--passWithNoTests` to exit with code 0
+In C:\HD\Eliab\Veertex\apps\kaza-tem-system\backend
+  415 files checked.
+  roots: C:\HD\Eliab\Veertex\apps\kaza-tem-system\backend\test, C:\HD\Eliab\Veertex\apps\kaza-tem-system\backend\src - 415 matches
+  testMatch: **/__tests__/**/*.[jt]s?(x), **/?(*.)+(spec|test).[tj]s?(x) - 1 match
+  testPathIgnorePatterns: \\node_modules\\ - 415 matches
+  testRegex:  - 0 matches
+Pattern: test\\unit\\cob-dunning.spec.ts|test\\unit\\cob-webhook.spec.ts - 0 matches
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path C:\HD\Eliab\Veertex\apps\kaza-tem-system\backend
+npm error workspace @gitspread/kaza-tem-system-backend@1.0.0
+npm error location C:\HD\Eliab\Veertex\apps\kaza-tem-system\backend
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c jest test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+npm error Lifecycle script `test` failed with error:
+npm error workspace @gitspread/kaza-tem-system-frontend@1.0.0
+npm error location C:\HD\Eliab\Veertex\apps\kaza-tem-system\frontend
+npm error Missing script: "test"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run --workspace=@gitspread/kaza-tem-system-frontend@1.0.0
+
+
+> @gitspread/ecoa-system-backend@1.0.0 test
+> jest test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+No tests found, exiting with code 1
+Run with `--passWithNoTests` to exit with code 0
+In C:\HD\Eliab\Veertex\apps\ecoa-system\backend
+  176 files checked.
+  roots: C:\HD\Eliab\Veertex\apps\ecoa-system\backend\test, C:\HD\Eliab\Veertex\apps\ecoa-system\backend\src - 176 matches
+  testMatch: **/__tests__/**/*.[jt]s?(x), **/?(*.)+(spec|test).[tj]s?(x) - 6 matches
+  testPathIgnorePatterns: \\node_modules\\ - 176 matches
+  testRegex:  - 0 matches
+Pattern: test\\unit\\cob-dunning.spec.ts|test\\unit\\cob-webhook.spec.ts - 0 matches
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path C:\HD\Eliab\Veertex\apps\ecoa-system\backend
+npm error workspace @gitspread/ecoa-system-backend@1.0.0
+npm error location C:\HD\Eliab\Veertex\apps\ecoa-system\backend
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c jest test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+npm error Lifecycle script `test` failed with error:
+npm error workspace @gitspread/ecoa-system-frontend@1.0.0
+npm error location C:\HD\Eliab\Veertex\apps\ecoa-system\frontend
+npm error Missing script: "test"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run --workspace=@gitspread/ecoa-system-frontend@1.0.0
+
+
+> @gitspread/emdr-remoto-backend@1.0.0 test
+> jest test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+No tests found, exiting with code 1
+Run with `--passWithNoTests` to exit with code 0
+In C:\HD\Eliab\Veertex\apps\emdrremoto\backend
+  136 files checked.
+  roots: C:\HD\Eliab\Veertex\apps\emdrremoto\backend\test, C:\HD\Eliab\Veertex\apps\emdrremoto\backend\src - 136 matches
+  testMatch: **/__tests__/**/*.[jt]s?(x), **/?(*.)+(spec|test).[tj]s?(x) - 7 matches
+  testPathIgnorePatterns: \\node_modules\\ - 136 matches
+  testRegex:  - 0 matches
+Pattern: test\\unit\\cob-dunning.spec.ts|test\\unit\\cob-webhook.spec.ts - 0 matches
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path C:\HD\Eliab\Veertex\apps\emdrremoto\backend
+npm error workspace @gitspread/emdr-remoto-backend@1.0.0
+npm error location C:\HD\Eliab\Veertex\apps\emdrremoto\backend
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c jest test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+npm error Lifecycle script `test` failed with error:
+npm error workspace @gitspread/emdr-remoto-frontend@1.0.0
+npm error location C:\HD\Eliab\Veertex\apps\emdrremoto\frontend
+npm error Missing script: "test"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run --workspace=@gitspread/emdr-remoto-frontend@1.0.0
+
+
+> @gitspread/plano-diario-backend@1.0.0 test
+> jest test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+No tests found, exiting with code 1
+Run with `--passWithNoTests` to exit with code 0
+In C:\HD\Eliab\Veertex\apps\plano-diario\backend
+  211 files checked.
+  roots: C:\HD\Eliab\Veertex\apps\plano-diario\backend\test, C:\HD\Eliab\Veertex\apps\plano-diario\backend\src - 211 matches
+  testMatch: **/__tests__/**/*.[jt]s?(x), **/?(*.)+(spec|test).[tj]s?(x) - 25 matches
+  testPathIgnorePatterns: \\node_modules\\ - 211 matches
+  testRegex:  - 0 matches
+Pattern: test\\unit\\cob-dunning.spec.ts|test\\unit\\cob-webhook.spec.ts - 0 matches
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path C:\HD\Eliab\Veertex\apps\plano-diario\backend
+npm error workspace @gitspread/plano-diario-backend@1.0.0
+npm error location C:\HD\Eliab\Veertex\apps\plano-diario\backend
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c jest test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+npm error Lifecycle script `test` failed with error:
+npm error workspace @gitspread/plano-diario-frontend@1.0.0
+npm error location C:\HD\Eliab\Veertex\apps\plano-diario\frontend
+npm error Missing script: "test"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run --workspace=@gitspread/plano-diario-frontend@1.0.0
+
+
+> @gitspread/batuta-system-backend@1.0.0 test
+> jest --passWithNoTests test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+No tests found, exiting with code 0
+
+> @gitspread/batuta-system-frontend@1.0.0 test
+> jest test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+No tests found, exiting with code 1
+Run with `--passWithNoTests` to exit with code 0
+In C:\HD\Eliab\Veertex\apps\batuta-system\frontend
+  201 files checked.
+  testMatch: C:/HD/Eliab/Veertex/apps/batuta-system/frontend/test/**/*.spec.ts, C:/HD/Eliab/Veertex/apps/batuta-system/frontend/test/**/*.spec.tsx - 3 matches
+  testPathIgnorePatterns: \\node_modules\\, \\.next\\ - 37 matches
+  testRegex:  - 0 matches
+Pattern: test\\unit\\cob-dunning.spec.ts|test\\unit\\cob-webhook.spec.ts - 0 matches
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path C:\HD\Eliab\Veertex\apps\batuta-system\frontend
+npm error workspace @gitspread/batuta-system-frontend@1.0.0
+npm error location C:\HD\Eliab\Veertex\apps\batuta-system\frontend
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c jest test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+
+> @gitspread/veertex-backend@1.0.0 test
+> jest --passWithNoTests test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+[dotenv@17.2.3] injecting env (24) from .env.local,.env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+FAIL test/unit/cob-dunning.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+  ● RunDunning — a régua (06 §2.3) e a política perdida (04 §3.4) › modo AUTO (opt-in registrado): envia AGORA e grava sent
+
+    DunningRuleInvalidException: Modo automático exige o registro de quem ativou (opt-in).
+
+    [0m [90m 94 |[39m       offsets[33m.[39madd(key)[33m;[39m
+     [90m 95 |[39m       [36mif[39m (step[33m.[39mmode [33m===[39m [32m'auto'[39m [33m&&[39m [33m![39mactorUserId) {
+    [31m[1m>[22m[39m[90m 96 |[39m         [36mthrow[39m [36mnew[39m [33mDunningRuleInvalidException[39m(
+     [90m    |[39m               [31m[1m^[22m[39m
+     [90m 97 |[39m           [32m'Modo automático exige o registro de quem ativou (opt-in).'[39m[33m,[39m
+     [90m 98 |[39m         )[33m;[39m
+     [90m 99 |[39m       }[0m
+
+      at DunningRule.replaceSteps (src/contexts/billing/domain/entities/dunning-rule.entity.ts:96:15)
+      at Function.create (src/contexts/billing/domain/entities/dunning-rule.entity.ts:56:10)
+      at regua (test/unit/cob-dunning.spec.ts:35:28)
+      at Object.<anonymous> (test/unit/cob-dunning.spec.ts:120:18)
+
+  ● RunDunning — a régua (06 §2.3) e a política perdida (04 §3.4) › rodar DUAS vezes não duplica: etapa já disparada não dispara de novo
+
+    expect(received).toHaveLength(expected)
+
+    Expected length: 1
+    Received length: 2
+    Received array:  [{"_accountId": "11111111-1111-4111-8111-111111111111", "_channel": "whatsapp", "_createdAt": 2026-08-24T12:12:46.832Z, "_domainEvents": [], "_id": "151b12cc-7ef7-4513-882b-4cbc21607d21", "_offsetDays": 1, "_renderedMessage": "Olá Maria, sua parcela de R$ 100,00 vence em 21/08/2026.", "_sentAt": null, "_status": "proposed", "_stepId": "e4e0a11b-5b71-4a36-9b3c-c1dcc253939e", "_titleId": "0856c87e-e729-409a-b01b-41bf840a861e"}, {"_accountId": "11111111-1111-4111-8111-111111111111", "_channel": "whatsapp", "_createdAt": 2026-08-24T12:12:46.833Z, "_domainEvents": [], "_id": "306adf72-36f1-4300-9899-df91267b48ec", "_offsetDays": 1, "_renderedMessage": "Olá Maria, sua parcela de R$ 100,00 vence em 21/08/2026.", "_sentAt": null, "_status": "proposed", "_stepId": "e4e0a11b-5b71-4a36-9b3c-c1dcc253939e", "_titleId": "0856c87e-e729-409a-b01b-41bf840a861e"}]
+
+    [0m [90m 137 |[39m     [36mawait[39m uc[33m.[39mexecute([36mnew[39m [33mRunDunningCommand[39m([33mCONTA[39m[33m,[39m [33mAGORA[39m))[33m;[39m
+     [90m 138 |[39m     [36mawait[39m uc[33m.[39mexecute([36mnew[39m [33mRunDunningCommand[39m([33mCONTA[39m[33m,[39m [33mAGORA[39m))[33m;[39m
+    [31m[1m>[22m[39m[90m 139 |[39m     expect(events)[33m.[39mtoHaveLength([35m1[39m)[33m;[39m
+     [90m     |[39m                    [31m[1m^[22m[39m
+     [90m 140 |[39m   })[33m;[39m
+     [90m 141 |[39m
+     [90m 142 |[39m   it([32m'PERDIDA: a recobrança repete a cada offset até 1+N; completou sem pagamento → written_off_pending e SAI da régua'[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (test/unit/cob-dunning.spec.ts:139:20)
+
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mRégua executada[39m
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mObject:[39m
+{
+  "proposed": 2,
+  "sent": 0,
+  "perdidas": 0
+}
+
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mRégua executada[39m
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mObject:[39m
+{
+  "proposed": 1,
+  "sent": 0,
+  "perdidas": 0
+}
+
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mRégua executada[39m
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mObject:[39m
+{
+  "proposed": 1,
+  "sent": 0,
+  "perdidas": 0
+}
+
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mRégua executada[39m
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mObject:[39m
+{
+  "proposed": 1,
+  "sent": 0,
+  "perdidas": 0
+}
+
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mRégua executada[39m
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mObject:[39m
+{
+  "proposed": 1,
+  "sent": 0,
+  "perdidas": 0
+}
+
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mRégua executada[39m
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mObject:[39m
+{
+  "proposed": 0,
+  "sent": 0,
+  "perdidas": 1
+}
+
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mRégua executada[39m
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mObject:[39m
+{
+  "proposed": 0,
+  "sent": 0,
+  "perdidas": 0
+}
+
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mRégua executada[39m
+[32m[Nest] 46268  - [39m24/08/2026, 09:12:46 [32m    LOG[39m [38;5;3m[RunDunningUseCase] [39m[32mObject:[39m
+{
+  "proposed": 1,
+  "sent": 0,
+  "perdidas": 0
+}
+
+[33m[Nest] 46268  - [39m24/08/2026, 09:12:48 [33m   WARN[39m [38;5;3m[HandleBillingWebhookUseCase] [39m[33mWebhook de cobrança ignorado (payload não reconhecido)[39m
+[33m[Nest] 46268  - [39m24/08/2026, 09:12:48 [33m   WARN[39m [38;5;3m[HandleBillingWebhookUseCase] [39m[33mObject:[39m
+{
+  "configId": "c0f19000-0000-4000-8000-000000000001"
+}
+
+PASS test/unit/cob-webhook.spec.ts
+  ● Console
+
+    console.log
+      [dotenv@17.2.3] injecting env (0) from .env.local,.env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+      at _log (../../../node_modules/dotenv/lib/main.js:142:11)
+
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       2 failed, 9 passed, 11 total
+Snapshots:   0 total
+Time:        5.485 s
+Ran all test suites matching /test\\unit\\cob-dunning.spec.ts|test\\unit\\cob-webhook.spec.ts/i.
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path C:\HD\Eliab\Veertex\apps\Veertex\backend
+npm error workspace @gitspread/veertex-backend@1.0.0
+npm error location C:\HD\Eliab\Veertex\apps\Veertex\backend
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c jest --passWithNoTests test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+
+> @gitspread/veertex-frontend@1.0.0 test
+> node test/compor-transcricao.test.js test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+ok   parcial não entra no campo
+ok   final entra no campo
+ok   final firmado e parcial em curso convivem
+ok   reemissão não duplica (1ª vez)
+ok   reemissão não duplica (2ª vez, mesmo evento)
+ok   base preservada
+ok   base com espaço não duplica espaço
+ok   evento sem resultado preserva a base
+ok   parciais múltiplos são unidos
+ok   sequência real firma no fim, sem repetir
+
+10/10 casos
+
+> @gitspread/kortex-backend@1.0.0 test
+> jest --passWithNoTests --runInBand test/unit/cob-dunning.spec.ts test/unit/cob-webhook.spec.ts
+
+No tests found, exiting with code 0
+npm error Lifecycle script `test` failed with error:
+npm error workspace @gitspread/kortex-frontend@1.0.0
+npm error location C:\HD\Eliab\Veertex\apps\Kortex\frontend
+npm error Missing script: "test"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run --workspace=@gitspread/kortex-frontend@1.0.0

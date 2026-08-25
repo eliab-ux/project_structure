@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "types": ["node", "jest"]
+  },
+  // Also covers the root-level configs (jest.config.ts, mikro-orm.config.ts) so typed ESLint
+  // can parse them. ts-jest only reads compilerOptions from here, never this include list.
+  "include": ["src/**/*", "test/**/*", "*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

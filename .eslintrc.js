@@ -16,7 +16,9 @@ module.exports = {
     node: true,
     jest: true,
   },
-  ignorePatterns: ['.eslintrc.js', 'dist', 'node_modules'],
+  // *.d.ts são declarações (parte gerada), não código-fonte a lintar — e não constam de
+  // nenhum tsconfig de build, então o lint tipado nem consegue parseá-las.
+  ignorePatterns: ['.eslintrc.js', 'dist', 'node_modules', '**/*.d.ts'],
   rules: {
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',

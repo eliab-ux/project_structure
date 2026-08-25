@@ -1,0 +1,12 @@
+{
+  "join-session": {
+    "session_id": 12345,
+    "user": {
+      "type": "psychologist"
+    }
+  },
+  "ball-handler": {
+    "property": "color",
+    "value": "green"
+  }
+}

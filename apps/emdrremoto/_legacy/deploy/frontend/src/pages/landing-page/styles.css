@@ -1,0 +1,571 @@
+/* Animações */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Indicador de carregamento */
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.5; }
+  50% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.5; }
+}
+
+.loading-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1.5rem 2.5rem;
+  border-radius: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.loading-indicator.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(74, 111, 165, 0.2);
+  border-radius: 50%;
+  border-top-color: #4a6fa5;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+/* Estilos gerais */
+.landing-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  line-height: 1.6;
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-image) no-repeat center center fixed;
+  background-size: cover;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+  will-change: opacity;
+}
+
+.landing-container.loaded::after {
+  opacity: 1;
+}
+
+.landing-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%);
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.landing-container.loaded::before {
+  opacity: 1;
+}
+
+.landing-container > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Estilos para o cabeçalho */
+.landing-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem 2rem;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para o logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+}
+
+.logo-img {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  transition: transform 0.3s ease;
+}
+
+.logo-img:hover {
+  transform: scale(1.05);
+}
+
+.logo h1 {
+  color: #1a365d; /* Azul escuro */
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+/* Conteúdo principal */
+.landing-main {
+  opacity: 0;
+  animation: fadeIn 0.8s ease-out 0.3s forwards;
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8rem 2rem 4rem;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.landing-main h1 {
+  font-size: 5.5rem;
+  margin: 0 0 1.5rem 0;
+  color: white;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 8px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  line-height: 1.1;
+  font-family: 'Arial', sans-serif;
+}
+
+.landing-main p {
+  font-size: 1.4rem;
+  margin: 0 0 5rem 0;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+  font-weight: 300;
+  letter-spacing: 1.5px;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Seção de recursos */
+.features {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4rem 0;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.features .feature {
+  width: 100%;
+  max-width: 350px;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.features .feature:hover {
+  transform: translateY(-5px);
+}
+
+.features .feature h3 {
+  color: #4a6fa5;
+  margin-bottom: 0.5rem;
+}
+
+/* Sobre o Sistema */
+.sobre-sistema {
+  text-align: center;
+  padding: 0;
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.sobre-sistema h2 {
+  color: white;
+  margin: 0 0 2.5rem 0;
+  font-size: 1.3rem;
+  font-weight: 400;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 1.2rem;
+  font-family: 'Arial', sans-serif;
+}
+
+.sobre-sistema h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.sobre-conteudo {
+  font-size: 1.15rem;
+  line-height: 1.9;
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 700px;
+  margin: 0 auto;
+  font-weight: 300;
+  letter-spacing: 0.8px;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Botões */
+.cta-buttons {
+  display: flex;
+  gap: 2.5rem;
+  justify-content: center;
+  margin: 0 0 6rem 0;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 1.3rem 4rem;
+  border: none;
+  border-radius: 40px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-width: 280px;
+  height: 65px;
+  font-family: 'Arial', sans-serif;
+  position: relative;
+  overflow: hidden;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.btn:hover {
+  transform: translateY(-2px) translateZ(0);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:hover::before,
+.btn:focus::before {
+  opacity: 1;
+}
+
+.btn:active {
+  transform: translateY(1px) translateZ(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Melhorar visibilidade do foco para navegação por teclado */
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.5);
+  transform: translateY(-2px) translateZ(0);
+}
+
+/* Garantir que o foco seja visível em navegadores que não suportam :focus-visible */
+.btn:focus:not(:focus-visible) {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilo específico para navegadores que suportam :focus-visible */
+.btn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.5);
+  transform: translateY(-2px) translateZ(0);
+}
+
+/* Estilo para a tagline */
+.landing-main .tagline {
+  color: white;
+  font-size: 1.5rem;
+  max-width: 700px;
+  margin: 0 auto 3rem;
+  line-height: 1.5;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  font-weight: 500;
+  padding: 0 1rem;
+}
+
+.btn-primary {
+  background-color: #4a6fa5;
+  color: white;
+  border: 2px solid #4a6fa5;
+}
+
+.btn-primary:hover {
+  background-color: #3a5a80;
+  border-color: #3a5a80;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: white;
+  border: 2px solid white;
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+}
+
+.btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Rodapé */
+.landing-footer {
+  text-align: center;
+  padding: 2rem 0;
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  font-weight: 300;
+  letter-spacing: 1px;
+  font-family: 'Arial', sans-serif;
+  text-transform: uppercase;
+}
+
+.landing-footer p {
+  margin: 0;
+  letter-spacing: 1.5px;
+}
+
+/* Responsividade para telas grandes */
+@media (min-width: 1921px) {
+  .landing-container {
+    font-size: 110%;
+  }
+  
+  .landing-main h1 {
+    font-size: 6rem;
+    margin-bottom: 2rem;
+  }
+  
+  .landing-main p {
+    font-size: 1.5rem;
+    margin-bottom: 6rem;
+  }
+  
+  .btn {
+    padding: 1.5rem 5rem;
+    font-size: 1.2rem;
+    min-width: 320px;
+    height: 75px;
+  }
+  
+  .sobre-sistema {
+    max-width: 1000px;
+  }
+  
+  .sobre-conteudo {
+    font-size: 1.3rem;
+    line-height: 2;
+  }
+}
+
+/* Responsividade */
+@media (max-width: 1200px) {
+  .landing-main h1 {
+    font-size: 4.5rem;
+    letter-spacing: 6px;
+  }
+
+  .landing-main p {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .landing-main h1 {
+    font-size: 4rem;
+    letter-spacing: 5px;
+  }
+
+  .btn {
+    min-width: 240px;
+    height: 60px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .landing-header {
+    padding: 1.2rem 2rem;
+  }
+
+  .landing-header .logo h1 {
+    font-size: 1.5rem;
+  }
+
+
+  .landing-main {
+    padding: 6rem 1.5rem 4rem;
+  }
+
+  .landing-main h1 {
+    font-size: 3rem;
+    letter-spacing: 4px;
+    margin-bottom: 1.2rem;
+  }
+
+  .landing-main p {
+    font-size: 1.1rem;
+    margin-bottom: 3.5rem;
+    padding: 0 1rem;
+  }
+
+  .cta-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 4rem;
+  }
+
+  .btn {
+    width: 100%;
+    max-width: 280px;
+    height: 55px;
+    font-size: 0.95rem;
+  }
+
+  .sobre-sistema {
+    padding: 0 1rem;
+  }
+
+  .sobre-sistema h2 {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    letter-spacing: 3px;
+  }
+
+  .sobre-conteudo {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .landing-header .logo h1 {
+    font-size: 1.3rem;
+    letter-spacing: 2px;
+  }
+
+  .landing-main {
+    padding: 5rem 1rem 4rem;
+  }
+
+  .landing-main h1 {
+    font-size: 2.2rem;
+    letter-spacing: 3px;
+    margin-bottom: 1rem;
+  }
+
+  .landing-main p {
+    font-size: 1rem;
+    margin-bottom: 3rem;
+    padding: 0;
+  }
+
+  .btn {
+    height: 50px;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+  }
+
+  .landing-footer {
+    padding: 1.5rem 0;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .landing-main h1 {
+    font-size: 2rem;
+  }
+  
+  .btn {
+    min-width: 100%;
+  }
+}

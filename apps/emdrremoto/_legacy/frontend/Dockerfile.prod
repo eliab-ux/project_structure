@@ -1,0 +1,53 @@
+# Build stage
+FROM node:18-alpine as build
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json yarn.lock ./
+
+# Install dependencies
+RUN yarn install --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Build arguments for environment variables
+ARG REACT_APP_API_URL
+ARG REACT_APP_WEBSOCKET_URL
+ARG REACT_APP_CREATE_ROOM_URL
+ARG REACT_APP_DAILY_CO_API
+
+# Set environment variables for build
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ENV REACT_APP_WEBSOCKET_URL=$REACT_APP_WEBSOCKET_URL
+ENV REACT_APP_CREATE_ROOM_URL=$REACT_APP_CREATE_ROOM_URL
+ENV REACT_APP_DAILY_CO_API=$REACT_APP_DAILY_CO_API
+ENV NODE_OPTIONS=--openssl-legacy-provider
+
+# Build the app
+RUN yarn build
+
+# Production stage
+FROM nginx:alpine
+
+# Copy built files
+COPY --from=build /app/build /usr/share/nginx/html
+
+# Copy nginx config for SPA routing
+RUN echo 'server { \
+    listen 3000; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+    location /static { \
+        expires 1y; \
+        add_header Cache-Control "public, immutable"; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
+
+EXPOSE 3000
+
+CMD ["nginx", "-g", "daemon off;"]

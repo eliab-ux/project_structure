@@ -1,0 +1,1 @@
+# Pasta de validadores, como por exemplo, validar campos que devem ser recebidos em um endpoint

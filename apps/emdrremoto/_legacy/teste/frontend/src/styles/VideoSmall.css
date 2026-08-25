@@ -1,0 +1,14 @@
+.small-video {
+    z-index: 60;
+    width: 100%;
+    /* position: fixed;
+    top: 5em;
+    right: 5em; */
+}
+.small-video-button {
+    z-index: 90;
+    width: 20vw;
+    position: fixed;
+    top: 5em;
+    right: 5em;
+}

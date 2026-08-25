@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TKC · Mapa de Processos Vivos</title>
+<style>
+  :root{
+    --navy:#0D2137; --ink:#1F2A37; --muted:#6B7280; --faint:#9AA4B2;
+    --blue:#2E5C9E; --blue-soft:#EAF0F8;
+    --gold:#C79B5C; --gold-2:#B08D57; --gold-soft:#F6EEE1; --gold-line:#E4D3B4;
+    --paper:#FBFAF7; --line:#E7E3DA; --green:#2F6B4F;
+    --cap:#4A7BC8; --tax:#C79B5C; --imo:#5B9E86;
+    --serif:Georgia,'Times New Roman',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --panel:430px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden}
+  body{font-family:var(--sans);color:var(--ink);
+    background:radial-gradient(1200px 820px at 50% 44%, #14315480 0%, #0A1A2E 55%, #071322 100%);
+    -webkit-font-smoothing:antialiased}
+
+  .top{position:fixed;top:0;left:0;right:0;height:58px;z-index:20;display:flex;align-items:center;gap:18px;padding:0 24px;color:#DCE5EF}
+  .wm{font-family:var(--serif);font-weight:700;letter-spacing:4px;font-size:18px;color:#fff}
+  .wm small{display:block;font-family:var(--sans);letter-spacing:3px;font-size:8.5px;color:#8CA3BE;margin-top:2px}
+  .top .sp{flex:1}
+  .legend{display:flex;gap:15px;font-size:12px;color:#9FB4CC}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px}
+  .who{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#9FB4CC}
+  .who select{font-family:var(--sans);font-size:12.5px;color:#fff;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);border-radius:8px;padding:6px 8px;cursor:pointer}
+  .who select option{color:#111}
+
+  #stage{position:fixed;inset:0;cursor:grab}
+  #stage.grabbing{cursor:grabbing}
+  #world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+  svg.links{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+  .node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;cursor:pointer;user-select:none;will-change:left,top,opacity}
+  .bubble{border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;transition:transform .16s, box-shadow .25s}
+  .node:hover .bubble{transform:scale(1.07)}
+  .node .lbl{margin-top:9px;color:#EAF0F8;font-size:12.5px;max-width:132px;line-height:1.25;text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.55)}
+  .node .ver{font-family:var(--mono);font-size:9.5px;color:#8ea3bd;margin-top:2px}
+  .toggle{position:absolute;bottom:-3px;right:-3px;width:20px;height:20px;border-radius:50%;background:#fff;color:var(--navy);
+    font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.35);border:1px solid rgba(0,0,0,.06)}
+
+  .n-root .bubble{width:128px;height:128px;background:radial-gradient(circle at 38% 32%, #20456b, #0e2036);
+    border:1px solid rgba(199,155,92,.55);box-shadow:0 0 0 8px rgba(199,155,92,.06),0 18px 50px rgba(0,0,0,.5)}
+  .n-root .rt{font-family:var(--serif);color:#fff;font-size:25px;letter-spacing:3px;font-weight:700}
+  .n-root .rs{font-size:8.5px;letter-spacing:2px;color:#9FB4CC;margin-top:3px}
+  .n-area .bubble{width:98px;height:98px;font-family:var(--serif);color:#fff;font-size:14.5px;font-weight:700;line-height:1.15;padding:10px;text-align:center;box-shadow:0 12px 34px rgba(0,0,0,.42)}
+  .n-proc .bubble{width:64px;height:64px;background:rgba(255,255,255,.92);box-shadow:0 8px 22px rgba(0,0,0,.34);font-family:var(--serif);font-weight:700;font-size:17px}
+  .n-leaf .bubble{width:52px;height:52px;box-shadow:0 6px 18px rgba(0,0,0,.32)}
+  .n-leaf.step .bubble{background:#fff;color:var(--navy);font-family:var(--mono);font-weight:700;font-size:16px;border:2px solid var(--gold-line)}
+  .n-leaf.ctx .bubble{background:rgba(255,255,255,.9);color:var(--navy);font-family:var(--serif);font-weight:700;font-size:17px}
+  .n-leaf.sel .bubble{box-shadow:0 0 0 4px rgba(255,255,255,.92),0 0 0 9px rgba(199,155,92,.55),0 8px 22px rgba(0,0,0,.4)}
+  .n-leaf .lbl{font-size:11.5px;max-width:118px}
+
+  .draftpulse::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--gold);animation:ring 1.8s infinite}
+  @keyframes ring{0%{transform:scale(1);opacity:.9}100%{transform:scale(1.4);opacity:0}}
+  .dtag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--gold);color:#fff;font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+
+  .zc{position:fixed;left:22px;bottom:22px;z-index:20;display:flex;flex-direction:column;gap:6px}
+  .zc button{width:38px;height:38px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);color:#DCE5EF;font-size:18px;cursor:pointer;backdrop-filter:blur(6px)}
+  .zc button:hover{background:rgba(255,255,255,.14)}
+  .hint{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:15;color:#7E93AC;font-size:12px;pointer-events:none;text-align:center;width:90%}
+
+  .panel{position:fixed;top:0;right:0;height:100vh;width:var(--panel);min-width:360px;max-width:96vw;background:#fff;box-shadow:-18px 0 50px rgba(0,0,0,.35);transform:translateX(103%);transition:transform .34s cubic-bezier(.22,.61,.36,1);display:flex;flex-direction:column;z-index:40}
+  .panel.open{transform:none}
+  .panel.resizing{transition:none;user-select:none}
+  .grip{position:absolute;left:-4px;top:0;width:9px;height:100%;cursor:ew-resize;z-index:5;display:flex;align-items:center;justify-content:center}
+  .grip::before{content:'';width:4px;height:46px;border-radius:4px;background:var(--line);transition:.15s}
+  .grip:hover::before,.panel.resizing .grip::before{background:var(--gold);height:70px}
+  .ph{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:12px}
+  .ph .ai{width:34px;height:34px;border-radius:10px;background:var(--navy);color:var(--gold);flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;font-size:15px}
+  .ph .eyebrow{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;font-weight:700}
+  .ph .t{font-family:var(--serif);font-size:18px;color:var(--navy);font-weight:700;line-height:1.15;margin-top:2px}
+  .ph .x{margin-left:auto;border:none;background:none;font-size:24px;line-height:1;color:var(--faint);cursor:pointer}
+  .ph .x:hover{color:var(--ink)}
+  .tabs{display:flex;gap:2px;padding:9px 14px 0;border-bottom:1px solid var(--line)}
+  .tabs button{border:none;background:none;font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--muted);padding:9px 11px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tabs button.on{color:var(--navy);border-bottom-color:var(--gold)}
+  .pwrap{flex:1;overflow:hidden;display:flex;flex-direction:column}
+  .view{flex:1;overflow-y:auto;display:none}.view.on{display:block}
+
+  .cbody{padding:20px}
+  .kind{display:inline-block;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;font-weight:700;color:var(--gold-2);margin-bottom:8px}
+  .meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+  .chip{font-size:11px;color:var(--ink);background:#F5F3EE;border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+  .chip.ver{font-family:var(--mono);color:var(--gold-2);background:var(--gold-soft);border-color:var(--gold-line)}
+  .content{font-size:14.5px;line-height:1.72;color:#33404E}
+  .content p{margin:0 0 12px}
+  .content strong{color:var(--ink)}
+  .cbody .btn{margin-top:20px;width:100%;justify-content:center}
+  .path{font-size:12px;color:var(--muted);margin-bottom:14px}
+  .path b{color:var(--ink)}
+
+  .btn{font-family:var(--sans);font-size:13.5px;font-weight:600;border-radius:10px;cursor:pointer;padding:11px 16px;border:1px solid transparent;transition:.15s;display:inline-flex;align-items:center;gap:8px}
+  .btn.gold{background:var(--gold-2);color:#fff}.btn.gold:hover{filter:brightness(1.05)}
+  .btn.green{background:var(--green);color:#fff}.btn.green:hover{filter:brightness(1.06)}
+  .btn.danger{background:#fff;color:#9B3B36;border:1px solid #E7C9C6}.btn.danger:hover{background:#FCF3F2}
+
+  .tl{padding:20px 20px 20px 34px;position:relative}
+  .tl::before{content:'';position:absolute;left:19px;top:24px;bottom:20px;width:2px;background:var(--line)}
+  .ev{position:relative;margin-bottom:15px}
+  .ev::before{content:'';position:absolute;left:-21px;top:3px;width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid var(--gold)}
+  .ev.rej::before{border-color:#C08B87}
+  .ev .r1{display:flex;gap:9px;align-items:baseline;flex-wrap:wrap}
+  .ev .vt{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--gold-2)}
+  .ev.rej .vt{color:#A15A55}
+  .ev .ac{font-size:12.5px;font-weight:600}
+  .ev .mt{font-size:11px;color:var(--faint)}
+  .ev .desc{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+
+  .chat{display:flex;flex-direction:column;height:100%}
+  .cmsgs{flex:1;overflow-y:auto;padding:18px 18px 6px;background:linear-gradient(#fff,#FCFBF9)}
+  .msg{margin-bottom:13px;max-width:92%}.msg .b{padding:10px 13px;border-radius:14px;font-size:13.5px;line-height:1.55}
+  .msg.ia{margin-right:auto}.msg.ia .b{background:#F1F0EC;color:#3a4552;border-bottom-left-radius:5px}
+  .msg.me{margin-left:auto}.msg.me .b{background:var(--navy);color:#eaf0f8;border-bottom-right-radius:5px}
+  .msg .who{font-size:10px;color:var(--faint);margin:0 0 3px 3px}.msg.me .who{text-align:right;margin-right:3px}
+  .typing{display:inline-flex;gap:4px;padding:11px 13px}.typing i{width:7px;height:7px;border-radius:50%;background:#B9C0C9;animation:bl 1.2s infinite}
+  .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+  @keyframes bl{0%,60%,100%{opacity:.3}30%{opacity:1}}
+  .draft{border:2px dashed var(--gold-line);border-radius:14px;background:var(--gold-soft);padding:15px;margin:4px 0 12px}
+  .draft .dl{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-2);font-weight:700;margin-bottom:9px}
+  .draft .dl .pulse{width:8px;height:8px;border-radius:50%;background:var(--gold);animation:pl 1.6s infinite}
+  @keyframes pl{0%{box-shadow:0 0 0 0 rgba(199,155,92,.5)}70%{box-shadow:0 0 0 8px rgba(199,155,92,0)}100%{box-shadow:0 0 0 0 rgba(199,155,92,0)}}
+  .linkbox{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--gold-line);border-radius:9px;padding:7px 9px;margin-bottom:10px}
+  .linkbox code{font-family:var(--mono);font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .linkbox button{font-size:11px;border:none;background:var(--navy);color:#fff;padding:5px 9px;border-radius:7px;cursor:pointer}
+  .draft-edit{width:100%;min-height:130px;max-height:260px;resize:vertical;font-family:var(--mono);font-size:11.5px;line-height:1.55;color:#33404E;border:1px solid var(--gold-line);border-radius:9px;padding:10px;background:#fff}
+  .draft-edit:focus{outline:none;border-color:var(--gold)}
+  .dhint{font-size:11px;color:#94805f;margin:7px 0 9px}
+  .dact{display:flex;gap:8px;margin-top:10px}.dact .btn{flex:1;justify-content:center;padding:10px}
+  .composer{border-top:1px solid var(--line);padding:12px 14px;background:#fff}
+  .composer .ex{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+  .composer .ex button{font-size:11px;color:var(--blue);background:var(--blue-soft);border:none;border-radius:999px;padding:5px 10px;cursor:pointer}
+  .composer .row{display:flex;gap:8px;align-items:flex-end}
+  .composer textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:11px;padding:10px 12px;font-family:var(--sans);font-size:13.5px;max-height:110px}
+  .composer textarea:focus{outline:none;border-color:var(--blue)}
+  .composer .send{border:none;background:var(--navy);color:#fff;width:40px;height:40px;border-radius:11px;cursor:pointer;font-size:16px;flex:none}
+
+  .backdrop{position:fixed;inset:0;background:rgba(8,20,34,.35);opacity:0;pointer-events:none;transition:.3s;z-index:30}
+  .backdrop.on{opacity:1;pointer-events:auto}
+  .toasts{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:8px;align-items:center}
+  .toast{background:var(--navy);color:#fff;font-size:13px;padding:10px 17px;border-radius:11px;box-shadow:0 10px 30px rgba(0,0,0,.3);display:flex;gap:9px;align-items:center;animation:tin .3s}
+  .toast .ic{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px}
+  .toast.ok .ic{background:var(--green)}.toast.gold .ic{background:var(--gold-2)}.toast.info .ic{background:var(--blue)}
+  @keyframes tin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="wm">TKC<small>PROCESSOS VIVOS</small></div>
+    <div class="sp"></div>
+    <div class="legend"><span><i style="background:var(--cap)"></i>Capital</span><span><i style="background:var(--tax)"></i>Tax</span><span><i style="background:var(--imo)"></i>Imóveis</span></div>
+    <div class="who"><span>Você:</span><select id="user"><option>Ricardo Pires</option><option>Paulo Tadeu</option><option>Carlos Matheus</option><option>Karla Lopes</option><option>Líder Comercial</option></select></div>
+  </div>
+
+  <div id="stage"><div id="world"><svg class="links" id="links"></svg><div id="nodes"></div></div></div>
+
+  <div class="zc"><button id="zin">＋</button><button id="zout">－</button><button id="zreset">⤢</button></div>
+  <div class="hint">Clique numa empresa para abrir seus processos · clique num processo para ver as etapas · clique numa etapa para o conteúdo</div>
+
+  <div class="backdrop" id="backdrop"></div>
+
+  <aside class="panel" id="panel">
+    <div class="grip" id="grip" title="Arraste para redimensionar"></div>
+    <div class="ph"><div class="ai">IA</div><div><div class="eyebrow" id="pEye"></div><div class="t" id="pTitle"></div></div><button class="x" id="closePanel">×</button></div>
+    <div class="tabs"><button class="on" data-tab="content">Conteúdo</button><button data-tab="chat">Alterar com IA</button><button data-tab="audit">Histórico</button></div>
+    <div class="pwrap">
+      <div class="view on" id="vContent"><div class="cbody" id="cbody"></div></div>
+      <div class="view" id="vChat"><div class="chat"><div class="cmsgs" id="cmsgs"></div>
+        <div class="composer"><div class="ex" id="examples"></div><div class="row"><textarea id="input" rows="1" placeholder="Descreva a alteração nesta etapa…"></textarea><button class="send" id="send">↑</button></div></div>
+      </div></div>
+      <div class="view" id="vAudit"><div class="tl" id="tl"></div></div>
+    </div>
+  </aside>
+  <div class="toasts" id="toasts"></div>
+
+<script>
+const AREAS=[
+  {id:'capital',name:'TKC\nCapital',hex:'#4A7BC8'},
+  {id:'tax',name:'TKC\nTax',hex:'#C79B5C'},
+  {id:'imoveis',name:'TKC\nImóveis',hex:'#5B9E86'},
+];
+const PROC={
+  sucessorio:{area:'capital',ic:'S',title:'Planejamento Sucessório',blocks:[
+    {id:'obj',type:'ctx',icon:'◆',label:'Objetivo',body:'Organizar a passagem do patrimônio entre gerações preservando **valor, harmonia familiar e eficiência tributária**.'},
+    {id:'s1',type:'step',label:'Mapa patrimonial e familiar',body:'Levantar ativos, herdeiros e objetivos de longo prazo da família.'},
+    {id:'s2',type:'step',label:'Escolha de instrumentos',body:'Definir **holding familiar**, doação com reserva de usufruto e seguro de vida conforme o caso.'},
+    {id:'s3',type:'step',label:'Governança',body:'Estabelecer acordo de família e regras claras de decisão.'},
+    {id:'s4',type:'step',label:'Formalização e blindagem',body:'Formalizar os instrumentos e blindar os ativos.'},
+    {id:'s5',type:'step',label:'Revisão periódica',body:'Revisar conforme mudanças na família e na legislação.'},
+    {id:'pos',type:'ctx',icon:'❝',label:'Posicionamento comercial',body:'Patrimônio é o que se constrói. Legado é o que se perpetua.'},
+  ]},
+  governanca:{area:'capital',ic:'G',title:'Governança Familiar',blocks:[
+    {id:'obj',type:'ctx',icon:'◆',label:'Objetivo',body:'Estabelecer regras de decisão e continuidade que **protegem o patrimônio da família**.'},
+    {id:'s1',type:'step',label:'Diagnóstico da família',body:'Mapear papéis, expectativas e conflitos latentes.'},
+    {id:'s2',type:'step',label:'Conselho de família',body:'Constituir o conselho e definir sua composição.'},
+    {id:'s3',type:'step',label:'Acordo de família',body:'Definir política de dividendos, entrada de herdeiros e sucessão de liderança.'},
+    {id:'s4',type:'step',label:'Ritos',body:'Instituir reuniões periódicas e prestação de contas.'},
+    {id:'pos',type:'ctx',icon:'❝',label:'Posicionamento comercial',body:'Estruturas sustentam o crescimento. Visão sustenta o legado.'},
+  ]},
+  tributario:{area:'tax',ic:'T',title:'Planejamento Tributário',blocks:[
+    {id:'obj',type:'ctx',icon:'◆',label:'Objetivo',body:'Transformar a tributação em **estrutura de competitividade**, dentro da legalidade — não apenas cumprir obrigação.'},
+    {id:'s1',type:'step',label:'Diagnóstico fiscal',body:'Levantar regime atual, obrigações acessórias e histórico de recolhimento.'},
+    {id:'s2',type:'step',label:'Mapeamento de oportunidades',body:'Identificar créditos, benefícios setoriais e o enquadramento ideal.'},
+    {id:'s3',type:'step',label:'Modelagem',body:'Simular cenários (Lucro Real, Presumido, incentivos) e comparar o impacto financeiro.'},
+    {id:'s4',type:'step',label:'Parecer',body:'Documentar a recomendação com fundamentação legal e mapa de riscos.'},
+    {id:'s5',type:'step',label:'Implementação e acompanhamento',body:'Executar a mudança e monitorar resultados trimestralmente.'},
+    {id:'pos',type:'ctx',icon:'❝',label:'Posicionamento comercial',body:'Onde muitos enxergam tributação, nós enxergamos estrutura.'},
+  ]},
+  creditos:{area:'tax',ic:'C',title:'Créditos Fiscais',blocks:[
+    {id:'obj',type:'ctx',icon:'◆',label:'Objetivo',body:'Recuperar valores pagos a maior, **gerando caixa** sem alterar a operação do cliente.'},
+    {id:'s1',type:'step',label:'Levantamento',body:'Cruzar apurações dos últimos 5 anos.'},
+    {id:'s2',type:'step',label:'Qualificação',body:'Definir teses aplicáveis e probabilidade de êxito.'},
+    {id:'s3',type:'step',label:'Sustentação',body:'Produzir parecer e memória de cálculo.'},
+    {id:'s4',type:'step',label:'Habilitação',body:'Pleitear o crédito na via administrativa ou judicial.'},
+    {id:'s5',type:'step',label:'Monitoramento',body:'Acompanhar até a homologação.'},
+    {id:'pos',type:'ctx',icon:'❝',label:'Posicionamento comercial',body:'O crédito já é do cliente. Nós apenas o tornamos visível e recuperável.'},
+  ]},
+  curadoria:{area:'imoveis',ic:'C',title:'Curadoria de Ativos',blocks:[
+    {id:'obj',type:'ctx',icon:'◆',label:'Objetivo',body:'Selecionar ativos imobiliários que sejam **reserva de valor** e atravessem gerações.'},
+    {id:'s1',type:'step',label:'Tese do cliente',body:'Definir objetivo (moradia, renda, reserva), horizonte e perfil.'},
+    {id:'s2',type:'step',label:'Curadoria',body:'Selecionar ativos fora de prateleira.'},
+    {id:'s3',type:'step',label:'Due diligence',body:'Verificação jurídica, física e de potencial de valorização.'},
+    {id:'s4',type:'step',label:'Estruturação da aquisição',body:'Montar a operação, inclusive crédito imobiliário quando fizer sentido.'},
+    {id:'s5',type:'step',label:'Gestão pós-aquisição',body:'Acompanhar o ativo ao longo do tempo.'},
+    {id:'pos',type:'ctx',icon:'❝',label:'Posicionamento comercial',body:'Alguns ativos geram retorno. Outros atravessam gerações.'},
+  ]},
+  'credito-imob':{area:'imoveis',ic:'F',title:'Crédito Imobiliário',blocks:[
+    {id:'obj',type:'ctx',icon:'◆',label:'Objetivo',body:'Viabilizar aquisições **sem descapitalizar** o cliente, alinhado à sua estratégia patrimonial.'},
+    {id:'s1',type:'step',label:'Análise de capacidade',body:'Avaliar capacidade e objetivo do cliente.'},
+    {id:'s2',type:'step',label:'Comparativo de linhas',body:'Comparar bancos, consórcio e SFH/SFI.'},
+    {id:'s3',type:'step',label:'Recomendação',body:'Indicar a melhor solução para o cliente — não a de maior comissão.'},
+    {id:'s4',type:'step',label:'Condução',body:'Conduzir o processo até a assinatura.'},
+    {id:'pos',type:'ctx',icon:'❝',label:'Posicionamento comercial',body:'A melhor solução é a do cliente. É assim que ele fica por décadas.'},
+  ]},
+};
+
+function leafId(pid,bid){return 'leaf|'+pid+'|'+bid;}
+const LEAF={};
+const now0='10/02/2026';
+for(const pid in PROC){ let n=0;
+  PROC[pid].blocks.forEach(bl=>{ if(bl.type==='step') n++; bl.num=(bl.type==='step')?n:null;
+    LEAF[leafId(pid,bl.id)]={pid,bid:bl.id,block:bl,version:1,content:bl.body,author:'Estruturação inicial',updatedAt:now0,draft:null,
+      history:[{v:'v1',action:'Publicação inicial',by:'Estruturação inicial',at:now0,desc:'Versão fundadora.',rej:false}]};
+  });
+}
+const EXAMPLES_STEP=['Detalhar melhor esta etapa','Adicionar um ponto de atenção','Tornar o texto mais objetivo'];
+
+function buildTree(){
+  return {id:'root',type:'root',children:AREAS.map(a=>({
+    id:'area|'+a.id,type:'area',area:a.id,
+    children:Object.keys(PROC).filter(k=>PROC[k].area===a.id).map(pid=>({
+      id:'proc|'+pid,type:'proc',area:a.id,pid,
+      children:PROC[pid].blocks.map(bl=>({id:leafId(pid,bl.id),type:'leaf',area:a.id,pid,bid:bl.id,ltype:bl.type}))
+    }))
+  }))};
+}
+const TREE=buildTree();
+const PARENT={}; (function idx(n,p){PARENT[n.id]=p;(n.children||[]).forEach(c=>idx(c,n.id));})(TREE,null);
+const NODEMAP={}; (function mp(n){NODEMAP[n.id]=n;(n.children||[]).forEach(mp);})(TREE);
+
+const EXPANDED=new Set(['root']);
+function isOpen(n){return n.type==='root'||EXPANDED.has(n.id);}
+function weight(n){ if(!n.children||n.type==='leaf'||!isOpen(n)) return 1; return n.children.reduce((s,c)=>s+weight(c),0); }
+
+const R=[0,250,470,690];
+const deg=Math.PI/180;
+function computeTargets(){
+  const pos={}; pos['root']={x:0,y:0,depth:0};
+  const bases=[-90,30,150];
+  TREE.children.forEach((area,i)=>{ const c=bases[i], span=60; layout(area,c-span,c+span,1,pos); });
+  return pos;
+}
+function layout(n,a0,a1,depth,pos){
+  const c=(a0+a1)/2;
+  pos[n.id]={x:R[depth]*Math.cos(c*deg),y:R[depth]*Math.sin(c*deg),depth,ang:c};
+  if(n.children && isOpen(n)){
+    const tot=n.children.reduce((s,c2)=>s+weight(c2),0); let acc=a0;
+    n.children.forEach(ch=>{ const w=weight(ch); const sp=(a1-a0)*w/tot; layout(ch,acc,acc+sp,depth+1,pos); acc+=sp; });
+  }
+}
+
+const nodesEl=document.getElementById('nodes'), linksEl=document.getElementById('links'), world=document.getElementById('world');
+let screen={}; const els={}; let current=null;
+function areaHex(id){return AREAS.find(a=>a.id===id).hex;}
+function shade(hex,amt){let c=hex.replace('#','');const cl=v=>Math.max(0,Math.min(255,v));return`rgb(${cl(parseInt(c.slice(0,2),16)+amt)},${cl(parseInt(c.slice(2,4),16)+amt)},${cl(parseInt(c.slice(4,6),16)+amt)})`;}
+
+function nodeHTML(n){
+  if(n.type==='root') return `<div class="bubble"><div style="text-align:center"><div class="rt">TKC</div><div class="rs">ECOSSISTEMA</div></div></div>`;
+  if(n.type==='area'){const a=AREAS.find(x=>x.id===n.area);const open=EXPANDED.has(n.id);
+    return `<div class="bubble" style="background:radial-gradient(circle at 38% 32%, ${a.hex}, ${shade(a.hex,-45)});border:1px solid ${a.hex}">${a.name.replace('\n','<br>')}<span class="toggle">${open?'–':'+'}</span></div>`;}
+  if(n.type==='proc'){const p=PROC[n.pid];const open=EXPANDED.has(n.id);
+    return `<div class="bubble" style="color:${areaHex(n.area)}">${p.ic}<span class="toggle">${open?'–':'+'}</span></div><div class="lbl">${p.title}</div>`;}
+  const L=LEAF[n.id], bl=L.block; const hex=areaHex(n.area);
+  const inner = bl.type==='step' ? bl.num : (bl.icon||'◆');
+  return `<div class="bubble ${L.draft?'draftpulse':''}" style="${bl.type==='step'?'':'color:'+hex}">${inner}${L.draft?'<span class="dtag">rascunho</span>':''}</div>
+    <div class="lbl">${bl.label}</div><div class="ver">v${L.version}</div>`;
+}
+function nodeClass(n){let c='node n-'+n.type; if(n.type==='leaf'){c+=' '+NODEMAP[n.id].ltype; if(n.id===current)c+=' sel';} return c;}
+function ensureEl(n){
+  let el=els[n.id];
+  if(!el){el=document.createElement('div');el.dataset.id=n.id;nodesEl.appendChild(el);els[n.id]=el;
+    el.onclick=(e)=>{e.stopPropagation();if(dragMoved)return;onNodeClick(n);};}
+  el.className=nodeClass(n); el.innerHTML=nodeHTML(n); return el;
+}
+function parentPos(id,targets){const p=PARENT[id];if(p&&screen[p])return screen[p];if(p&&targets[p])return targets[p];return{x:0,y:0};}
+function nearestVisibleAncestorPos(id,targets){let p=PARENT[id];while(p){if(targets[p])return targets[p];p=PARENT[p];}return{x:0,y:0};}
+
+function relayout(animated=true){
+  const targets=computeTargets(); const nextIds=Object.keys(targets); const prevIds=Object.keys(screen);
+  nextIds.forEach(id=>{if(!screen[id]){const pp=parentPos(id,targets);screen[id]={x:pp.x,y:pp.y,op:0};}});
+  const gone=prevIds.filter(id=>!targets[id]); const goneTarget={}; gone.forEach(id=>goneTarget[id]=nearestVisibleAncestorPos(id,targets));
+  nextIds.forEach(id=>ensureEl(NODEMAP[id]));
+  const start={}; nextIds.forEach(id=>start[id]={...screen[id]}); gone.forEach(id=>start[id]={...screen[id]});
+  const dur=animated?460:0; const t0=performance.now();
+  function frame(t){ let k=dur?Math.min(1,(t-t0)/dur):1; const e=1-Math.pow(1-k,3);
+    nextIds.forEach(id=>{const s=start[id],tg=targets[id];const x=s.x+(tg.x-s.x)*e,y=s.y+(tg.y-s.y)*e,op=(s.op||0)+(1-(s.op||0))*e;
+      const el=els[id];el.style.left=x+'px';el.style.top=y+'px';el.style.opacity=op;screen[id]={x,y,op};});
+    gone.forEach(id=>{const s=start[id],tg=goneTarget[id];const x=s.x+(tg.x-s.x)*e,y=s.y+(tg.y-s.y)*e,op=(s.op||1)*(1-e);
+      const el=els[id];if(el){el.style.left=x+'px';el.style.top=y+'px';el.style.opacity=op;}screen[id]={x,y,op};});
+    drawLinks(nextIds,gone);
+    if(k<1)requestAnimationFrame(frame);
+    else{gone.forEach(id=>{if(els[id]){els[id].remove();delete els[id];}delete screen[id];});drawLinks(nextIds,[]);}
+  }
+  requestAnimationFrame(frame);
+}
+function drawLinks(vis,gone){
+  const set=new Set(vis.concat(gone)); let s='';
+  set.forEach(id=>{const p=PARENT[id];if(!p||!screen[id]||!screen[p])return;const a=screen[p],b=screen[id],n=NODEMAP[id];
+    const col=p==='root'?'rgba(199,155,92,.35)':areaHex(n.area)+'55';const w=p==='root'?2.2:(n.type==='leaf'?1.1:1.6);
+    s+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${col}" stroke-width="${w}"/>`;});
+  linksEl.innerHTML=s;
+}
+function onNodeClick(n){
+  if(n.type==='root')return;
+  if(n.type==='area'||n.type==='proc'){
+    if(EXPANDED.has(n.id))collapseSubtree(n); else EXPANDED.add(n.id);
+    if(current&&!leafVisible(current))closePanel();
+    relayout(); ensureEl(n); return;
+  }
+  if(n.type==='leaf')openLeaf(n.id);
+}
+function collapseSubtree(n){EXPANDED.delete(n.id);(n.children||[]).forEach(c=>{if(c.children)collapseSubtree(c);});}
+function leafVisible(id){const proc=PARENT[id],area=PARENT[proc];return EXPANDED.has(proc)&&EXPANDED.has(area);}
+
+let tx=innerWidth/2,ty=innerHeight/2+6,scale=1;
+function apply(){world.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;}
+const stage=document.getElementById('stage');
+let drag=false,sx,sy,stx,sty,dragMoved=false;
+stage.addEventListener('mousedown',e=>{drag=true;dragMoved=false;sx=e.clientX;sy=e.clientY;stx=tx;sty=ty;stage.classList.add('grabbing');});
+window.addEventListener('mousemove',e=>{if(!drag)return;tx=stx+(e.clientX-sx);ty=sty+(e.clientY-sy);if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)>4)dragMoved=true;apply();});
+window.addEventListener('mouseup',()=>{drag=false;stage.classList.remove('grabbing');setTimeout(()=>dragMoved=false,20);});
+stage.addEventListener('wheel',e=>{e.preventDefault();const f=e.deltaY<0?1.12:1/1.12;const nx=(e.clientX-tx)/scale,ny=(e.clientY-ty)/scale;scale=Math.max(.35,Math.min(2.4,scale*f));tx=e.clientX-nx*scale;ty=e.clientY-ny*scale;apply();},{passive:false});
+stage.addEventListener('touchstart',e=>{if(e.touches.length===1){drag=true;dragMoved=false;sx=e.touches[0].clientX;sy=e.touches[0].clientY;stx=tx;sty=ty;}},{passive:true});
+stage.addEventListener('touchmove',e=>{if(e.touches.length===1&&drag){tx=stx+(e.touches[0].clientX-sx);ty=sty+(e.touches[0].clientY-sy);if(Math.abs(e.touches[0].clientX-sx)>4)dragMoved=true;apply();}},{passive:true});
+stage.addEventListener('touchend',()=>{drag=false;});
+document.getElementById('zin').onclick=()=>{scale=Math.min(2.4,scale*1.15);apply();};
+document.getElementById('zout').onclick=()=>{scale=Math.max(.35,scale/1.15);apply();};
+document.getElementById('zreset').onclick=()=>{tx=innerWidth/2;ty=innerHeight/2+6;scale=1;apply();closePanel();};
+apply();
+
+function currentUser(){return document.getElementById('user').value;}
+function pathOf(id){const proc=PARENT[id],area=PARENT[proc];return `${AREAS.find(a=>a.id===NODEMAP[area].area).name.replace('\n',' ')} › ${PROC[NODEMAP[proc].pid].title}`;}
+function openLeaf(id){
+  current=id; Object.values(els).forEach(el=>el.classList.remove('sel')); if(els[id])els[id].classList.add('sel');
+  const L=LEAF[id], bl=L.block;
+  document.getElementById('pEye').textContent=(bl.type==='step'?('Etapa '+bl.num):'Seção');
+  document.getElementById('pEye').style.color=areaHex(PROC[L.pid].area);
+  document.getElementById('pTitle').textContent=bl.label;
+  switchTab('content');renderContent();renderAudit();resetChat();
+  document.getElementById('panel').classList.add('open');document.getElementById('backdrop').classList.add('on');
+  const pos=screen[id]; if(pos){const pw=parseFloat(getComputedStyle(document.getElementById('panel')).width)||430;tx=(innerWidth-pw)/2-pos.x*scale;ty=innerHeight/2-pos.y*scale;apply();}
+}
+function closePanel(){document.getElementById('panel').classList.remove('open');document.getElementById('backdrop').classList.remove('on');current=null;Object.values(els).forEach(el=>el.classList.remove('sel'));}
+document.getElementById('closePanel').onclick=closePanel;
+document.getElementById('backdrop').onclick=closePanel;
+
+// redimensionar painel pela alça
+(function(){
+  const panel=document.getElementById('panel'), grip=document.getElementById('grip');
+  let rz=false;
+  function width(){return parseFloat(getComputedStyle(panel).width);}
+  function setW(w){const max=window.innerWidth*0.96, min=360; w=Math.max(min,Math.min(max,w)); panel.style.width=w+'px';}
+  function start(clientX){rz=true;panel.classList.add('resizing');document.body.style.cursor='ew-resize';}
+  function move(clientX){ if(!rz)return; setW(window.innerWidth-clientX); }
+  function end(){ if(!rz)return; rz=false; panel.classList.remove('resizing'); document.body.style.cursor='';
+    if(current&&screen[current]){ tx=(window.innerWidth-width())/2 - screen[current].x*scale; ty=innerHeight/2 - screen[current].y*scale; apply(); } }
+  grip.addEventListener('mousedown',e=>{e.preventDefault();start(e.clientX);});
+  window.addEventListener('mousemove',e=>{if(rz){e.preventDefault();move(e.clientX);}});
+  window.addEventListener('mouseup',end);
+  grip.addEventListener('touchstart',e=>{start(e.touches[0].clientX);},{passive:true});
+  window.addEventListener('touchmove',e=>{if(rz)move(e.touches[0].clientX);},{passive:true});
+  window.addEventListener('touchend',end);
+  // duplo-clique reseta a largura padrão
+  grip.addEventListener('dblclick',()=>{panel.style.width='';end();});
+})();
+function switchTab(t){document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  document.getElementById('vContent').classList.toggle('on',t==='content');document.getElementById('vChat').classList.toggle('on',t==='chat');document.getElementById('vAudit').classList.toggle('on',t==='audit');
+  if(t==='chat')setTimeout(()=>document.getElementById('input').focus(),50);}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function inl(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')}
+function renderContent(){
+  const L=LEAF[current], bl=L.block;
+  const body = (bl.type==='ctx'&&bl.icon==='❝')
+    ? '<blockquote style="margin:0;padding:14px 16px;border-left:3px solid var(--gold);background:var(--gold-soft);border-radius:0 9px 9px 0;font-family:var(--serif);font-style:italic;color:#5c4a30">'+inl(L.content)+'</blockquote>'
+    : '<p>'+inl(L.content)+'</p>';
+  document.getElementById('cbody').innerHTML=`
+    <div class="path">${pathOf(current)}</div>
+    <div class="kind" style="color:${areaHex(PROC[L.pid].area)}">${bl.type==='step'?('Etapa '+bl.num+' do protocolo'):bl.label}</div>
+    <div class="meta"><span class="chip ver">v${L.version}</span><span class="chip">Atualizado ${L.updatedAt}</span><span class="chip">Por ${L.author}</span>${L.draft?'<span class="chip" style="color:var(--gold-2);background:var(--gold-soft);border-color:var(--gold-line)">● rascunho pendente</span>':''}</div>
+    <div class="content">${body}</div>
+    <button class="btn gold" id="toChat">✦ Alterar esta ${bl.type==='step'?'etapa':'seção'} com IA</button>`;
+  document.getElementById('toChat').onclick=()=>switchTab('chat');
+}
+function renderAudit(){const L=LEAF[current];
+  document.getElementById('tl').innerHTML=L.history.slice().reverse().map(ev=>`<div class="ev ${ev.rej?'rej':''}"><div class="r1"><span class="vt">${ev.v}</span><span class="ac">${ev.action}</span><span class="mt">· ${ev.by} · ${ev.at}</span></div>${ev.desc?`<div class="desc">${ev.desc}</div>`:''}</div>`).join('');}
+
+const cmsgs=document.getElementById('cmsgs');
+function resetChat(){cmsgs.innerHTML='';const bl=LEAF[current].block;
+  addMsg('ia','Descreva a alteração para <b>'+bl.label+'</b>. Eu gero um rascunho para você revisar, editar e aprovar.');
+  if(LEAF[current].draft)renderDraft(LEAF[current].draft);
+  const ex=document.getElementById('examples');ex.innerHTML='';
+  EXAMPLES_STEP.forEach(t=>{const b=document.createElement('button');b.textContent=t;b.onclick=()=>{const i=document.getElementById('input');i.value=t;i.focus();grow(i);};ex.appendChild(b);});}
+function addMsg(role,html){const m=document.createElement('div');m.className='msg '+(role==='ia'?'ia':'me');m.innerHTML=`<div class="who">${role==='ia'?'Assistente':currentUser()}</div><div class="b">${html}</div>`;cmsgs.appendChild(m);cmsgs.scrollTop=cmsgs.scrollHeight;return m;}
+function typing(){const m=document.createElement('div');m.className='msg ia';m.innerHTML='<div class="b" style="padding:0"><div class="typing"><i></i><i></i><i></i></div></div>';cmsgs.appendChild(m);cmsgs.scrollTop=cmsgs.scrollHeight;return m;}
+const input=document.getElementById('input');function grow(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,110)+'px';}
+input.addEventListener('input',()=>grow(input));input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
+document.getElementById('send').onclick=send;
+async function send(){const text=input.value.trim();if(!text)return;input.value='';grow(input);addMsg('me',esc(text));const tp=typing();
+  const L=LEAF[current];let revised;try{revised=await aiRevise(L.block.label,L.content,text);}catch(e){revised=L.content+' — '+text;}
+  tp.remove();addMsg('ia','Preparei uma nova versão desta '+(L.block.type==='step'?'etapa':'seção')+'. Revise e edite se quiser — aprovar substitui o conteúdo publicado; reprovar descarta.');
+  const d={id:sid(),content:revised,request:text,by:currentUser(),at:today()};L.draft=d;renderDraft(d);updateNode(current);
+  toast('info','ⓘ','Rascunho criado e link enviado a '+d.by);}
+function renderDraft(d){const old=cmsgs.querySelector('.draft');if(old)old.remove();
+  const link=`https://processos.tkc/rascunho/${d.id}`;const w=document.createElement('div');w.className='draft';
+  w.innerHTML=`<div class="dl"><span class="pulse"></span>Rascunho temporário · aguardando aprovação</div>
+    <div class="linkbox"><code>${link}</code><button data-c>copiar</button></div>
+    <div class="dhint">Edite se quiser ajustar o que a IA gerou. Publica-se exatamente o que estiver aqui.</div>
+    <textarea class="draft-edit" spellcheck="false">${esc(d.content)}</textarea>
+    <div class="dact"><button class="btn danger" data-r>Reprovar</button><button class="btn green" data-a>Aprovar e publicar</button></div>`;
+  cmsgs.appendChild(w);cmsgs.scrollTop=cmsgs.scrollHeight;
+  const ta=w.querySelector('.draft-edit');ta.addEventListener('input',()=>d.content=ta.value);
+  w.querySelector('[data-c]').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(link);toast('info','⧉','Link copiado');};
+  w.querySelector('[data-a]').onclick=()=>approve(d,w);w.querySelector('[data-r]').onclick=()=>reject(d,w);}
+function approve(d,w){const L=LEAF[current];L.content=d.content;L.version++;L.updatedAt=today();L.author=d.by;
+  L.history.push({v:'v'+L.version,action:'Alteração aprovada',by:d.by,at:today(),desc:'Solicitação: "'+d.request+'"',rej:false});L.draft=null;
+  w.style.transition='.3s';w.style.opacity='0';setTimeout(()=>{w.remove();addMsg('ia','✓ Publicado. Esta '+(L.block.type==='step'?'etapa':'seção')+' está na <b>v'+L.version+'</b>, registrada no histórico.');},300);
+  renderContent();renderAudit();updateNode(current);toast('ok','✓','Publicado na v'+L.version+' · auditado');}
+function reject(d,w){const L=LEAF[current];L.history.push({v:'—',action:'Rascunho reprovado',by:d.by,at:today(),desc:'Descartado: "'+d.request+'"',rej:true});L.draft=null;
+  w.style.transition='.3s';w.style.opacity='0';setTimeout(()=>{w.remove();addMsg('ia','Rascunho descartado. Permanece a <b>v'+L.version+'</b>. O descarte fica na auditoria.');},300);
+  renderContent();renderAudit();updateNode(current);toast('gold','↺','Rascunho reprovado e apagado');}
+function updateNode(id){if(els[id]){const keep=els[id].classList.contains('sel');ensureEl(NODEMAP[id]);if(keep)els[id].classList.add('sel');const s=screen[id];if(s){els[id].style.left=s.x+'px';els[id].style.top=s.y+'px';els[id].style.opacity=s.op;}}}
+
+async function aiRevise(label,content,request){
+  const prompt=`Você é o assistente de processos da TKC (boutique de patrimônio, tributação e imóveis). Tom institucional, claro, sem jargão.
+Abaixo está o texto de uma seção/etapa chamada "${label}" de um processo. Reescreva APENAS o texto desta seção aplicando a alteração pedida. Mantenha curto (1 a 3 frases), no tom TKC. Pode usar **negrito** em Markdown. Responda só com o texto final, sem preâmbulo.
+
+TEXTO ATUAL:
+${content}
+
+ALTERAÇÃO SOLICITADA:
+${request}`;
+  const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:400,messages:[{role:"user",content:prompt}]})});
+  if(!res.ok)throw new Error('http');const data=await res.json();
+  let txt=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(' ').trim().replace(/^```.*?\n?|```$/g,'').trim();
+  if(!txt)throw new Error('vazio');return txt;}
+function sid(){return Math.random().toString(36).slice(2,8);}
+function today(){const d=new Date();return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
+function toast(k,ic,m){const t=document.createElement('div');t.className='toast '+k;t.innerHTML=`<span class="ic">${ic}</span>${m}`;document.getElementById('toasts').appendChild(t);setTimeout(()=>{t.style.transition='.3s';t.style.opacity='0';setTimeout(()=>t.remove(),300);},3200);}
+
+relayout(false);
+</script>
+</body>
+</html>

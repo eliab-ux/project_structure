@@ -1,0 +1,78 @@
+version: "3.9"
+
+services:
+  mariadb:
+    image: mariadb:10.6
+    container_name: emdr_mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: emdr
+      MYSQL_USER: emdr
+      MYSQL_PASSWORD: emdr
+    ports:
+      - "3306:3306"
+    volumes:
+      - emdr_mariadb_data:/var/lib/mysql
+      - ./dump.sql:/backup/dump.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -u root -proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    networks:
+      - emdr-net
+
+  adminer:
+    image: adminer:latest
+    container_name: emdr_adminer
+    ports:
+      - "8080:8080"
+    networks:
+      - emdr-net
+
+  backend:
+    build: ./backend
+    container_name: emdr_backend
+    restart: always
+    command: npm run start
+    working_dir: "/usr/src/app"
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/build
+      - /usr/src/app/node_modules
+    ports:
+      - "3001:3001"
+      - "3002:3002"
+    environment:
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+      - SECRET_KEY=emdr3xp
+      - PORT=3002
+      - SYNC=true
+      - DAILYCOAPIKEY=1f154b8cfac0119377aab4d0b4ce3ea10d13e3a0e287a4441a2346a3190f9205
+      - WEBSOCKET_PORT=3001
+      - TWILIO_AUTH_TOKEN=bf593c3c33cc527656dcede84c05dc1f
+      - TWILIO_ACCOUNT_SID=AC03c5e8b254c18ee99cbab99044369ddf
+      - TWILIO_FROM_NUMBER=+14155238886
+      - MAILGUN_API_KEY=ce436853c6f135afd426f1c54f60ba09-08c79601-de6312d0
+      - MAILGUN_DOMAIN=emdrremoto.com.br
+      - MAILGUN_FROM=noreply@emdrremoto.com.br
+      - DATABASE_HOST=emdr_mariadb
+      - DATABASE_PORT=3306
+      - DATABASE_USER=emdr
+      - DATABASE_PASSWORD=emdr
+      - DATABASE_NAME=emdr
+      - DATABASE_TYPE=mysql
+      - DATABASE_LOGGING=true
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - emdr-net
+
+volumes:
+  emdr_mariadb_data:
+
+networks:
+  emdr-net:
+    name: emdr-net

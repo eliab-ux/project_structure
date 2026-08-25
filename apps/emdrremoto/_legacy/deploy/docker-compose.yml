@@ -1,0 +1,50 @@
+services:
+  backend:
+    build: ./backend
+    container_name: emdr_backend
+    restart: always
+    ports:
+      - "3002:3002"
+      - "3001:3001"
+    environment:
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+      - SECRET_KEY=${SECRET_KEY}
+      - PORT=3002
+      - SYNC=false
+      - DAILYCOAPIKEY=${DAILYCOAPIKEY}
+      - WEBSOCKET_PORT=3001
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER}
+      - MAILGUN_API_KEY=${MAILGUN_API_KEY}
+      - MAILGUN_DOMAIN=${MAILGUN_DOMAIN}
+      - MAILGUN_FROM=${MAILGUN_FROM}
+      - DATABASE_HOST=${DATABASE_HOST}
+      - DATABASE_PORT=${DATABASE_PORT:-3306}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - DATABASE_TYPE=mysql
+      - DATABASE_LOGGING=false
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/emdr-api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        - REACT_APP_API_URL=${REACT_APP_API_URL}
+        - REACT_APP_WEBSOCKET_URL=${REACT_APP_WEBSOCKET_URL}
+        - REACT_APP_CREATE_ROOM_URL=${REACT_APP_CREATE_ROOM_URL}
+        - REACT_APP_DAILY_CO_API=${REACT_APP_DAILY_CO_API}
+    container_name: emdr_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend

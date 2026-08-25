@@ -1,0 +1,105 @@
+import { MikroORM } from '@mikro-orm/core';
+import { createMikroOrmConfig } from '../infrastructure/persistence/mikro-orm/config/mikro-orm.config';
+import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'crypto';
+
+async function createResellerForEliab() {
+  console.log('🚀 Criando cadastro de reseller para eliab@techbs.com.br...\n');
+
+  // Criar ConfigService mock com variáveis de ambiente
+  const configService = {
+    get: (key: string) => process.env[key],
+    getOrThrow: (key: string) => {
+      const value = process.env[key];
+      if (!value) throw new Error(`${key} não encontrado`);
+      return value;
+    },
+  } as ConfigService;
+
+  const config = createMikroOrmConfig(configService);
+  const orm = await MikroORM.init(config);
+  const em = orm.em.fork();
+
+  try {
+    // Buscar usuário pelo email
+    const UserEntity = require('../infrastructure/persistence/mikro-orm/entities/user-orm.entity')
+      .UserOrmEntity;
+    const ResellerEntity = require('../infrastructure/persistence/mikro-orm/entities/reseller-orm.entity')
+      .ResellerOrmEntity;
+
+    const user = await em.findOne(UserEntity, { email: 'eliab@techbs.com.br' });
+
+    if (!user) {
+      console.log('❌ Usuário eliab@techbs.com.br não encontrado!');
+      console.log('💡 Execute primeiro o script create-user-eliab.ts\n');
+      await orm.close();
+      return;
+    }
+
+    console.log(`✅ Usuário encontrado: ${user.id}\n`);
+
+    // Verificar se já existe um reseller para este usuário
+    const existingReseller = await em.findOne(ResellerEntity, { userId: user.id });
+
+    if (existingReseller) {
+      console.log('⚠️  Cadastro de reseller já existe para este usuário!');
+      console.log(`\n📋 Dados do Reseller:`);
+      console.log(`   ID: ${existingReseller.id}`);
+      console.log(`   CPF: ${existingReseller.cpf}`);
+      console.log(`   Link único: ${existingReseller.uniqueLink}`);
+      console.log(`   Status: ${existingReseller.status}`);
+      console.log(`   Nível: ${existingReseller.level}\n`);
+      console.log('💡 Você já pode fazer login em AMBOS os portais:\n');
+      console.log('   🔹 Portal Admin: http://localhost:3003/admin/login');
+      console.log('   🔹 Portal Revendedor: http://localhost:3003/auth/login\n');
+      await orm.close();
+      return;
+    }
+
+    // Criar cadastro de reseller (apenas campos que existem no banco)
+    const reseller = em.create(ResellerEntity, {
+      id: randomUUID(),
+      userId: user.id,
+      cpf: '12345678900', // CPF de teste
+      uniqueLink: 'eliab-admin',
+      status: 'active', // Já aprovado
+      level: 'gold', // Nível gold
+      approvedAt: new Date(),
+      approvedBy: user.id, // Auto-aprovado
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await em.persistAndFlush(reseller);
+
+    console.log('✅ Cadastro de reseller criado com sucesso!\n');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🎯 RESELLER CRIADO');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`📧 Email: ${user.email}`);
+    console.log(`🔑 Senha: Eliab@123`);
+    console.log(`👤 Nome:  ${user.name}`);
+    console.log(`🆔 CPF:   ${reseller.cpf}`);
+    console.log(`🔗 Link:  kazatem.shop/r/${reseller.uniqueLink}`);
+    console.log(`📊 Status: ${reseller.status}`);
+    console.log(`⭐ Nível: ${reseller.level}`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.log('💡 Agora você pode fazer login em AMBOS os portais:\n');
+    console.log('   🔹 Portal Admin: http://localhost:3003/admin/login');
+    console.log('   🔹 Portal Revendedor: http://localhost:3003/auth/login\n');
+  } catch (error) {
+    console.error('❌ Erro ao criar reseller:', error);
+    throw error;
+  } finally {
+    await orm.close();
+  }
+}
+
+createResellerForEliab()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

@@ -1,0 +1,88 @@
+# Infraestrutura local do Batuta: Postgres, Redis e MinIO.
+#
+# Isto é AMBIENTE DE DESENVOLVIMENTO, não deploy. Em produção (Dokploy/mdantas) cada um destes é um
+# serviço gerenciado pela plataforma e os segredos vivem na aba Environment — ver o playbook no
+# CLAUDE.md. As senhas aqui são deliberadamente óbvias: só valem em localhost e nunca saem daqui.
+#
+#   docker compose -f apps/batuta-system/docker-compose.yml up -d
+#   npm run migration:up -w apps/batuta-system/backend
+#
+# As portas fogem do padrão (55432 / 56379 / 59000) para não colidir com um Postgres ou Redis que já
+# esteja rodando na máquina — é o tipo de conflito que consome uma hora antes de alguém desconfiar.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: batuta-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: batuta
+      POSTGRES_PASSWORD: batuta_local
+      POSTGRES_DB: batuta
+      # O banco de teste de integração é criado pelo script abaixo, não à mão.
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C'
+    ports:
+      - '55432:5432'
+    volumes:
+      - batuta-postgres-data:/var/lib/postgresql/data
+      - ./deploy/local/init-test-db.sql:/docker-entrypoint-initdb.d/10-init-test-db.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U batuta -d batuta']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: batuta-redis
+    restart: unless-stopped
+    # requirepass mesmo local: o código lê REDIS_PASSWORD, e um caminho de autenticação que só é
+    # exercitado em produção é um caminho que ninguém testou.
+    command: ['redis-server', '--requirepass', 'batuta_local', '--appendonly', 'yes']
+    ports:
+      - '56379:6379'
+    volumes:
+      - batuta-redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', 'batuta_local', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    image: minio/minio:RELEASE.2024-09-22T00-33-43Z
+    container_name: batuta-minio
+    restart: unless-stopped
+    command: ['server', '/data', '--console-address', ':59001']
+    environment:
+      MINIO_ROOT_USER: batuta
+      MINIO_ROOT_PASSWORD: batuta_local
+    ports:
+      - '59000:9000'
+      - '59001:59001'
+    volumes:
+      - batuta-minio-data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Captura de e-mail em desenvolvimento. Nada sai da máquina: o link de aprovação (§8) é a única
+  # forma de exercitar o magic link de ponta a ponta, e mandar isso por SMTP real em dev seria
+  # enviar credencial de aprovação para um endereço de verdade.
+  #   UI: http://localhost:58025
+  mailpit:
+    image: axllent/mailpit:v1.20
+    container_name: batuta-mailpit
+    restart: unless-stopped
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - '51025:1025'
+      - '58025:8025'
+
+volumes:
+  batuta-postgres-data:
+  batuta-redis-data:
+  batuta-minio-data:

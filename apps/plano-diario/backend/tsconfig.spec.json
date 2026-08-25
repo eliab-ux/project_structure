@@ -1,0 +1,14 @@
+{
+  "//": "Config de lint/teste: cobre src + test + os configs da raiz do app. O tsconfig.json de build exclui test/ e *.spec.ts, então o ESLint tipado precisa deste projeto para parsear os specs. ts-jest lê daqui apenas compilerOptions.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "types": ["node", "jest"]
+  },
+  "include": ["src/**/*", "test/**/*", "*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

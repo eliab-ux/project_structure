@@ -1,0 +1,13 @@
+.idea/
+.vscode/
+node_modules/
+build/
+tmp/
+temp/
+doc/
+insomnia/
+postman/
+*.jpg
+*.png
+*.pdf
+*.mp4
